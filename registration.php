@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © GetJohn. All rights reserved.
+ * Copyright 2025 © GetJohn. All rights reserved.
  */
 
 use Magento\Framework\Component\ComponentRegistrar;

@@ -7,7 +7,6 @@ magento2-vendor-checker/
 ├── registration.php                       # Magento 2 module registration
 ├── LICENSE                                # MIT License
 ├── README.md                              # Full documentation
-├── QUICKSTART.md                          # Quick start guide
 ├── .gitignore                             # Git ignore rules
 │
 ├── etc/
@@ -30,20 +29,7 @@ magento2-vendor-checker/
 
 ## Key Files Explained
 
-### Root Level
-
-- **composer.json** - Defines this as a Composer plugin with type `composer-plugin`
-- **registration.php** - Registers the module with Magento 2
-- **README.md** - Complete documentation with examples and use cases
-- **QUICKSTART.md** - Quick reference guide for common commands
-
-### etc/
-
-- **module.xml** - Standard Magento 2 module declaration
-
 ### src/
-
-Main source code organized by responsibility:
 
 - **ComposerPlugin.php** - Entry point for Composer plugin system
   - Implements `PluginInterface` and `Capable`
@@ -66,7 +52,6 @@ Main source code organized by responsibility:
 Business logic separated into focused services:
 
 - **VersionChecker.php** - Core checking logic
-  - HTTP client configuration
   - Vendor-specific parsing patterns
   - Web scraping and DOM parsing
   - Version extraction
@@ -93,21 +78,21 @@ Business logic separated into focused services:
 6. **VersionChecker** scrapes vendor websites for each package
 7. **Results are formatted** and displayed to the user
 
-## Installation Methods
+## Extension Points
 
-### As a Composer Plugin (Recommended)
-Install globally or per-project:
-```bash
-composer require getjohn/magento2-vendor-checker
-```
+Want to customize? Here's where:
 
-The command `composer vendor:check` becomes available immediately.
+1. **Add Package URLs**
+   - `ComposerIntegration::$packageUrlMappings`
 
-### As a Magento 2 Module
-Place in `app/code/GetJohn/VendorChecker/` and run:
-```bash
-php bin/magento module:enable GetJohn_VendorChecker
-php bin/magento setup:upgrade
-```
+2. **Add Vendor Patterns**
+   - `VersionChecker::$vendorPatterns`
 
-Both methods work simultaneously - it's both a Composer plugin AND a Magento module!
+3. **Add Command Options**
+   - `VendorCheckCommand::configure()`
+
+4. **Change Output Format**
+   - `VendorCheckCommand::display*()` methods
+
+5. **Add Version Sources**
+   - `VersionChecker::checkMultiplePackages()`

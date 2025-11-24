@@ -22,10 +22,8 @@ Now you can run `composer vendor:check` in any project!
 
 ```bash
 cd /path/to/your/magento2/project
-composer require getjohn/magento2-vendor-checker
+composer require --dev getjohn/magento2-vendor-checker
 ```
-
-The command will be available in this project.
 
 ### Verify Installation
 
@@ -116,9 +114,9 @@ Summary: 1 up-to-date, 1 updates available, 0 errors
 
 ## Configuration
 
-### Adding Custom Vendor URLs
+### Adding New Modules
 
-If you have modules from vendors not in the default list, add them:
+This works if the vendor is already suppported.
 
 #### Method A: Programmatically
 
@@ -224,18 +222,6 @@ composer global show
 3. **composer.lock doesn't exist**
    
    Solution: Run `composer install` first to generate it
-
-### Version Mismatch Warnings
-
-**Problem**: Tool shows version mismatch between sources
-
-This is actually **working correctly**! It means:
-
-- Composer has one version
-- Marketplace has another version
-- Vendor website shows yet another version
-
-**Action**: Wait for all sources to sync, or contact the vendor.
 
 ### Vendor Website Changed
 
@@ -375,23 +361,3 @@ composer remove getjohn/magento2-vendor-checker
 rm -rf app/code/GetJohn/VendorChecker
 ```
 
----
-
-## Getting Help
-
-1. Check this documentation
-2. Review the examples in `examples/` directory
-3. Check the source code - it's well-commented
-4. Open an issue on GitHub
-5. Contact: john@getjohn.co.uk
-
----
-
-## What's Next?
-
-Once installed, check out:
-
-- **QUICKSTART.md** - Common command examples
-- **README.md** - Full feature documentation  
-- **examples/custom-config.php** - Customization examples
-- **STRUCTURE.md** - Understanding the codebase
