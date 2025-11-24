@@ -1,0 +1,29 @@
+{
+    "name": "getjohn/magento2-vendor-checker",
+    "description": "Magento 2 module to check vendor websites for latest module versions",
+    "type": "composer-plugin",
+    "version": "1.0.0",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "John",
+            "email": "john@getjohn.co.uk"
+        }
+    ],
+    "require": {
+        "php": ">=7.4",
+        "magento/framework": ">=102.0",
+        "guzzlehttp/guzzle": "^7.0",
+        "ext-dom": "*",
+        "ext-json": "*",
+        "composer-plugin-api": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "GetJohn\\VendorChecker\\": "src/"
+        }
+    },
+    "extra": {
+        "class": "GetJohn\\VendorChecker\\ComposerPlugin"
+    }
+}
