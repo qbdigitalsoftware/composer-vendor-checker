@@ -11,13 +11,13 @@ namespace GetJohn\VendorChecker\Service;
 class ComposerIntegration
 {
     /** @var string */
-    private $composerLockPath;
+    protected $composerLockPath;
 
     /** @var VersionChecker */
-    private $versionChecker;
+    protected $versionChecker;
 
     /** @var array Known package URL mappings */
-    private $packageUrlMappings = [
+    protected $packageUrlMappings = [
         // Amasty modules
         'amasty/module-admin-actions-log' => 'https://amasty.com/admin-actions-log-for-magento-2.html',
         'amasty/promo' => 'https://amasty.com/special-promotions-for-magento-2.html',
@@ -202,7 +202,7 @@ class ComposerIntegration
      * @param string $latest
      * @return string
      */
-    private function compareVersions($installed, $latest)
+    protected function compareVersions($installed, $latest)
     {
         // Remove 'v' prefix if present
         $installed = ltrim($installed, 'v');

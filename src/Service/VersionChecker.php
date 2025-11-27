@@ -14,10 +14,10 @@ use GuzzleHttp\Exception\GuzzleException;
 class VersionChecker
 {
     /** @var Client */
-    private $httpClient;
+    protected $httpClient;
 
     /** @var array Vendor-specific patterns */
-    private $vendorPatterns = [
+    protected $vendorPatterns = [
         'amasty.com' => [
             'version_pattern' => '/Version\s+(\d+\.\d+\.\d+)/i',
             'changelog_pattern' => '/<h3[^>]*>Version\s+(\d+\.\d+\.\d+)[^<]*<\/h3>\s*<p[^>]*>([^<]+)<\/p>/i',
@@ -54,6 +54,20 @@ class VersionChecker
     ];
 
     /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->httpClient = new Client([
+            'timeout' => 30,
+            'verify' => true,
+            'headers' => [
+                'User-Agent' => 'Mozilla/5.0 (compatible; MagentoVersionChecker/1.0)'
+            ]
+        ]);
+    }
+
+    /**
      * Get list of supported vendor domains
      *
      * @return array
@@ -73,20 +87,6 @@ class VersionChecker
     {
         $parts = explode('/', $packageName);
         return isset($parts[0]) ? $parts[0] : null;
-    }
-
-    /**
-     * Constructor
-     */
-    public function __construct()
-    {
-        $this->httpClient = new Client([
-            'timeout' => 30,
-            'verify' => true,
-            'headers' => [
-                'User-Agent' => 'Mozilla/5.0 (compatible; MagentoVersionChecker/1.0)'
-            ]
-        ]);
     }
 
     /**
@@ -181,7 +181,7 @@ class VersionChecker
      * @param string $package
      * @return string|null
      */
-    private function getComposerVersion($package)
+    protected function getComposerVersion($package)
     {
         $command = "composer show {$package} 2>/dev/null | grep 'versions' | head -n1";
         $output = shell_exec($command);
@@ -199,7 +199,7 @@ class VersionChecker
      * @param string $package
      * @return string|null
      */
-    private function getMarketplaceVersion($package)
+    protected function getMarketplaceVersion($package)
     {
         // Convert composer package name to marketplace URL
         $marketplaceUrl = $this->getMarketplaceUrl($package);
@@ -234,7 +234,7 @@ class VersionChecker
      * @param string $package
      * @return string|null
      */
-    private function getMarketplaceUrl($package)
+    protected function getMarketplaceUrl($package)
     {
         // This is a simplified version - you may need to maintain a mapping
         $packageName = str_replace(['/', '-'], '', $package);
@@ -247,14 +247,14 @@ class VersionChecker
      * @param string $url
      * @return string
      */
-    private function detectVendor($url)
+    protected function detectVendor($url)
     {
         foreach (array_keys($this->vendorPatterns) as $vendor) {
             if (strpos($url, $vendor) !== false) {
                 return $vendor;
             }
         }
-        return 'amasty.com'; // Default fallback
+	return null;
     }
 
     /**
@@ -264,7 +264,7 @@ class VersionChecker
      * @param array $patterns
      * @return string|null
      */
-    private function extractVersion($html, $patterns)
+    protected function extractVersion($html, $patterns)
     {
         if (preg_match($patterns['version_pattern'], $html, $matches)) {
             return $matches[1];
@@ -280,7 +280,7 @@ class VersionChecker
      * @param array $patterns
      * @return array
      */
-    private function extractChangelog($html, $patterns)
+    protected function extractChangelog($html, $patterns)
     {
         $changelog = [];
 

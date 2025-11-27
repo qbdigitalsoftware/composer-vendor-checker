@@ -134,7 +134,7 @@ EOF
      * @param bool $jsonOutput
      * @return int
      */
-    private function checkSingleUrl($url, OutputInterface $output, $verbose, $jsonOutput)
+    protected function checkSingleUrl($url, OutputInterface $output, $verbose, $jsonOutput)
     {
         $checker = new VersionChecker();
         
@@ -173,7 +173,7 @@ EOF
      * @param bool $jsonOutput
      * @return int
      */
-    private function checkMultiplePackages(array $packages, OutputInterface $output, $verbose, $compareSources, $jsonOutput)
+    protected function checkMultiplePackages(array $packages, OutputInterface $output, $verbose, $compareSources, $jsonOutput)
     {
         $checker = new VersionChecker();
         $integration = new ComposerIntegration('./composer.lock');
@@ -209,7 +209,7 @@ EOF
      * @param bool $jsonOutput
      * @return int
      */
-    private function checkAllPackages($path, OutputInterface $output, $verbose, $compareSources, $jsonOutput)
+    protected function checkAllPackages($path, OutputInterface $output, $verbose, $compareSources, $jsonOutput)
     {
         if (!file_exists($path)) {
             $output->writeln("<error>composer.lock not found at: $path</error>");
@@ -250,7 +250,7 @@ EOF
      * @param OutputInterface $output
      * @param bool $verbose
      */
-    private function displaySingleResult(array $result, OutputInterface $output, $verbose)
+    protected function displaySingleResult(array $result, OutputInterface $output, $verbose)
     {
         if (isset($result['error'])) {
             $output->writeln("<error>Error: {$result['error']}</error>");
@@ -281,7 +281,7 @@ EOF
      * @param bool $verbose
      * @param bool $compareSources
      */
-    private function displayResults(array $results, OutputInterface $output, $verbose, $compareSources)
+    protected function displayResults(array $results, OutputInterface $output, $verbose, $compareSources)
     {
         foreach ($results as $package => $data) {
             $output->writeln("<info>Package:</info> $package");
