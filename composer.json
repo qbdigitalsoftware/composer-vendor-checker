@@ -1,5 +1,5 @@
 {
-    "name": "getjohn/magento2-vendor-checker",
+    "name": "getjohn/module-composer-vendor-checker",
     "description": "Magento 2 module to check vendor websites for latest module versions",
     "type": "composer-plugin",
     "version": "1.0.0",
