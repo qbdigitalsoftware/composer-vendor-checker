@@ -16,37 +16,37 @@ class VersionChecker
     /** @var Client */
     protected $httpClient;
 
-    /** @var array Vendor-specific patterns */
+    /** @var array Vendor-specific patterns keyed by composer vendor name */
     protected $vendorPatterns = [
-        'amasty.com' => [
+        'amasty' => [ 'url_match' => 'amasty.com',
             'version_pattern' => '/Version\s+(\d+\.\d+\.\d+)/i',
             'changelog_pattern' => '/<h3[^>]*>Version\s+(\d+\.\d+\.\d+)[^<]*<\/h3>\s*<p[^>]*>([^<]+)<\/p>/i',
             'changelog_section' => '/<div[^>]*class="[^"]*changelog[^"]*"[^>]*>(.*?)<\/div>/is'
         ],
-        'mageplaza.com' => [
+        'mageplaza' => [ 'url_match' => 'mageplaza.com',
             'version_pattern' => '/v(\d+\.\d+\.\d+)/i',
             'changelog_pattern' => '/##\s*v?(\d+\.\d+\.\d+)\s*\(([^)]+)\)(.*?)(?=##|$)/s',
             'composer_pattern' => '/composer\s+require\s+([\w\-\/]+)/i'
         ],
-        'bsscommerce.com' => [
+        'bsscommerce' => [ 'url_match' => 'bsscommerce.com',
             'version_pattern' => '/Version:?\s*(\d+\.\d+\.\d+)/i',
             'changelog_pattern' => '/<h4[^>]*>(\d+\.\d+\.\d+)[^<]*<\/h4>\s*<ul>(.*?)<\/ul>/is'
         ],
-        'aheadworks.com' => [
+        'aheadworks' => [ 'url_match' => 'aheadworks.com',
             'version_pattern' => '/Version\s+(\d+\.\d+\.\d+)/i',
             'changelog_pattern' => '/Release\s+(\d+\.\d+\.\d+)\s*-\s*([^<\n]+)/i'
         ],
-        'mageme.com' => [
+        'mageme' => [ 'url_match' => 'mageme.com',
             'version_pattern' => '/(\d+\.\d+\.\d+)/i',
             'changelog_pattern' => '/(\d+\.\d+\.\d+)\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d+\s+\d{4}/i',
             'changelog_section' => '/CHANGE\s+LOG(.*?)(?=Frequently|$)/is'
         ],
-        'mageworx.com' => [
+        'mageworx' => [ 'url_match' => 'mageworx.com',
             'version_pattern' => '/Version:?\s*(\d+\.\d+\.\d+)/i',
             'changelog_pattern' => '/Version:?\s*(\d+\.\d+\.\d+)\s*\(([^)]+)\)/i',
             'changelog_section' => '/<div[^>]*class="[^"]*changelog[^"]*"[^>]*>(.*?)<\/div>/is'
         ],
-        'xtento.com' => [
+        'xtento' => [ 'url_match' => 'xtento.com',
             'version_pattern' => '/Version:?\s*(\d+\.\d+\.\d+)/i',
             'changelog_pattern' => '/=====\s*(\d+\.\d+\.\d+)\s*=====\s*\*(.*?)(?======|$)/s',
             'changelog_section' => '/CHANGELOG(.*?)(?=This extension|$)/is'
@@ -103,13 +103,13 @@ class VersionChecker
             $html = (string) $response->getBody();
 
             $vendor = $this->detectVendor($url);
-            $patterns = $this->vendorPatterns[$vendor] ?? $this->vendorPatterns['amasty.com'];
+            $vendor_info = $this->vendorPatterns[$vendor];
 
             // Extract version
-            $version = $this->extractVersion($html, $patterns);
+            $version = $this->extractVersion($html, $vendor_info);
             
             // Extract changelog
-            $changelog = $this->extractChangelog($html, $patterns);
+            $changelog = $this->extractChangelog($html, $vendor_info);
 
             return [
                 'url' => $url,
@@ -120,7 +120,7 @@ class VersionChecker
             ];
 
         } catch (GuzzleException $e) {
-            throw new \Exception("Failed to fetch URL: " . $e->getMessage());
+            throw new \Exception("Failed to fetch {$url}: " . $e->getMessage());
         }
     }
 
@@ -181,8 +181,9 @@ class VersionChecker
      * @param string $package
      * @return string|null
      */
-    protected function getComposerVersion($package)
+    protected function getComposerVersion($package, $publicOnly = false)
     {
+	//TODO if($publicOnly) { .... somehow ignore auth.json and COMPOSER_AUTH }
         $command = "composer show {$package} 2>/dev/null | grep 'versions' | head -n1";
         $output = shell_exec($command);
         
@@ -249,24 +250,24 @@ class VersionChecker
      */
     protected function detectVendor($url)
     {
-        foreach (array_keys($this->vendorPatterns) as $vendor) {
-            if (strpos($url, $vendor) !== false) {
+        foreach ($this->vendorPatterns as $vendor => $vendor_info) {
+            if (strpos($url, $vendor_info['url_match']) !== false) {
                 return $vendor;
             }
         }
-	return null;
+        throw new \Exception("Unknown vendor for ".$url);
     }
 
     /**
      * Extract version from HTML
      *
      * @param string $html
-     * @param array $patterns
+     * @param array $vendor_info
      * @return string|null
      */
-    protected function extractVersion($html, $patterns)
+    protected function extractVersion($html, $vendor_info)
     {
-        if (preg_match($patterns['version_pattern'], $html, $matches)) {
+        if (preg_match($vendor_info['version_pattern'], $html, $matches)) {
             return $matches[1];
         }
 
@@ -277,20 +278,20 @@ class VersionChecker
      * Extract changelog from HTML
      *
      * @param string $html
-     * @param array $patterns
+     * @param array $vendor_info
      * @return array
      */
-    protected function extractChangelog($html, $patterns)
+    protected function extractChangelog($html, $vendor_info)
     {
         $changelog = [];
 
         // Try to find changelog section first
-        if (isset($patterns['changelog_section']) && preg_match($patterns['changelog_section'], $html, $sectionMatch)) {
+        if (isset($vendor_info['changelog_section']) && preg_match($vendor_info['changelog_section'], $html, $sectionMatch)) {
             $html = $sectionMatch[1];
         }
 
         // Extract changelog entries
-        if (preg_match_all($patterns['changelog_pattern'], $html, $matches, PREG_SET_ORDER)) {
+        if (preg_match_all($vendor_info['changelog_pattern'], $html, $matches, PREG_SET_ORDER)) {
             foreach ($matches as $match) {
                 $entry = [
                     'version' => $match[1],
