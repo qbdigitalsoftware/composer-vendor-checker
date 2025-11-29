@@ -2,7 +2,6 @@
     "name": "getjohn/module-composer-vendor-checker",
     "description": "Magento 2 module to check vendor websites for latest module versions",
     "type": "composer-plugin",
-    "version": "1.0.0",
     "license": "MIT",
     "authors": [
         {
@@ -19,6 +18,9 @@
         "composer-plugin-api": "^2.0"
     },
     "autoload": {
+        "files": [
+            "registration.php"
+	],
         "psr-4": {
             "GetJohn\\VendorChecker\\": "src/"
         }
