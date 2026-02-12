@@ -13,8 +13,17 @@ class ComposerIntegration
     /** @var string */
     protected $composerLockPath;
 
+    /** @var string|null Path to composer.json (for reading repository definitions) */
+    protected $composerJsonPath;
+
+    /** @var string|null Path to auth.json (for private repo credentials) */
+    protected $authJsonPath;
+
     /** @var VersionChecker */
     protected $versionChecker;
+
+    /** @var array Cached private repo config: ['package' => ['repo_url' => '...', 'auth' => [...]]] */
+    protected $privateRepoMap = [];
 
     /** @var array Known package URL mappings for vendor website scraping */
     protected $packageUrlMappings = [
@@ -73,11 +82,137 @@ class ComposerIntegration
      * Constructor
      *
      * @param string $composerLockPath
+     * @param string|null $composerJsonPath Path to composer.json for repo definitions
+     * @param string|null $authJsonPath Path to auth.json for private repo credentials
      */
-    public function __construct($composerLockPath = './composer.lock')
+    public function __construct($composerLockPath = './composer.lock', $composerJsonPath = null, $authJsonPath = null)
     {
         $this->composerLockPath = $composerLockPath;
+        $this->composerJsonPath = $composerJsonPath;
+        $this->authJsonPath = $authJsonPath;
         $this->versionChecker = new VersionChecker();
+
+        if ($composerJsonPath && $authJsonPath) {
+            $this->buildPrivateRepoMap();
+        }
+    }
+
+    /**
+     * Build a map of packages to their private Composer repos + auth credentials
+     * Reads composer.json for repo URLs and auth.json for credentials
+     */
+    protected function buildPrivateRepoMap()
+    {
+        if (!file_exists($this->composerJsonPath) || !file_exists($this->authJsonPath)) {
+            return;
+        }
+
+        $composerJson = json_decode(file_get_contents($this->composerJsonPath), true);
+        $authJson = json_decode(file_get_contents($this->authJsonPath), true);
+
+        if (!$composerJson || !$authJson) {
+            return;
+        }
+
+        $repos = $composerJson['repositories'] ?? [];
+        $httpBasic = $authJson['http-basic'] ?? [];
+
+        // Hosts to skip — Magento core, internal satis, and marketplace repos
+        $skipHosts = [
+            'repo.magento.com',
+            'marketplace.magento.com',
+        ];
+
+        // Host patterns to skip — agency/client satis repos with custom modules
+        $skipPatterns = [
+            '/\.satis\./i',         // e.g. cisco.satis.getjohn.co.uk
+            '/\.getjohn\./i',       // e.g. any getjohn internal repo
+        ];
+
+        // Build list of private Composer repos with their auth
+        $privateRepos = [];
+        foreach ($repos as $repo) {
+            if (!is_array($repo)) {
+                continue;
+            }
+            $type = $repo['type'] ?? '';
+            $url = $repo['url'] ?? '';
+
+            if (!in_array($type, ['composer', '']) || empty($url)) {
+                continue;
+            }
+
+            // Match repo URL host against auth.json keys
+            $host = parse_url($url, PHP_URL_HOST);
+            if (!$host || in_array($host, $skipHosts)) {
+                continue;
+            }
+
+            // Skip hosts matching internal patterns
+            $skipThis = false;
+            foreach ($skipPatterns as $pattern) {
+                if (preg_match($pattern, $host)) {
+                    $skipThis = true;
+                    break;
+                }
+            }
+            if ($skipThis) {
+                continue;
+            }
+            if (isset($httpBasic[$host]['username'], $httpBasic[$host]['password'])) {
+                $privateRepos[] = [
+                    'url' => $url,
+                    'host' => $host,
+                    'auth' => [
+                        'username' => $httpBasic[$host]['username'],
+                        'password' => $httpBasic[$host]['password'],
+                    ]
+                ];
+            }
+        }
+
+        if (empty($privateRepos)) {
+            return;
+        }
+
+        // Read lock file to see which packages came from which repo
+        if (!file_exists($this->composerLockPath)) {
+            return;
+        }
+
+        $lockData = json_decode(file_get_contents($this->composerLockPath), true);
+        $packages = $lockData['packages'] ?? [];
+
+        foreach ($packages as $pkg) {
+            $name = $pkg['name'] ?? '';
+            $distUrl = $pkg['dist']['url'] ?? '';
+            $notificationUrl = $pkg['notification-url'] ?? '';
+
+            // Match package to its private repo by dist URL or notification URL
+            foreach ($privateRepos as $repo) {
+                if (
+                    (strpos($distUrl, $repo['host']) !== false) ||
+                    (strpos($notificationUrl, $repo['host']) !== false)
+                ) {
+                    $this->privateRepoMap[$name] = [
+                        'repo_url' => $repo['url'],
+                        'auth' => $repo['auth'],
+                    ];
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * Get private repo configuration for a package
+     *
+     * @param string $packageName
+     * @return array|null ['repo_url' => '...', 'auth' => ['username' => '...', 'password' => '...']]
+     */
+    public function getPrivateRepoConfig($packageName)
+    {
+        return $this->privateRepoMap[$packageName] ?? null;
     }
 
     /**
@@ -162,6 +297,17 @@ class ComposerIntegration
                     'url' => null,
                     'check_method' => 'packagist'
                 ];
+                continue;
+            }
+
+            // Include if we have private repo credentials for it
+            if (isset($this->privateRepoMap[$packageName])) {
+                $packages[$packageName] = [
+                    'name' => $packageName,
+                    'version' => $package['version'],
+                    'url' => null,
+                    'check_method' => 'private_repo'
+                ];
             }
         }
 
@@ -206,6 +352,41 @@ class ComposerIntegration
                         'error' => 'Package not found on Packagist',
                         'checked_at' => date('Y-m-d H:i:s')
                     ];
+                }
+                continue;
+            }
+
+            // Private Composer repo check
+            if ($checkMethod === 'private_repo') {
+                $repoConfig = $this->getPrivateRepoConfig($packageName);
+                if ($repoConfig) {
+                    $latestVersion = $this->versionChecker->getPrivateRepoVersion(
+                        $packageName,
+                        $repoConfig['repo_url'],
+                        $repoConfig['auth']
+                    );
+                    if ($latestVersion !== null) {
+                        $results[] = [
+                            'package' => $packageName,
+                            'installed_version' => $packageInfo['version'],
+                            'latest_version' => $latestVersion,
+                            'vendor_url' => $repoConfig['repo_url'],
+                            'source' => 'private_repo',
+                            'status' => $this->compareVersions($packageInfo['version'], $latestVersion),
+                            'checked_at' => date('Y-m-d H:i:s')
+                        ];
+                    } else {
+                        $results[] = [
+                            'package' => $packageName,
+                            'installed_version' => $packageInfo['version'],
+                            'latest_version' => 'N/A',
+                            'vendor_url' => $repoConfig['repo_url'],
+                            'source' => 'private_repo',
+                            'status' => 'UNAVAILABLE',
+                            'error' => 'Could not resolve version from private repo (auth may be expired)',
+                            'checked_at' => date('Y-m-d H:i:s')
+                        ];
+                    }
                 }
                 continue;
             }
@@ -312,7 +493,7 @@ class ComposerIntegration
             // Status symbol
             $statusSymbol = '?';
             $statusColor = '';
-            
+
             switch ($status) {
                 case 'UP_TO_DATE':
                     $statusSymbol = '✓';
@@ -336,7 +517,11 @@ class ComposerIntegration
             }
 
             $source = isset($result['source']) ? $result['source'] : '';
-            $sourceLabel = ($source === 'packagist') ? ' [via Packagist]' : '';
+            $sourceLabels = [
+                'packagist' => ' [via Packagist]',
+                'private_repo' => ' [via Private Repo]',
+            ];
+            $sourceLabel = $sourceLabels[$source] ?? '';
 
             $report[] = sprintf("  %s  %-50s", $statusSymbol, $package);
             $report[] = sprintf("      Installed: %-20s  Latest: %s%s", $installed, $latest, $sourceLabel);
@@ -347,11 +532,11 @@ class ComposerIntegration
                     $report[] = sprintf("        • %s - %s", $change['version'], $change['date']);
                 }
             }
-            
+
             if (isset($result['error'])) {
                 $report[] = "      Error: " . $result['error'];
             }
-            
+
             $report[] = "";
         }
 

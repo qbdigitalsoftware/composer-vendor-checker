@@ -159,6 +159,155 @@ class VersionChecker
     }
 
     /**
+     * Get latest stable version from a private Composer repository (Satis)
+     *
+     * @param string $packageName e.g. 'amasty/promo'
+     * @param string $repoUrl Base URL of the Composer repo (e.g. 'https://composer.amasty.com/enterprise/')
+     * @param array $auth ['username' => '...', 'password' => '...']
+     * @return string|null
+     */
+    public function getPrivateRepoVersion($packageName, $repoUrl, array $auth)
+    {
+        if (!isset($auth['username'], $auth['password'])) {
+            return null;
+        }
+        $repoUrl = rtrim($repoUrl, '/');
+
+        // Try Composer V2 provider format first: p2/{vendor}/{package}.json
+        $endpoints = [
+            "{$repoUrl}/p2/{$packageName}.json",
+            "{$repoUrl}/p/{$packageName}.json",
+            "{$repoUrl}/packages.json",
+        ];
+
+        $authOptions = [
+            'auth' => [$auth['username'], $auth['password']],
+            'timeout' => 15,
+        ];
+
+        foreach ($endpoints as $endpoint) {
+            try {
+                $body = (string) $this->httpClient->get($endpoint, $authOptions)->getBody();
+                $data = json_decode($body, true);
+                if (!$data) {
+                    continue;
+                }
+
+                // Direct package endpoint (p2/ or p/ format)
+                if (isset($data['packages'][$packageName])) {
+                    return $this->extractLatestStableFromRepo($data['packages'][$packageName]);
+                }
+
+                // Full packages.json — look for our package inside
+                if (isset($data['packages']) && is_array($data['packages'])) {
+                    foreach ($data['packages'] as $name => $versions) {
+                        if ($name === $packageName) {
+                            return $this->extractLatestStableFromRepo($versions);
+                        }
+                    }
+                }
+
+                // Satis with provider includes
+                if (isset($data['provider-includes']) || isset($data['providers-url'])) {
+                    $version = $this->resolveFromSatisProviders($data, $packageName, $repoUrl, $auth);
+                    if ($version !== null) {
+                        return $version;
+                    }
+                }
+
+            } catch (\Exception $e) {
+                // Try next endpoint
+                continue;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Extract latest stable version from a Composer repo version list
+     *
+     * @param array $versions Array of version entries from packages.json
+     * @return string|null
+     */
+    protected function extractLatestStableFromRepo(array $versions)
+    {
+        $stableVersions = [];
+
+        foreach ($versions as $key => $release) {
+            // Handle both indexed arrays and version-keyed arrays
+            $version = is_array($release) ? ($release['version'] ?? $key) : $key;
+            $version = ltrim($version, 'v');
+
+            // Skip dev/alpha/beta/RC
+            if (preg_match('/dev|alpha|beta|rc/i', $version)) {
+                continue;
+            }
+
+            if (preg_match('/^\d+\.\d+(\.\d+)?/', $version, $m)) {
+                $stableVersions[] = $m[0];
+            }
+        }
+
+        if (empty($stableVersions)) {
+            return null;
+        }
+
+        usort($stableVersions, 'version_compare');
+        return end($stableVersions);
+    }
+
+    /**
+     * Resolve version from Satis provider includes
+     *
+     * @param array $rootData Root packages.json data
+     * @param string $packageName
+     * @param string $repoUrl
+     * @param array $auth
+     * @return string|null
+     */
+    protected function resolveFromSatisProviders(array $rootData, $packageName, $repoUrl, array $auth)
+    {
+        $authOptions = [
+            'auth' => [$auth['username'], $auth['password']],
+            'timeout' => 15,
+        ];
+
+        if (isset($rootData['provider-includes'])) {
+            foreach ($rootData['provider-includes'] as $template => $meta) {
+                $hash = $meta['sha256'] ?? '';
+                $url = $repoUrl . '/' . str_replace('%hash%', $hash, $template);
+
+                try {
+                    $body = (string) $this->httpClient->get($url, $authOptions)->getBody();
+                    $providers = json_decode($body, true);
+
+                    if (isset($providers['providers'][$packageName])) {
+                        $pkgHash = $providers['providers'][$packageName]['sha256'] ?? '';
+                        $providersUrl = $rootData['providers-url'] ?? '/p/%package%$%hash%.json';
+                        $pkgUrl = $repoUrl . '/' . str_replace(
+                            ['%package%', '%hash%'],
+                            [$packageName, $pkgHash],
+                            ltrim($providersUrl, '/')
+                        );
+
+                        $pkgBody = (string) $this->httpClient->get($pkgUrl, $authOptions)->getBody();
+                        $pkgData = json_decode($pkgBody, true);
+
+                        if (isset($pkgData['packages'][$packageName])) {
+                            return $this->extractLatestStableFromRepo($pkgData['packages'][$packageName]);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Get latest stable version from Packagist API
      *
      * @param string $packageName e.g. 'amasty/promo'
@@ -208,7 +357,7 @@ class VersionChecker
     public function checkMultiplePackages(array $packages, array $options = [])
     {
         $results = [];
-        
+
         foreach ($packages as $package) {
             $packageResult = [
                 'package' => $package
@@ -260,7 +409,7 @@ class VersionChecker
 	//TODO if($publicOnly) { .... somehow ignore auth.json and COMPOSER_AUTH }
         $command = "composer show {$package} 2>/dev/null | grep 'versions' | head -n1";
         $output = shell_exec($command);
-        
+
         if ($output && preg_match('/\*\s*([0-9.]+)/', $output, $matches)) {
             return $matches[1];
         }
@@ -278,7 +427,7 @@ class VersionChecker
     {
         // Convert composer package name to marketplace URL
         $marketplaceUrl = $this->getMarketplaceUrl($package);
-        
+
         if (!$marketplaceUrl) {
             return null;
         }
