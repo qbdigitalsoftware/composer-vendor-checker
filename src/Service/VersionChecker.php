@@ -47,7 +47,8 @@ class VersionChecker
             'changelog_section' => '/<div[^>]*class="[^"]*changelog[^"]*"[^>]*>(.*?)<\/div>/is'
         ],
         'xtento' => [ 'url_match' => 'xtento.com',
-            'version_pattern' => '/Version:?\s*(\d+\.\d+\.\d+)/i',
+            'version_pattern' => '/Version:\s*(\d+\.\d+\.\d+)/',
+            'version_select' => 'highest',
             'changelog_pattern' => '/=====\s*(\d+\.\d+\.\d+)\s*=====\s*\*(.*?)(?======|$)/s',
             'changelog_section' => '/CHANGELOG(.*?)(?=This extension|$)/is'
         ]
@@ -62,7 +63,7 @@ class VersionChecker
             'timeout' => 30,
             'verify' => true,
             'headers' => [
-                'User-Agent' => 'Mozilla/5.0 (compatible; MagentoVersionChecker/1.0)'
+                'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             ]
         ]);
     }
@@ -91,12 +92,14 @@ class VersionChecker
 
     /**
      * Get version information from a vendor website
+     * Falls back to Packagist API if website scraping fails or returns no version
      *
      * @param string $url
+     * @param string|null $packageName Composer package name for Packagist fallback
      * @return array
      * @throws \Exception
      */
-    public function getVendorVersion($url)
+    public function getVendorVersion($url, $packageName = null)
     {
         try {
             $response = $this->httpClient->get($url);
@@ -107,21 +110,92 @@ class VersionChecker
 
             // Extract version
             $version = $this->extractVersion($html, $vendor_info);
-            
+            $source = 'vendor_website';
+
             // Extract changelog
             $changelog = $this->extractChangelog($html, $vendor_info);
+
+            // If website returned no version, try Packagist as fallback
+            if ($version === null && $packageName !== null) {
+                $version = $this->getPackagistVersion($packageName);
+                if ($version !== null) {
+                    $source = 'packagist';
+                }
+            }
 
             return [
                 'url' => $url,
                 'vendor' => $vendor,
                 'latest_version' => $version,
                 'changelog' => $changelog,
+                'source' => $source,
                 'checked_at' => date('Y-m-d H:i:s')
             ];
 
         } catch (GuzzleException $e) {
-            throw new \Exception("Failed to fetch {$url}: " . $e->getMessage());
+            // Website unreachable (e.g., Cloudflare block) — try Packagist fallback
+            if ($packageName !== null) {
+                $version = $this->getPackagistVersion($packageName);
+                if ($version !== null) {
+                    return [
+                        'url' => $url,
+                        'vendor' => $this->getVendorFromPackage($packageName) ?? 'unknown',
+                        'latest_version' => $version,
+                        'changelog' => [],
+                        'source' => 'packagist',
+                        'checked_at' => date('Y-m-d H:i:s')
+                    ];
+                }
+            }
+
+            // Detect Cloudflare protection
+            $message = $e->getMessage();
+            if (strpos($message, '403') !== false && strpos($message, 'Just a moment') !== false) {
+                throw new \Exception("Cloudflare protection detected on {$url} — website requires browser verification");
+            }
+
+            throw new \Exception("Failed to fetch {$url}: " . $message);
         }
+    }
+
+    /**
+     * Get latest stable version from Packagist API
+     *
+     * @param string $packageName e.g. 'amasty/promo'
+     * @return string|null
+     */
+    public function getPackagistVersion($packageName)
+    {
+        try {
+            $response = $this->httpClient->get(
+                "https://repo.packagist.org/p2/{$packageName}.json"
+            );
+            $data = json_decode((string) $response->getBody(), true);
+
+            if (!isset($data['packages'][$packageName])) {
+                return null;
+            }
+
+            // Versions are sorted newest-first; find the first stable release
+            foreach ($data['packages'][$packageName] as $release) {
+                $version = $release['version'] ?? '';
+
+                // Skip dev/alpha/beta/RC versions
+                if (preg_match('/dev|alpha|beta|rc/i', $version)) {
+                    continue;
+                }
+
+                $version = ltrim($version, 'v');
+
+                if (preg_match('/^\d+\.\d+(\.\d+)?/', $version)) {
+                    return $version;
+                }
+            }
+        } catch (\Exception $e) {
+            // Packagist unavailable or package not found — silent fail
+        }
+
+        return null;
     }
 
     /**
@@ -267,7 +341,26 @@ class VersionChecker
      */
     protected function extractVersion($html, $vendor_info)
     {
-        if (preg_match($vendor_info['version_pattern'], $html, $matches)) {
+        $content = $html;
+
+        // Apply section filter to isolate relevant content
+        if (isset($vendor_info['section_filter'])) {
+            if (preg_match($vendor_info['section_filter'], $html, $sectionMatch)) {
+                $content = $sectionMatch[0];
+            }
+        }
+
+        // If version_select is 'highest', find all matches and return the highest version
+        if (isset($vendor_info['version_select']) && $vendor_info['version_select'] === 'highest') {
+            if (preg_match_all($vendor_info['version_pattern'], $content, $matches)) {
+                $versions = $matches[1];
+                usort($versions, 'version_compare');
+                return end($versions);
+            }
+            return null;
+        }
+
+        if (preg_match($vendor_info['version_pattern'], $content, $matches)) {
             return $matches[1];
         }
 
