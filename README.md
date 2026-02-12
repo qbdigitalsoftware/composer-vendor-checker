@@ -1,32 +1,61 @@
 # Magento 2 Vendor Version Checker
 
-A Magento 2 module that adds a `composer vendor:check` command to check vendor websites for the latest module versions, helping you identify when updates are available that might not yet be reflected in Composer or the Magento Marketplace.
+A Composer plugin that checks vendor websites, the Packagist API, and private Composer repositories for the latest module versions, helping identify when updates are available that may not yet be reflected in Composer or the Magento Marketplace.
 
 ## The Problem This Solves
 
-Sometimes `composer update` doesn't show the latest version that's advertised on a vendor's website. This can happen when:
+`composer update` doesn't always show the true latest version of a third-party module. This happens when:
 
 - The vendor hasn't pushed the update to Packagist yet
-- The Magento Marketplace listing is out of sync
-- There's a delay in the Composer repository cache
+- The version available through Composer repositories lags behind the vendor's latest release
+- The module is distributed via a private Composer repository with restricted access
 
-This tool checks **all three sources** (Composer, Marketplace, and vendor websites) to give you the complete picture.
+This tool checks **vendor websites**, the **Packagist API**, and **private Composer repositories** (with auth.json credentials) to give you the complete picture.
 
 ## Features
 
-- ✅ Custom Composer command: `composer vendor:check`
-- ✅ Check all installed vendor modules at once (only from supported vendors)
-- ✅ Check specific packages by name
-- ✅ Check a single vendor URL directly
-- ✅ Compare versions across Composer, Marketplace, and vendor sites
-- ✅ Detailed changelog information
-- ✅ JSON output for automation/CI pipelines
-- ✅ Support for major vendors: Amasty, Mageplaza, BSS Commerce, Aheadworks, MageMe, Mageworx, XTENTO
-- ✅ Automatically filters to only vendors with defined patterns
+- Custom Composer command: `composer vendor:check`
+- Checks all installed third-party modules at once
+- Three version sources: vendor website scraping, Packagist API, and private Composer repos
+- Auto-detects private repos from composer.json and authenticates via auth.json
+- Packagist-only tracking for packages without vendor website patterns
+- Cloudflare bot protection detection with clear error messaging
+- Intelligent version selection (`version_select: highest`) for pages with multiple versions
+- JSON output for CI/CD pipelines
+- HTML dashboard for visual reporting (TailwindCSS + Alpine.js)
+- UNAVAILABLE status for packages that can't be checked automatically
+
+## Supported Vendors
+
+### Website Scraping
+
+| Vendor | Status |
+|--------|--------|
+| Amasty | Cloudflare blocked |
+| Aheadworks | Cloudflare blocked |
+| BSS Commerce | Active |
+| MageMe | Active |
+| Mageplaza | Active |
+| MageWorx | No version on page |
+| XTENTO | Active |
+
+### Private Composer Repositories
+
+| Vendor | Repository | Status |
+|--------|-----------|--------|
+| Amasty | composer.amasty.com | Auth expired (needs project-level keys) |
+| MageWorx | packages.mageworx.com | Auth expired |
+| XTENTO | repo.xtento.com | Working |
+| Aheadworks | dist.aheadworks.com | Credentials present |
+| BSS Commerce | composer.bsscommerce.com | Credentials present |
+
+### Packagist API
+
+Justuno, Klaviyo, ParadoxLabs, Stripe, TaxJar, WebShopApps, Yotpo, and any package published to public Packagist.
 
 ## Installation
 
-### Via Composer (Recommended)
+### Via Composer
 
 ```bash
 composer require getjohn/magento2-vendor-checker
@@ -35,13 +64,12 @@ composer require getjohn/magento2-vendor-checker
 ### Manual Installation
 
 1. Clone or download this repository
-2. Place in `app/code/GetJohn/VendorChecker`
-3. Run Magento setup:
+2. Place in your project or as a path repository
+3. Require via Composer:
 
 ```bash
-php bin/magento module:enable GetJohn_VendorChecker
-php bin/magento setup:upgrade
-php bin/magento cache:flush
+composer config repositories.vendor-checker path /path/to/module
+composer require getjohn/magento2-vendor-checker
 ```
 
 ## Usage
@@ -52,18 +80,12 @@ php bin/magento cache:flush
 composer vendor:check
 ```
 
-This will scan your `composer.lock` file and check all known vendor modules for updates.
-
-**Note:** Only packages from supported vendors (Amasty, Mageplaza, BSS Commerce, Aheadworks) will be checked. Use `-v` flag to see which vendors are supported.
-
-```bash
-composer vendor:check -v
-```
+Scans `composer.lock` and checks all known vendor modules for updates. Packages are checked via their vendor website first, with Packagist API as a fallback.
 
 ### Check Specific Packages
 
 ```bash
-composer vendor:check --packages=amasty/promo,mageplaza/layered-navigation-m2-pro
+composer vendor:check --packages=amasty/promo,mageplaza/module-smtp
 ```
 
 ### Check a Single Vendor URL
@@ -72,33 +94,17 @@ composer vendor:check --packages=amasty/promo,mageplaza/layered-navigation-m2-pr
 composer vendor:check --url=https://amasty.com/admin-actions-log-for-magento-2.html
 ```
 
-### Compare Across Multiple Sources
-
-```bash
-composer vendor:check --compare-sources --packages=amasty/promo
-```
-
-This will show you:
-- Version from `composer show`
-- Version from Magento Marketplace
-- Version from vendor's website
-- Whether all three match
-
 ### Verbose Output with Changelog
 
 ```bash
 composer vendor:check -v
 ```
 
-Shows recent changelog entries for each module.
-
 ### JSON Output (for CI/CD)
 
 ```bash
 composer vendor:check --json
 ```
-
-Outputs results in JSON format for parsing in automated scripts.
 
 ### Custom composer.lock Path
 
@@ -120,148 +126,130 @@ composer vendor:check --path=/path/to/composer.lock
 ## Example Output
 
 ```
-╔════════════════════════════════════════════════════════════════════════════╗
-║                        Vendor Version Check Report                         ║
-╚════════════════════════════════════════════════════════════════════════════╝
+Vendor Version Check Report
+==============================================================================
 
-  ✓  amasty/module-admin-actions-log
-      Installed: 2.1.0              Latest: 2.1.0
+  UP_TO_DATE   yotpo/module-review
+               Installed: 3.3.0    Latest: 3.3.0 [via Packagist]
 
-  ↑  amasty/promo
-      Installed: 2.22.0             Latest: 2.23.1
-      Recent changes:
-        • 2.23.1 - Sep 15, 2024
-        • 2.23.0 - Aug 22, 2024
+  UPDATE       xtento/orderexport
+               Installed: 2.16.3   Latest: 2.17.6 [via Website]
 
-  ✓  mageplaza/layered-navigation-m2-pro
-      Installed: 4.5.13             Latest: 4.5.13
+  UPDATE       klaviyo/magento2-extension
+               Installed: 4.0.9    Latest: 4.4.2 [via Packagist]
 
-─────────────────────────────────────────────────────────────────────────────
-Summary: 2 up-to-date, 1 updates available, 0 errors
+  ERROR        amasty/promo
+               Cloudflare protection detected — website requires browser verification
+
+  UNAVAILABLE  stripe/stripe-payments
+               Package not found on Packagist
+
+------------------------------------------------------------------------------
+Summary: 1 up-to-date, 10 updates available, 7 errors, 4 unavailable
 ```
 
-## Supported Vendors
+## HTML Dashboard
 
-The module currently has built-in support for:
+The module generates an HTML dashboard at `docs/index.html` for visual reporting:
 
-- **Amasty** (amasty.com)
-- **Mageplaza** (mageplaza.com)
-- **BSS Commerce** (bsscommerce.com)
-- **Aheadworks** (aheadworks.com)
-- **MageMe** (mageme.com)
-- **Mageworx** (mageworx.com)
-- **XTENTO** (xtento.com)
+- Summary cards showing total/up-to-date/updates/unavailable/errors
+- Filterable results table with status indicators
+- Version source badges (Website / Packagist / Failed)
+- Module documentation and architecture reference
+- Works offline — data is inlined directly in the HTML (no CORS issues)
 
-## Adding Custom Package URLs
-
-If you have modules from other vendors or custom URLs, you can add them programmatically:
-
-```php
-<?php
-use GetJohn\VendorChecker\Service\ComposerIntegration;
-
-$integration = new ComposerIntegration('./composer.lock');
-$integration->addPackageUrlMapping(
-    'vendor/module-name',
-    'https://vendor.com/product-page.html'
-);
-```
-
-Or add them directly to the `$packageUrlMappings` array in:
-`src/Service/ComposerIntegration.php`
+To regenerate the dashboard after a scan, the runner script updates the inline data automatically.
 
 ## How It Works
 
-1. **Reads composer.lock** to get your installed packages
-2. **Checks known vendor URLs** for each package
-3. **Scrapes vendor websites** using intelligent pattern matching
-4. **Parses changelog sections** to extract version history
-5. **Compares versions** across all sources
-6. **Generates reports** with clear status indicators
+1. **Reads composer.lock, composer.json and auth.json** to identify installed packages, private repo URLs and credentials
+2. **Matches packages** against known vendor URL mappings, the Packagist registry, and private Composer repositories
+3. **Scrapes vendor websites** using vendor-specific regex patterns to extract the latest version
+4. **Queries private Composer repos** (Satis) with HTTP basic auth for vendors like Amasty, MageWorx and XTENTO
+5. **Falls back to Packagist API** when website scraping and private repo checks fail
+6. **Compares versions** and generates the report with source tracking
 
-## Use Cases
+### Version Sources
 
-### Daily Development
-```bash
-# Quick check before starting work
-composer vendor:check
+- **Website** — Directly scrapes the vendor's product page. Most accurate but subject to Cloudflare protection and page structure changes.
+- **Private Repo** — Queries the vendor's private Composer repository (Satis) using credentials from auth.json. Supports V2 (`p2/`), V1 (`p/`), full `packages.json`, and Satis provider-includes formats.
+- **Packagist** — Queries the public Packagist registry API (`repo.packagist.org/p2/`). Used as fallback and as primary source for packages without vendor website patterns.
+- **Failed** — Vendors behind Cloudflare with expired private repo credentials cannot be checked automatically.
+
+## Adding Custom Package URLs
+
+Add URL mappings in `src/Service/ComposerIntegration.php`:
+
+```php
+protected $packageUrlMappings = [
+    'vendor/module-name' => 'https://vendor.com/product-page.html',
+];
 ```
 
-### Pre-Upgrade Planning
-```bash
-# See what's changed in verbose mode
-composer vendor:check -v --packages=amasty/promo
+For Packagist-only packages:
+
+```php
+protected $packagistPackages = [
+    'vendor/module-name',
+];
 ```
 
-### CI/CD Pipeline
-```bash
-# Check for updates and fail build if critical updates exist
-composer vendor:check --json | jq '.[] | select(.status=="UPDATE_AVAILABLE")'
-```
+Private Composer repos are auto-detected from `composer.json` repository definitions and authenticated via `auth.json`. No manual configuration needed — just ensure valid credentials are present.
 
-### Multi-Source Validation
-```bash
-# Ensure all sources are in sync before deploying
-composer vendor:check --compare-sources
-```
+## Technical Architecture
+
+This module implements a Composer Plugin using the `composer-plugin-api ^2.0`:
+
+| File | Purpose |
+|------|---------|
+| `ComposerPlugin.php` | Registers the plugin with Composer |
+| `CommandProvider.php` | Provides the custom CLI command |
+| `VendorCheckCommand.php` | CLI command logic and output formatting |
+| `VersionChecker.php` | Core scraping engine, vendor patterns, Packagist API, private repo queries |
+| `ComposerIntegration.php` | composer.lock + composer.json + auth.json parsing, private repo map, report generation |
+
+## Known Limitations
+
+- **Amasty** — Website blocked by Cloudflare. Private Composer repo (`composer.amasty.com`) returns 403 because global keys were deprecated on 1 Jan 2026. Requires new project-level Composer keys from the Amasty customer portal.
+- **Aheadworks** — Website blocked by Cloudflare. Private repo credentials present in auth.json but repo format not yet verified.
+- **MageWorx** — Website does not display version numbers. Private repo (`packages.mageworx.com`) credentials present but returning errors — auth may be expired.
+- **XTENTO** — Private repo is working and successfully resolving versions via customer-specific XTENTO repository.
+- **Stripe Payments** — `stripe/stripe-payments` is distributed via Stripe's private Composer repository, not public Packagist.
+- **Website structure changes** — Vendor-specific regex patterns may need updating if vendors redesign their product pages.
 
 ## Requirements
 
 - PHP 7.4 or higher
 - Magento 2.4.x or higher
 - Composer 2.x
-- ext-dom
 - ext-json
-
-## Technical Architecture
-
-This module implements a Composer Plugin using the `composer-plugin-api`. The architecture consists of:
-
-- **ComposerPlugin.php** - Registers the plugin with Composer
-- **CommandProvider.php** - Provides the custom command
-- **VendorCheckCommand.php** - CLI command with all options
-- **VersionChecker.php** - Core scraping and version detection logic
-- **ComposerIntegration.php** - Integration with composer.lock and package management
+- guzzlehttp/guzzle (included in Magento)
 
 ## Troubleshooting
 
-### Command not found after installation
+### Command not found
 
 ```bash
-# Rebuild Composer autoload
 composer dump-autoload
 ```
 
 ### Package URL not found
 
-Check if the package has a URL mapping in `ComposerIntegration.php`. You can add custom mappings using `addPackageUrlMapping()`.
+Check `$packageUrlMappings` in `ComposerIntegration.php` or add the package to `$packagistPackages`.
 
 ### Vendor website changed structure
 
-The module uses pattern matching for each vendor. If a vendor changes their website structure, you may need to update the patterns in `VersionChecker.php` under the `$vendorPatterns` array.
+Update the regex patterns in `VersionChecker.php` under the `$vendorPatterns` array.
 
-## Contributing
+### Cloudflare blocked
 
-Found a vendor that's not supported? Want to improve the pattern matching? Contributions are welcome!
+Vendors using Cloudflare Managed Challenge cannot be scraped. If the package is on Packagist, the tool will fall back automatically. Otherwise it will report as ERROR with a clear message.
 
-1. Fork the repository
-2. Create a feature branch
-3. Add your changes
-4. Submit a pull request
+## Author
+
+**John @ GetJohn**
+https://getjohn.co.uk
 
 ## License
 
 MIT License - see LICENSE file for details
-
-## Author
-
-**John @ GetJohn**  
-https://getjohn.co.uk
-
-## Support
-
-For issues, questions, or feature requests, please open an issue on the GitHub repository.
-
----
-
-**Note**: This tool scrapes vendor websites and is subject to changes in their HTML structure. While we maintain patterns for major vendors, occasional updates may be needed if vendors redesign their sites.

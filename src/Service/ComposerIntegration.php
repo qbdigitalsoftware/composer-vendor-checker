@@ -125,7 +125,7 @@ class ComposerIntegration
 
         // Host patterns to skip — agency/client satis repos with custom modules
         $skipPatterns = [
-            '/\.satis\./i',         // e.g. cisco.satis.getjohn.co.uk
+            '/\.satis\./i',         // e.g. client.satis.getjohn.co.uk
             '/\.getjohn\./i',       // e.g. any getjohn internal repo
         ];
 
