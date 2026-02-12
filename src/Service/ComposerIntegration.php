@@ -84,12 +84,7 @@ class ComposerIntegration
      */
     public function getSupportedVendors()
     {
-        $supportedVendorDomains = $this->versionChecker->getSupportedVendors();
-        
-        // Extract vendor names from domains (e.g., 'amasty.com' -> 'amasty')
-        return array_map(function($domain) {
-            return explode('.', $domain)[0];
-        }, $supportedVendorDomains);
+        return $this->versionChecker->getSupportedVendors();
     }
 
     /**
@@ -111,13 +106,7 @@ class ComposerIntegration
             throw new \Exception("Invalid composer.lock format");
         }
 
-        // Get supported vendors from VersionChecker (vendors with patterns)
-        $supportedVendorDomains = $this->versionChecker->getSupportedVendors();
-        
-        // Extract vendor names from domains (e.g., 'amasty.com' -> 'amasty')
-        $supportedVendors = array_map(function($domain) {
-            return explode('.', $domain)[0];
-        }, $supportedVendorDomains);
+        $supportedVendors = $this->versionChecker->getSupportedVendors();
 
         $packages = [];
         
