@@ -8,6 +8,10 @@ namespace GetJohn\VendorChecker\Service;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Promise\Utils as PromiseUtils;
+use GuzzleHttp\Psr7\Request as Psr7Request;
+use GuzzleHttp\Psr7\Response as Psr7Response;
 
 /**
  * Service to check vendor websites for module versions
@@ -16,6 +20,9 @@ class VersionChecker
 {
     /** @var Client */
     protected $httpClient;
+
+    /** @var array Cached HTTP responses from warmCache, keyed by URL */
+    protected $bodyCache = [];
 
     /** @var array Vendor-specific patterns keyed by composer vendor name */
     protected $vendorPatterns = [
@@ -70,6 +77,84 @@ class VersionChecker
     }
 
     /**
+     * Pre-fetch multiple URLs concurrently to warm the response cache.
+     * Call this before running checks to parallelise HTTP I/O.
+     *
+     * @param array $urlConfigs ['url' => ['auth' => [...], 'timeout' => N], ...]
+     */
+    public function warmCache(array $urlConfigs)
+    {
+        if (empty($urlConfigs)) {
+            return;
+        }
+
+        $promises = [];
+        foreach ($urlConfigs as $url => $options) {
+            $requestOptions = ['http_errors' => false];
+            if (isset($options['auth'])) {
+                $requestOptions['auth'] = [$options['auth']['username'], $options['auth']['password']];
+            }
+            if (isset($options['timeout'])) {
+                $requestOptions['timeout'] = $options['timeout'];
+            }
+            $promises[$url] = $this->httpClient->getAsync($url, $requestOptions);
+        }
+
+        $settled = PromiseUtils::settle($promises)->wait();
+
+        foreach ($settled as $url => $result) {
+            if ($result['state'] === 'fulfilled') {
+                $response = $result['value'];
+                $this->bodyCache[$url] = [
+                    'status' => $response->getStatusCode(),
+                    'headers' => $response->getHeaders(),
+                    'body' => (string) $response->getBody(),
+                ];
+            } else {
+                $this->bodyCache[$url] = [
+                    'status' => 0,
+                    'headers' => [],
+                    'body' => '',
+                    'network_error' => $result['reason']->getMessage(),
+                ];
+            }
+        }
+    }
+
+    /**
+     * Fetch a URL body, using the warm cache if available.
+     *
+     * @param string $url
+     * @param array $options Guzzle request options (only used for non-cached requests)
+     * @return string Response body
+     * @throws GuzzleException
+     */
+    protected function cachedGet($url, array $options = [])
+    {
+        if (isset($this->bodyCache[$url])) {
+            $cached = $this->bodyCache[$url];
+
+            if (isset($cached['network_error'])) {
+                throw new ConnectException(
+                    $cached['network_error'],
+                    new Psr7Request('GET', $url)
+                );
+            }
+
+            if ($cached['status'] >= 400) {
+                throw RequestException::create(
+                    new Psr7Request('GET', $url),
+                    new Psr7Response($cached['status'], $cached['headers'] ?? [], $cached['body'])
+                );
+            }
+
+            return $cached['body'];
+        }
+
+        return (string) $this->httpClient->get($url, $options)->getBody();
+    }
+
+    /**
      * Get list of supported vendor domains
      *
      * @return array
@@ -103,8 +188,7 @@ class VersionChecker
     public function getVendorVersion($url, $packageName = null)
     {
         try {
-            $response = $this->httpClient->get($url);
-            $html = (string) $response->getBody();
+            $html = $this->cachedGet($url);
 
             $vendor = $this->detectVendor($url);
             $vendor_info = $this->vendorPatterns[$vendor];
@@ -213,7 +297,7 @@ class VersionChecker
 
         foreach ($endpoints as $endpoint) {
             try {
-                $body = (string) $this->httpClient->get($endpoint, $authOptions)->getBody();
+                $body = $this->cachedGet($endpoint, $authOptions);
                 $data = json_decode($body, true);
                 if (!$data) {
                     continue;
@@ -305,7 +389,7 @@ class VersionChecker
                 $url = $repoUrl . '/' . str_replace('%hash%', $hash, $template);
 
                 try {
-                    $body = (string) $this->httpClient->get($url, $authOptions)->getBody();
+                    $body = $this->cachedGet($url, $authOptions);
                     $providers = json_decode($body, true);
 
                     if (isset($providers['providers'][$packageName])) {
@@ -317,7 +401,7 @@ class VersionChecker
                             ltrim($providersUrl, '/')
                         );
 
-                        $pkgBody = (string) $this->httpClient->get($pkgUrl, $authOptions)->getBody();
+                        $pkgBody = $this->cachedGet($pkgUrl, $authOptions);
                         $pkgData = json_decode($pkgBody, true);
 
                         if (isset($pkgData['packages'][$packageName])) {
@@ -342,10 +426,8 @@ class VersionChecker
     public function getPackagistVersion($packageName)
     {
         try {
-            $response = $this->httpClient->get(
-                "https://repo.packagist.org/p2/{$packageName}.json"
-            );
-            $data = json_decode((string) $response->getBody(), true);
+            $body = $this->cachedGet("https://repo.packagist.org/p2/{$packageName}.json");
+            $data = json_decode($body, true);
 
             if (!isset($data['packages'][$packageName])) {
                 return null;

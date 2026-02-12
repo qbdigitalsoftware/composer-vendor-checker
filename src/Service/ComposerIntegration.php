@@ -315,14 +315,48 @@ class ComposerIntegration
     }
 
     /**
-     * Check for updates for all installed packages
+     * Check for updates for installed packages
      *
      * @param bool $verbose
+     * @param array $packageFilter Optional list of specific package names to check
      * @return array
      */
-    public function checkForUpdates($verbose = false)
+    public function checkForUpdates($verbose = false, array $packageFilter = [])
     {
         $installedPackages = $this->getInstalledPackages();
+
+        // Filter to specific packages if requested
+        if (!empty($packageFilter)) {
+            $installedPackages = array_intersect_key(
+                $installedPackages,
+                array_flip($packageFilter)
+            );
+        }
+
+        // Pre-fetch all primary URLs concurrently
+        $urlsToFetch = [];
+        foreach ($installedPackages as $packageName => $packageInfo) {
+            $method = $packageInfo['check_method'] ?? 'website';
+
+            if ($method === 'website' && !empty($packageInfo['url'])) {
+                $urlsToFetch[$packageInfo['url']] = [];
+            } elseif ($method === 'packagist') {
+                $urlsToFetch["https://repo.packagist.org/p2/{$packageName}.json"] = [];
+            } elseif ($method === 'private_repo') {
+                $repoConfig = $this->getPrivateRepoConfig($packageName);
+                if ($repoConfig) {
+                    $repoUrl = rtrim($repoConfig['repo_url'], '/');
+                    $auth = $repoConfig['auth'];
+                    // Pre-fetch all three endpoint formats
+                    $urlsToFetch["{$repoUrl}/p2/{$packageName}.json"] = ['auth' => $auth, 'timeout' => 15];
+                    $urlsToFetch["{$repoUrl}/p/{$packageName}.json"] = ['auth' => $auth, 'timeout' => 15];
+                    // packages.json is shared per repo — only fetched once
+                    $urlsToFetch["{$repoUrl}/packages.json"] = ['auth' => $auth, 'timeout' => 15];
+                }
+            }
+        }
+        $this->versionChecker->warmCache($urlsToFetch);
+
         $results = [];
 
         foreach ($installedPackages as $packageName => $packageInfo) {
@@ -493,7 +527,7 @@ class ComposerIntegration
             // Status symbol
             $statusSymbol = '?';
             $statusColor = '';
-
+            
             switch ($status) {
                 case 'UP_TO_DATE':
                     $statusSymbol = '✓';
@@ -532,11 +566,11 @@ class ComposerIntegration
                     $report[] = sprintf("        • %s - %s", $change['version'], $change['date']);
                 }
             }
-
+            
             if (isset($result['error'])) {
                 $report[] = "      Error: " . $result['error'];
             }
-
+            
             $report[] = "";
         }
 
