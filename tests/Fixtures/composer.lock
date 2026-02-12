@@ -1,0 +1,76 @@
+{
+    "_readme": [
+        "Test fixture — minimal composer.lock for unit tests"
+    ],
+    "content-hash": "abc123",
+    "packages": [
+        {
+            "name": "amasty/promo",
+            "version": "2.12.0",
+            "dist": {
+                "url": "https://composer.amasty.com/enterprise/dist/amasty/promo/amasty-promo-2.12.0.zip",
+                "type": "zip"
+            },
+            "notification-url": "https://composer.amasty.com/enterprise/downloads/"
+        },
+        {
+            "name": "klaviyo/magento2-extension",
+            "version": "4.4.2",
+            "dist": {
+                "url": "https://api.github.com/repos/klaviyo/magento2-klaviyo/zipball/abc123",
+                "type": "zip"
+            }
+        },
+        {
+            "name": "xtento/orderexport",
+            "version": "2.14.9",
+            "dist": {
+                "url": "https://repo.xtento.com/dist/xtento/orderexport/xtento-orderexport-2.14.9.zip",
+                "type": "zip"
+            },
+            "notification-url": "https://repo.xtento.com/downloads/"
+        },
+        {
+            "name": "magento/framework",
+            "version": "103.0.7",
+            "dist": {
+                "url": "https://repo.magento.com/archives/magento/framework/magento-framework-103.0.7.0.zip",
+                "type": "zip"
+            }
+        },
+        {
+            "name": "laminas/laminas-validator",
+            "version": "2.30.0",
+            "dist": {
+                "url": "https://api.github.com/repos/laminas/laminas-validator/zipball/def456",
+                "type": "zip"
+            }
+        },
+        {
+            "name": "stripe/stripe-payments",
+            "version": "3.5.0",
+            "dist": {
+                "url": "https://packages.stripe.com/dist/stripe/stripe-payments/stripe-stripe-payments-3.5.0.zip",
+                "type": "zip"
+            },
+            "notification-url": "https://packages.stripe.com/downloads/"
+        },
+        {
+            "name": "getjohn/module-customsprice",
+            "version": "1.0.0",
+            "dist": {
+                "url": "https://cisco.satis.getjohn.co.uk/dist/getjohn/module-customsprice/getjohn-module-customsprice-1.0.0.zip",
+                "type": "zip"
+            },
+            "notification-url": "https://cisco.satis.getjohn.co.uk/downloads/"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": {},
+    "prefer-stable": true,
+    "prefer-lowest": false,
+    "platform": {},
+    "platform-dev": {}
+}

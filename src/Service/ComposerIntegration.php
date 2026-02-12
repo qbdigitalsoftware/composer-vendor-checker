@@ -5,8 +5,14 @@
 
 namespace GetJohn\VendorChecker\Service;
 
+use GetJohn\VendorChecker\Output\ProgressReporter;
+
 /**
- * Service to integrate with Composer and check installed packages
+ * Service to integrate with Composer and check installed packages for available updates.
+ *
+ * Reads all packages from composer.lock, resolves check strategies via PackageResolver,
+ * and checks each non-skipped package for available updates using Packagist, private
+ * repos, or vendor websites.
  */
 class ComposerIntegration
 {
@@ -22,84 +28,82 @@ class ComposerIntegration
     /** @var VersionChecker */
     protected $versionChecker;
 
+    /** @var ResultCache|null */
+    protected $cache;
+
+    /** @var PackageResolver */
+    protected $resolver;
+
+    /** @var array Loaded config from packages.php */
+    protected $config = [];
+
     /** @var array Cached private repo config: ['package' => ['repo_url' => '...', 'auth' => [...]]] */
     protected $privateRepoMap = [];
 
-    /** @var array Known package URL mappings for vendor website scraping */
-    protected $packageUrlMappings = [
-        // Amasty modules (Cloudflare-protected — will fall back to error reporting)
-        'amasty/module-admin-actions-log' => 'https://amasty.com/admin-actions-log-for-magento-2.html',
-        'amasty/promo' => 'https://amasty.com/special-promotions-for-magento-2.html',
-        'amasty/shopby' => 'https://amasty.com/improved-layered-navigation-for-magento-2.html',
-        'amasty/geoip' => 'https://amasty.com/geoip-for-magento-2.html',
-        'amasty/gdpr-cookie' => 'https://amasty.com/gdpr-cookie-compliance-for-magento-2.html',
-        'amasty/geoipredirect' => 'https://amasty.com/geoip-redirect-for-magento-2.html',
-        'amasty/module-gdpr' => 'https://amasty.com/gdpr-for-magento-2.html',
-        'amasty/number' => 'https://amasty.com/custom-order-number-for-magento-2.html',
-
-        // Aheadworks modules (Cloudflare-protected)
-        'aheadworks/module-blog' => 'https://aheadworks.com/magento-2-blog-extension',
-
-        // Mageplaza modules
-        'mageplaza/module-layered-navigation-m2' => 'https://www.mageplaza.com/magento-2-layered-navigation/',
-        'mageplaza/layered-navigation-m2-pro' => 'https://www.mageplaza.com/magento-2-layered-navigation/',
-        'mageplaza/module-layered-navigation-m2-ultimate' => 'https://www.mageplaza.com/magento-2-layered-navigation/',
-        'mageplaza/module-smtp' => 'https://www.mageplaza.com/magento-2-smtp/',
-
-        // BSS Commerce modules
-        'bsscommerce/module-customer-approval' => 'https://bsscommerce.com/magento-2-customer-approval-extension.html',
-        // Note: bsscommerce/disable-compare has no public product page — tracked via Packagist
-
-        // MageMe modules
-        'mageme/module-webforms-3' => 'https://mageme.com/magento-2-form-builder.html',
-        'mageme/module-webforms' => 'https://mageme.com/magento-2-form-builder.html',
-
-        // MageWorx modules
-        // Note: mageworx/module-giftcards has no version info on product page — tracked via Packagist
-        // Note: mageworx/module-donationsmeta has no public product page — tracked via Packagist
-
-        // XTENTO modules
-        'xtento/orderexport' => 'https://www.xtento.com/magento-extensions/magento-order-export-module.html',
-    ];
-
-    /** @var array Packages to check via Packagist API only (no vendor website scraping) */
-    protected $packagistPackages = [
-        'taxjar/module-taxjar',
-        'webshopapps/module-matrixrate',
-        'klaviyo/magento2-extension',
-        'yotpo/magento2-module-yotpo-loyalty',
-        'yotpo/module-review',
-        'paradoxlabs/authnetcim',
-        'paradoxlabs/tokenbase',
-        'justuno.com/m2',
-        'stripe/stripe-payments',
-        'bsscommerce/disable-compare',
-        'mageworx/module-donationsmeta',
-        'mageworx/module-giftcards',
-    ];
-
     /**
-     * Constructor
-     *
-     * @param string $composerLockPath
+     * @param string $composerLockPath Path to composer.lock
      * @param string|null $composerJsonPath Path to composer.json for repo definitions
      * @param string|null $authJsonPath Path to auth.json for private repo credentials
+     * @param string|null $configPath Path to packages.php config file
+     * @param ResultCache|null $cache Optional result cache
+     * @param VersionChecker|null $versionChecker Optional injected checker (for testing)
      */
-    public function __construct($composerLockPath = './composer.lock', $composerJsonPath = null, $authJsonPath = null)
-    {
+    public function __construct(
+        $composerLockPath = './composer.lock',
+        $composerJsonPath = null,
+        $authJsonPath = null,
+        $configPath = null,
+        $cache = null,
+        $versionChecker = null
+    ) {
         $this->composerLockPath = $composerLockPath;
         $this->composerJsonPath = $composerJsonPath;
         $this->authJsonPath = $authJsonPath;
-        $this->versionChecker = new VersionChecker();
+        $this->versionChecker = $versionChecker ?: new VersionChecker();
+        $this->cache = $cache;
+
+        $this->config = $this->loadConfig($configPath);
 
         if ($composerJsonPath && $authJsonPath) {
             $this->buildPrivateRepoMap();
         }
+
+        $this->resolver = new PackageResolver($this->config, $this->privateRepoMap);
     }
 
     /**
-     * Build a map of packages to their private Composer repos + auth credentials
-     * Reads composer.json for repo URLs and auth.json for credentials
+     * Load configuration from a PHP file.
+     *
+     * Search order:
+     * 1. Explicit $configPath parameter
+     * 2. Plugin's bundled config/packages.php
+     *
+     * @param string|null $configPath
+     * @return array
+     */
+    protected function loadConfig($configPath)
+    {
+        if ($configPath !== null && file_exists($configPath)) {
+            $config = require $configPath;
+            if (is_array($config)) {
+                return $config;
+            }
+        }
+
+        $pluginConfig = dirname(__DIR__, 2) . '/config/packages.php';
+        if (file_exists($pluginConfig)) {
+            $config = require $pluginConfig;
+            if (is_array($config)) {
+                return $config;
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * Build a map of packages to their private Composer repos + auth credentials.
+     * Reads composer.json for repo URLs and auth.json for credentials.
      */
     protected function buildPrivateRepoMap()
     {
@@ -117,17 +121,14 @@ class ComposerIntegration
         $repos = $composerJson['repositories'] ?? [];
         $httpBasic = $authJson['http-basic'] ?? [];
 
-        // Hosts to skip — Magento core, internal satis, and marketplace repos
-        $skipHosts = [
-            'repo.magento.com',
-            'marketplace.magento.com',
-        ];
+        // Read skip hosts and patterns from config (with sensible defaults)
+        $skipHosts = isset($this->config['skip_hosts']) && is_array($this->config['skip_hosts'])
+            ? $this->config['skip_hosts']
+            : ['repo.magento.com', 'marketplace.magento.com'];
 
-        // Host patterns to skip — agency/client satis repos with custom modules
-        $skipPatterns = [
-            '/\.satis\./i',         // e.g. client.satis.getjohn.co.uk
-            '/\.getjohn\./i',       // e.g. any getjohn internal repo
-        ];
+        $skipPatterns = isset($this->config['skip_patterns']) && is_array($this->config['skip_patterns'])
+            ? $this->config['skip_patterns']
+            : ['/\.satis\./i', '/\.getjohn\./i'];
 
         // Build list of private Composer repos with their auth
         $privateRepos = [];
@@ -142,13 +143,11 @@ class ComposerIntegration
                 continue;
             }
 
-            // Match repo URL host against auth.json keys
             $host = parse_url($url, PHP_URL_HOST);
             if (!$host || in_array($host, $skipHosts)) {
                 continue;
             }
 
-            // Skip hosts matching internal patterns
             $skipThis = false;
             foreach ($skipPatterns as $pattern) {
                 if (preg_match($pattern, $host)) {
@@ -159,6 +158,7 @@ class ComposerIntegration
             if ($skipThis) {
                 continue;
             }
+
             if (isset($httpBasic[$host]['username'], $httpBasic[$host]['password'])) {
                 $privateRepos[] = [
                     'url' => $url,
@@ -188,7 +188,6 @@ class ComposerIntegration
             $distUrl = $pkg['dist']['url'] ?? '';
             $notificationUrl = $pkg['notification-url'] ?? '';
 
-            // Match package to its private repo by dist URL or notification URL
             foreach ($privateRepos as $repo) {
                 if (
                     (strpos($distUrl, $repo['host']) !== false) ||
@@ -205,7 +204,7 @@ class ComposerIntegration
     }
 
     /**
-     * Get private repo configuration for a package
+     * Get private repo configuration for a package.
      *
      * @param string $packageName
      * @return array|null ['repo_url' => '...', 'auth' => ['username' => '...', 'password' => '...']]
@@ -216,44 +215,15 @@ class ComposerIntegration
     }
 
     /**
-     * Add a custom package URL mapping
+     * Get installed packages from composer.lock with resolution strategies.
      *
-     * @param string $package
-     * @param string $url
-     */
-    public function addPackageUrlMapping($package, $url)
-    {
-        $this->packageUrlMappings[$package] = $url;
-    }
-
-    /**
-     * Get all package URL mappings
+     * Returns ALL packages (not just pre-configured ones), each tagged with
+     * a check method determined by PackageResolver.
      *
-     * @return array
+     * @param array $packageFilter Optional list of specific package names to include
+     * @return array ['package/name' => ['method' => ..., 'version' => ..., ...], ...]
      */
-    public function getPackageUrlMappings()
-    {
-        return $this->packageUrlMappings;
-    }
-
-    /**
-     * Get list of supported vendor names
-     *
-     * @return array
-     */
-    public function getSupportedVendors()
-    {
-        return $this->versionChecker->getSupportedVendors();
-    }
-
-    /**
-     * Get installed packages from composer.lock
-     * Returns packages that have URL mappings OR are in the Packagist-only list
-     *
-     * @param array $vendorFilter Optional vendor names to filter (e.g., ['amasty', 'mageplaza'])
-     * @return array
-     */
-    public function getInstalledPackages(array $vendorFilter = [])
+    public function getInstalledPackages(array $packageFilter = [])
     {
         if (!file_exists($this->composerLockPath)) {
             throw new \Exception("composer.lock not found at: {$this->composerLockPath}");
@@ -265,228 +235,277 @@ class ComposerIntegration
             throw new \Exception("Invalid composer.lock format");
         }
 
-        $supportedVendors = $this->versionChecker->getSupportedVendors();
+        $resolved = $this->resolver->resolveAll($lockData['packages']);
 
-        $packages = [];
-
-        foreach ($lockData['packages'] as $package) {
-            $packageName = $package['name'];
-            $vendor = $this->versionChecker->getVendorFromPackage($packageName);
-
-            // Apply vendor filter if specified
-            if (!empty($vendorFilter) && !in_array($vendor, $vendorFilter)) {
-                continue;
-            }
-
-            // Include if we have a URL mapping (vendor website check)
-            if (isset($this->packageUrlMappings[$packageName]) && in_array($vendor, $supportedVendors)) {
-                $packages[$packageName] = [
-                    'name' => $packageName,
-                    'version' => $package['version'],
-                    'url' => $this->packageUrlMappings[$packageName],
-                    'check_method' => 'website'
-                ];
-                continue;
-            }
-
-            // Include if it's a Packagist-only package
-            if (in_array($packageName, $this->packagistPackages)) {
-                $packages[$packageName] = [
-                    'name' => $packageName,
-                    'version' => $package['version'],
-                    'url' => null,
-                    'check_method' => 'packagist'
-                ];
-                continue;
-            }
-
-            // Include if we have private repo credentials for it
-            if (isset($this->privateRepoMap[$packageName])) {
-                $packages[$packageName] = [
-                    'name' => $packageName,
-                    'version' => $package['version'],
-                    'url' => null,
-                    'check_method' => 'private_repo'
-                ];
-            }
+        if (!empty($packageFilter)) {
+            $resolved = array_intersect_key($resolved, array_flip($packageFilter));
         }
 
-        return $packages;
+        return $resolved;
     }
 
     /**
-     * Check for updates for installed packages
+     * Check for updates for installed packages.
      *
-     * @param bool $verbose
+     * @param ProgressReporter|null $progress Optional progress reporter
      * @param array $packageFilter Optional list of specific package names to check
      * @return array
      */
-    public function checkForUpdates($verbose = false, array $packageFilter = [])
+    public function checkForUpdates($progress = null, array $packageFilter = [])
     {
-        $installedPackages = $this->getInstalledPackages();
+        $packages = $this->getInstalledPackages($packageFilter);
 
-        // Filter to specific packages if requested
-        if (!empty($packageFilter)) {
-            $installedPackages = array_intersect_key(
-                $installedPackages,
-                array_flip($packageFilter)
-            );
-        }
-
-        // Pre-fetch all primary URLs concurrently
-        $urlsToFetch = [];
-        foreach ($installedPackages as $packageName => $packageInfo) {
-            $method = $packageInfo['check_method'] ?? 'website';
-
-            if ($method === 'website' && !empty($packageInfo['url'])) {
-                $urlsToFetch[$packageInfo['url']] = [];
-            } elseif ($method === 'packagist') {
-                $urlsToFetch["https://repo.packagist.org/p2/{$packageName}.json"] = [];
-            } elseif ($method === 'private_repo') {
-                $repoConfig = $this->getPrivateRepoConfig($packageName);
-                if ($repoConfig) {
-                    $repoUrl = rtrim($repoConfig['repo_url'], '/');
-                    $auth = $repoConfig['auth'];
-                    // Pre-fetch all three endpoint formats
-                    $urlsToFetch["{$repoUrl}/p2/{$packageName}.json"] = ['auth' => $auth, 'timeout' => 15];
-                    $urlsToFetch["{$repoUrl}/p/{$packageName}.json"] = ['auth' => $auth, 'timeout' => 15];
-                    // packages.json is shared per repo — only fetched once
-                    $urlsToFetch["{$repoUrl}/packages.json"] = ['auth' => $auth, 'timeout' => 15];
-                }
-            }
-        }
-        $this->versionChecker->warmCache($urlsToFetch);
-
+        // Separate cached hits from packages that need checking
         $results = [];
+        $toCheck = [];
 
-        foreach ($installedPackages as $packageName => $packageInfo) {
-            $checkMethod = $packageInfo['check_method'] ?? 'website';
-
-            // Packagist-only packages — check directly via Packagist API
-            if ($checkMethod === 'packagist') {
-                $latestVersion = $this->versionChecker->getPackagistVersion($packageName);
-                if ($latestVersion !== null) {
-                    $results[] = [
-                        'package' => $packageName,
-                        'installed_version' => $packageInfo['version'],
-                        'latest_version' => $latestVersion,
-                        'vendor_url' => 'https://packagist.org/packages/' . $packageName,
-                        'source' => 'packagist',
-                        'status' => $this->compareVersions($packageInfo['version'], $latestVersion),
-                        'checked_at' => date('Y-m-d H:i:s')
-                    ];
-                } else {
-                    $results[] = [
-                        'package' => $packageName,
-                        'installed_version' => $packageInfo['version'],
-                        'latest_version' => 'N/A',
-                        'vendor_url' => null,
-                        'source' => 'packagist',
-                        'status' => 'UNAVAILABLE',
-                        'error' => 'Package not found on Packagist',
-                        'checked_at' => date('Y-m-d H:i:s')
-                    ];
-                }
+        foreach ($packages as $name => $pkg) {
+            if ($pkg['method'] === 'skip') {
                 continue;
             }
 
-            // Private Composer repo check
-            if ($checkMethod === 'private_repo') {
-                $repoConfig = $this->getPrivateRepoConfig($packageName);
-                if ($repoConfig) {
-                    $latestVersion = $this->versionChecker->getPrivateRepoVersion(
-                        $packageName,
-                        $repoConfig['repo_url'],
-                        $repoConfig['auth']
-                    );
-                    if ($latestVersion !== null) {
-                        $results[] = [
-                            'package' => $packageName,
-                            'installed_version' => $packageInfo['version'],
-                            'latest_version' => $latestVersion,
-                            'vendor_url' => $repoConfig['repo_url'],
-                            'source' => 'private_repo',
-                            'status' => $this->compareVersions($packageInfo['version'], $latestVersion),
-                            'checked_at' => date('Y-m-d H:i:s')
-                        ];
-                    } else {
-                        $results[] = [
-                            'package' => $packageName,
-                            'installed_version' => $packageInfo['version'],
-                            'latest_version' => 'N/A',
-                            'vendor_url' => $repoConfig['repo_url'],
-                            'source' => 'private_repo',
-                            'status' => 'UNAVAILABLE',
-                            'error' => 'Could not resolve version from private repo (auth may be expired)',
-                            'checked_at' => date('Y-m-d H:i:s')
-                        ];
+            if ($this->cache !== null) {
+                $cached = $this->cache->get($name);
+                if ($cached !== null) {
+                    $results[] = $cached;
+                    if ($progress !== null) {
+                        $progress->advance($name, 'cached', $cached['status']);
                     }
-                }
-                continue;
-            }
-
-            // Website check with Packagist fallback
-            try {
-                $vendorData = $this->versionChecker->getVendorVersion($packageInfo['url'], $packageName);
-
-                $latestVersion = $vendorData['latest_version'];
-
-                // Handle null version — page loaded but no version found
-                if ($latestVersion === null) {
-                    $results[] = [
-                        'package' => $packageName,
-                        'installed_version' => $packageInfo['version'],
-                        'latest_version' => 'N/A',
-                        'vendor_url' => $packageInfo['url'],
-                        'source' => $vendorData['source'] ?? 'vendor_website',
-                        'status' => 'UNAVAILABLE',
-                        'error' => 'No version information found on vendor page or Packagist',
-                        'checked_at' => $vendorData['checked_at']
-                    ];
                     continue;
                 }
-
-                $result = [
-                    'package' => $packageName,
-                    'installed_version' => $packageInfo['version'],
-                    'latest_version' => $latestVersion,
-                    'vendor_url' => $packageInfo['url'],
-                    'source' => $vendorData['source'] ?? 'vendor_website',
-                    'status' => $this->compareVersions($packageInfo['version'], $latestVersion),
-                    'checked_at' => $vendorData['checked_at']
-                ];
-
-                if ($verbose && !empty($vendorData['changelog'])) {
-                    $result['recent_changes'] = array_slice($vendorData['changelog'], 0, 3);
-                }
-
-                $results[] = $result;
-
-            } catch (\Exception $e) {
-                $results[] = [
-                    'package' => $packageName,
-                    'installed_version' => $packageInfo['version'],
-                    'latest_version' => 'Error',
-                    'vendor_url' => $packageInfo['url'],
-                    'status' => 'ERROR',
-                    'error' => $e->getMessage()
-                ];
             }
+
+            $toCheck[$name] = $pkg;
+        }
+
+        // Pre-fetch URLs concurrently for all cache misses
+        $this->warmHttpCache($toCheck);
+
+        // Check each uncached package
+        foreach ($toCheck as $name => $pkg) {
+            $result = $this->checkPackage($name, $pkg);
+            $results[] = $result;
+
+            if ($this->cache !== null) {
+                $this->cache->set($name, $result);
+            }
+
+            if ($progress !== null) {
+                $progress->advance($name, $pkg['method'], $result['status']);
+            }
+        }
+
+        // Flush cache to disk
+        if ($this->cache !== null) {
+            $this->cache->flush();
         }
 
         return $results;
     }
 
     /**
-     * Compare two version strings
+     * Pre-fetch URLs concurrently for a set of packages.
+     *
+     * @param array $packages ['name' => ['method' => ..., ...], ...]
+     */
+    protected function warmHttpCache(array $packages)
+    {
+        $urlsToFetch = [];
+
+        foreach ($packages as $name => $pkg) {
+            $method = $pkg['method'];
+
+            if ($method === 'website' && !empty($pkg['url'])) {
+                $urlsToFetch[$pkg['url']] = [];
+            }
+
+            // Pre-fetch Packagist for packagist packages and as fallback for website/private_repo
+            $urlsToFetch["https://repo.packagist.org/p2/{$name}.json"] = [];
+
+            if ($method === 'private_repo' && isset($pkg['auth'])) {
+                $repoUrl = rtrim($pkg['repo_url'], '/');
+                $auth = $pkg['auth'];
+                $urlsToFetch["{$repoUrl}/p2/{$name}.json"] = ['auth' => $auth, 'timeout' => 15];
+                $urlsToFetch["{$repoUrl}/p/{$name}.json"] = ['auth' => $auth, 'timeout' => 15];
+                $urlsToFetch["{$repoUrl}/packages.json"] = ['auth' => $auth, 'timeout' => 15];
+            }
+        }
+
+        if (!empty($urlsToFetch)) {
+            $this->versionChecker->warmCache($urlsToFetch);
+        }
+    }
+
+    /**
+     * Check a single package for updates using its resolved method.
+     *
+     * @param string $name Package name
+     * @param array $pkg Resolution info from PackageResolver
+     * @return array Result item
+     */
+    protected function checkPackage($name, array $pkg)
+    {
+        $method = $pkg['method'];
+        $version = $pkg['version'];
+
+        if ($method === 'packagist') {
+            return $this->checkViaPackagist($name, $version);
+        }
+
+        if ($method === 'private_repo') {
+            return $this->checkViaPrivateRepo($name, $version, $pkg);
+        }
+
+        if ($method === 'website') {
+            return $this->checkViaWebsite($name, $version, $pkg['url']);
+        }
+
+        return [
+            'package' => $name,
+            'installed_version' => $version,
+            'latest_version' => 'N/A',
+            'status' => 'ERROR',
+            'error' => "Unknown check method: {$method}",
+        ];
+    }
+
+    /**
+     * Check a package via Packagist API.
+     *
+     * @param string $name
+     * @param string $installedVersion
+     * @return array
+     */
+    protected function checkViaPackagist($name, $installedVersion)
+    {
+        $latestVersion = $this->versionChecker->getPackagistVersion($name);
+
+        if ($latestVersion !== null) {
+            return [
+                'package' => $name,
+                'installed_version' => $installedVersion,
+                'latest_version' => $latestVersion,
+                'status' => self::compareVersions($installedVersion, $latestVersion),
+                'source' => 'packagist',
+            ];
+        }
+
+        return [
+            'package' => $name,
+            'installed_version' => $installedVersion,
+            'latest_version' => 'N/A',
+            'status' => 'UNAVAILABLE',
+            'source' => 'packagist',
+            'error' => 'Package not found on Packagist',
+        ];
+    }
+
+    /**
+     * Check a package via private Composer repository with Packagist fallback.
+     *
+     * @param string $name
+     * @param string $installedVersion
+     * @param array $pkg Resolution info containing repo_url and auth
+     * @return array
+     */
+    protected function checkViaPrivateRepo($name, $installedVersion, array $pkg)
+    {
+        $repoUrl = $pkg['repo_url'];
+        $auth = $pkg['auth'];
+
+        $latestVersion = $this->versionChecker->getPrivateRepoVersion($name, $repoUrl, $auth);
+
+        if ($latestVersion !== null) {
+            return [
+                'package' => $name,
+                'installed_version' => $installedVersion,
+                'latest_version' => $latestVersion,
+                'status' => self::compareVersions($installedVersion, $latestVersion),
+                'source' => 'private_repo',
+            ];
+        }
+
+        // Private repo failed — try Packagist as fallback
+        $packagistVersion = $this->versionChecker->getPackagistVersion($name);
+        if ($packagistVersion !== null) {
+            return [
+                'package' => $name,
+                'installed_version' => $installedVersion,
+                'latest_version' => $packagistVersion,
+                'status' => self::compareVersions($installedVersion, $packagistVersion),
+                'source' => 'packagist',
+            ];
+        }
+
+        return [
+            'package' => $name,
+            'installed_version' => $installedVersion,
+            'latest_version' => 'N/A',
+            'status' => 'UNAVAILABLE',
+            'source' => 'private_repo',
+            'error' => 'Could not resolve version from private repo (auth may be expired)',
+        ];
+    }
+
+    /**
+     * Check a package via vendor website with Packagist fallback.
+     *
+     * @param string $name
+     * @param string $installedVersion
+     * @param string $url Vendor product page URL
+     * @return array
+     */
+    protected function checkViaWebsite($name, $installedVersion, $url)
+    {
+        try {
+            $vendorData = $this->versionChecker->getVendorVersion($url, $name);
+            $latestVersion = $vendorData['latest_version'];
+
+            if ($latestVersion === null) {
+                return [
+                    'package' => $name,
+                    'installed_version' => $installedVersion,
+                    'latest_version' => 'N/A',
+                    'status' => 'UNAVAILABLE',
+                    'source' => $vendorData['source'] ?? 'vendor_website',
+                    'error' => 'No version information found on vendor page or Packagist',
+                ];
+            }
+
+            $result = [
+                'package' => $name,
+                'installed_version' => $installedVersion,
+                'latest_version' => $latestVersion,
+                'status' => self::compareVersions($installedVersion, $latestVersion),
+                'source' => $vendorData['source'] ?? 'vendor_website',
+            ];
+
+            if (!empty($vendorData['changelog'])) {
+                $result['recent_changes'] = array_slice($vendorData['changelog'], 0, 3);
+            }
+
+            return $result;
+
+        } catch (\Exception $e) {
+            return [
+                'package' => $name,
+                'installed_version' => $installedVersion,
+                'latest_version' => 'Error',
+                'status' => 'ERROR',
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Compare two version strings.
      *
      * @param string $installed
      * @param string $latest
-     * @return string
+     * @return string UP_TO_DATE|UPDATE_AVAILABLE|AHEAD_OF_VENDOR
      */
-    protected function compareVersions($installed, $latest)
+    public static function compareVersions($installed, $latest)
     {
-        // Remove 'v' prefix if present
         $installed = ltrim($installed, 'v');
         $latest = ltrim($latest, 'v');
 
@@ -497,88 +516,5 @@ class ComposerIntegration
         } else {
             return 'AHEAD_OF_VENDOR';
         }
-    }
-
-    /**
-     * Generate a human-readable report
-     *
-     * @param array $results
-     * @return string
-     */
-    public function generateReport(array $results)
-    {
-        $report = [];
-        $report[] = "╔════════════════════════════════════════════════════════════════════════════╗";
-        $report[] = "║                        Vendor Version Check Report                         ║";
-        $report[] = "╚════════════════════════════════════════════════════════════════════════════╝";
-        $report[] = "";
-
-        $updateCount = 0;
-        $upToDateCount = 0;
-        $errorCount = 0;
-        $unavailableCount = 0;
-
-        foreach ($results as $result) {
-            $package = $result['package'];
-            $installed = $result['installed_version'];
-            $latest = $result['latest_version'];
-            $status = $result['status'];
-
-            // Status symbol
-            $statusSymbol = '?';
-            $statusColor = '';
-            
-            switch ($status) {
-                case 'UP_TO_DATE':
-                    $statusSymbol = '✓';
-                    $upToDateCount++;
-                    break;
-                case 'UPDATE_AVAILABLE':
-                    $statusSymbol = '↑';
-                    $updateCount++;
-                    break;
-                case 'AHEAD_OF_VENDOR':
-                    $statusSymbol = '⚠';
-                    break;
-                case 'UNAVAILABLE':
-                    $statusSymbol = '?';
-                    $unavailableCount++;
-                    break;
-                case 'ERROR':
-                    $statusSymbol = '✗';
-                    $errorCount++;
-                    break;
-            }
-
-            $source = isset($result['source']) ? $result['source'] : '';
-            $sourceLabels = [
-                'packagist' => ' [via Packagist]',
-                'private_repo' => ' [via Private Repo]',
-            ];
-            $sourceLabel = $sourceLabels[$source] ?? '';
-
-            $report[] = sprintf("  %s  %-50s", $statusSymbol, $package);
-            $report[] = sprintf("      Installed: %-20s  Latest: %s%s", $installed, $latest, $sourceLabel);
-
-            if (isset($result['recent_changes'])) {
-                $report[] = "      Recent changes:";
-                foreach ($result['recent_changes'] as $change) {
-                    $report[] = sprintf("        • %s - %s", $change['version'], $change['date']);
-                }
-            }
-            
-            if (isset($result['error'])) {
-                $report[] = "      Error: " . $result['error'];
-            }
-            
-            $report[] = "";
-        }
-
-        $report[] = "─────────────────────────────────────────────────────────────────────────────";
-        $report[] = sprintf("Summary: %d up-to-date, %d updates available, %d unavailable, %d errors",
-            $upToDateCount, $updateCount, $unavailableCount, $errorCount);
-        $report[] = "";
-
-        return implode("\n", $report);
     }
 }

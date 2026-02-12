@@ -1,0 +1,22 @@
+{
+    "name": "test/project",
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://composer.amasty.com/enterprise/"
+        },
+        {
+            "type": "composer",
+            "url": "https://repo.xtento.com"
+        },
+        {
+            "type": "composer",
+            "url": "https://repo.magento.com"
+        },
+        {
+            "type": "composer",
+            "url": "https://cisco.satis.getjohn.co.uk"
+        }
+    ],
+    "require": {}
+}

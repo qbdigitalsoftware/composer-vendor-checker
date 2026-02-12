@@ -64,10 +64,12 @@ class VersionChecker
 
     /**
      * Constructor
+     *
+     * @param Client|null $httpClient Optional Guzzle client (for testing)
      */
-    public function __construct()
+    public function __construct($httpClient = null)
     {
-        $this->httpClient = new Client([
+        $this->httpClient = $httpClient ?: new Client([
             'timeout' => 30,
             'verify' => true,
             'headers' => [

@@ -2,27 +2,32 @@
 
 ## Overview
 
-This module works as **both** a Composer plugin and a Magento 2 module. You can install it either way (or both!).
+This is a Composer plugin that provides the `composer vendor:check` command. It works on any Composer project with zero configuration.
 
 ---
 
-## Method 1: Install as Composer Plugin (Recommended)
+## Installation
 
-This makes the `composer vendor:check` command available globally or per-project.
-
-### Global Installation (Available everywhere)
+### Per-Project (Recommended)
 
 ```bash
-composer global require getjohn/magento2-vendor-checker
+cd /path/to/your/project
+composer require --dev getjohn/module-composer-vendor-checker
 ```
 
-Now you can run `composer vendor:check` in any project!
-
-### Per-Project Installation
+### Global Installation
 
 ```bash
-cd /path/to/your/magento2/project
-composer require --dev getjohn/magento2-vendor-checker
+composer global require getjohn/module-composer-vendor-checker
+```
+
+Now you can run `composer vendor:check` in any project.
+
+### As a Path Repository
+
+```bash
+composer config repositories.vendor-checker path /path/to/module-composer-vendor-checker
+composer require --dev getjohn/module-composer-vendor-checker
 ```
 
 ### Verify Installation
@@ -30,151 +35,164 @@ composer require --dev getjohn/magento2-vendor-checker
 ```bash
 composer vendor:check --help
 ```
-
-You should see the help documentation for the command.
-
----
-
-## Method 2: Install as Magento 2 Module
-
-This integrates the module into your Magento 2 installation.
-
-### Using Composer (Recommended)
-
-```bash
-cd /path/to/your/magento2/project
-composer require getjohn/magento2-vendor-checker
-php bin/magento module:enable GetJohn_VendorChecker
-php bin/magento setup:upgrade
-php bin/magento cache:flush
-```
-
-### Manual Installation
-
-1. Create directory structure:
-```bash
-mkdir -p app/code/GetJohn/VendorChecker
-```
-
-2. Copy module files:
-```bash
-cp -r magento2-vendor-checker/* app/code/GetJohn/VendorChecker/
-```
-
-3. Enable the module:
-```bash
-php bin/magento module:enable GetJohn_VendorChecker
-php bin/magento setup:upgrade
-php bin/magento cache:flush
-```
-
-### Verify Installation
-
-```bash
-php bin/magento module:status GetJohn_VendorChecker
-```
-
-Should show as "enabled".
 
 ---
 
 ## First Run
 
-### Test the Command
+### Basic Test
 
 ```bash
-# Basic test
+# Show help
 composer vendor:check --help
+
+# Check all installed packages
+composer vendor:check
 
 # Check a single vendor URL
 composer vendor:check --url=https://amasty.com/admin-actions-log-for-magento-2.html
-
-# Check all your installed packages
-composer vendor:check
 ```
 
 ### Expected Output
 
 ```
-╔════════════════════════════════════════════════════════════════════════════╗
-║                        Vendor Version Check Report                         ║
-╚════════════════════════════════════════════════════════════════════════════╝
+Checking packages from: ./composer.lock
 
-  ✓  amasty/module-admin-actions-log
-      Installed: 2.1.0              Latest: 2.1.0
+  [ 1/42] stripe/stripe-payments                          packagist OK
+  [ 2/42] klaviyo/magento2-extension                      packagist UPDATE
+  ...
 
-  ↑  amasty/promo
-      Installed: 2.22.0             Latest: 2.23.1
+  Vendor Version Check Report
+  --------------------------------------------------------------------------
 
-─────────────────────────────────────────────────────────────────────────────
-Summary: 1 up-to-date, 1 updates available, 0 errors
+  ✓  stripe/stripe-payments
+      Installed: 3.5.0              Latest: 3.5.0 [via Packagist]
+
+  ↑  klaviyo/magento2-extension
+      Installed: 4.4.2              Latest: 4.5.0 [via Packagist]
+
+  --------------------------------------------------------------------------
+  Summary: 35 up-to-date, 5 updates available, 0 unavailable, 2 errors
 ```
 
 ---
 
 ## Configuration
 
-### Adding New Modules
+Configuration is **optional**. Without any config, all packages are checked via Packagist.
 
-This works if the vendor is already suppported.
+### Custom Config File
 
-#### Method A: Programmatically
+Create a PHP file based on `config/packages.php.example`:
 
-Create a PHP script (e.g., `check-custom-vendors.php`):
-
-```php
-<?php
-require 'vendor/autoload.php';
-
-use GetJohn\VendorChecker\Service\ComposerIntegration;
-
-$integration = new ComposerIntegration('./composer.lock');
-
-// Add your custom mappings
-$integration->addPackageUrlMapping(
-    'customvendor/module-name',
-    'https://customvendor.com/product-page.html'
-);
-
-$results = $integration->checkForUpdates(true);
-echo $integration->generateReport($results);
-```
-
-Run it:
 ```bash
-php check-custom-vendors.php
+cp vendor/getjohn/module-composer-vendor-checker/config/packages.php.example my-packages.php
 ```
 
-#### Method B: Edit the Source
+Edit the file to add your skip lists, website overrides, and skip patterns, then run:
 
-Edit `src/Service/ComposerIntegration.php` and add to the `$packageUrlMappings` array:
+```bash
+composer vendor:check --config=my-packages.php
+```
+
+### Key Configuration Options
 
 ```php
-private $packageUrlMappings = [
-    // Existing mappings...
-    
-    // Your custom mappings
-    'customvendor/module-name' => 'https://customvendor.com/product.html',
-    'anothervendor/extension' => 'https://anothervendor.com/extension.html',
+return [
+    // Skip framework/core vendors entirely
+    'skip_vendors' => ['magento', 'laminas', 'symfony'],
+
+    // Skip specific packages
+    'skip_packages' => ['my-agency/internal-module'],
+
+    // Website overrides (checked before Packagist)
+    'package_url_mappings' => [
+        'amasty/promo' => 'https://amasty.com/special-promotions-for-magento-2.html',
+    ],
+
+    // Private repo hosts to skip
+    'skip_hosts' => ['repo.magento.com'],
+
+    // Host patterns to skip (regex)
+    'skip_patterns' => ['/\.satis\./i'],
 ];
 ```
+
+### Private Repositories
+
+Private repos are auto-detected from your `composer.json` repository definitions and authenticated using your `auth.json` credentials. No manual configuration needed.
 
 ### Adding Custom Vendor Patterns
 
-If you need to support a completely new vendor with different HTML structure:
-
-Edit `src/Service/VersionChecker.php` and add to the `$vendorPatterns` array:
+If you need website scraping support for a new vendor, add patterns to `VersionChecker.php`:
 
 ```php
-private $vendorPatterns = [
-    // Existing patterns...
-    
-    'newvendor.com' => [
-        'version_pattern' => '/Version:?\s*(\d+\.\d+\.\d+)/i',
-        'changelog_pattern' => '/##\s*v?(\d+\.\d+\.\d+)\s*\(([^)]+)\)(.*?)(?=##|$)/s',
-        'composer_pattern' => '/composer\s+require\s+([\w\-\/]+)/i'
-    ]
-];
+'newvendor' => [
+    'url_match' => 'newvendor.com',
+    'version_pattern' => '/Version:?\s*(\d+\.\d+\.\d+)/i',
+    'changelog_pattern' => '/##\s*v?(\d+\.\d+\.\d+)\s*\(([^)]+)\)(.*?)(?=##|$)/s',
+]
+```
+
+---
+
+## Caching
+
+Results are cached in `.vendor-check-cache/` in the lock file directory. Default TTL is 1 hour.
+
+```bash
+# Skip cache (force fresh check)
+composer vendor:check --no-cache
+
+# Clear cache before running
+composer vendor:check --clear-cache
+
+# Custom TTL
+composer vendor:check --cache-ttl=7200
+```
+
+---
+
+## CI/CD Integration
+
+### GitHub Actions
+
+```yaml
+name: Check Vendor Versions
+on:
+  schedule:
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  check-versions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+      - run: composer install
+      - run: composer vendor:check --format=json --output=versions.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: version-report
+          path: versions.json
+```
+
+### Automated Notifications
+
+```bash
+#!/bin/bash
+UPDATES=$(composer vendor:check --format=json | \
+  jq -r '.[] | select(.status=="UPDATE_AVAILABLE") |
+  "\(.package): \(.installed_version) -> \(.latest_version)"')
+
+if [ ! -z "$UPDATES" ]; then
+    curl -X POST -H 'Content-type: application/json' \
+      --data "{\"text\":\"Vendor updates available:\n$UPDATES\"}" \
+      $SLACK_WEBHOOK_URL
+fi
 ```
 
 ---
@@ -183,181 +201,41 @@ private $vendorPatterns = [
 
 ### Command Not Found
 
-**Problem**: `composer vendor:check` not recognized
-
-**Solutions**:
-
-1. Rebuild Composer autoload:
 ```bash
 composer dump-autoload
 ```
 
-2. Check if plugin is installed:
-```bash
-composer show getjohn/magento2-vendor-checker
-```
+### No Results
 
-3. Check Composer's plugin list:
-```bash
-composer global show
-```
+If all packages are being skipped, check your `skip_vendors` list in the config. The default config skips common framework vendors (magento, laminas, symfony, etc.).
 
-### No Packages Found
+### Cloudflare Blocked
 
-**Problem**: "No packages found to check"
-
-**Possible causes**:
-
-1. **No mapped vendor packages** - The module only checks packages it knows about
-   
-   Solution: Add custom URL mappings (see Configuration above)
-
-2. **Wrong composer.lock path**
-   
-   Solution: Specify the correct path:
-   ```bash
-   composer vendor:check --path=/correct/path/to/composer.lock
-   ```
-
-3. **composer.lock doesn't exist**
-   
-   Solution: Run `composer install` first to generate it
-
-### Vendor Website Changed
-
-**Problem**: Can't extract version from a vendor's website
-
-**Cause**: Vendor redesigned their website
-
-**Solution**: Update the patterns in `VersionChecker.php` for that vendor. Check the HTML source of their product page and adjust the regex patterns accordingly.
+Vendors using Cloudflare cannot be scraped. The tool falls back to Packagist automatically. If the package isn't on Packagist, it reports as ERROR.
 
 ### SSL Certificate Errors
 
-**Problem**: SSL verification errors when fetching URLs
+Update your CA certificates:
 
-**Temporary fix** (not recommended for production):
-```bash
-# Disable SSL verification (security risk!)
-composer config -g disable-tls false
-```
-
-**Proper fix**: Update your CA certificates:
 ```bash
 # Ubuntu/Debian
 sudo apt-get update && sudo apt-get install ca-certificates
 
 # macOS
 brew install ca-certificates
-
-# Windows
-# Update via Windows Update
-```
-
----
-
-## Advanced Usage
-
-### CI/CD Integration
-
-#### GitLab CI
-
-```yaml
-# .gitlab-ci.yml
-vendor-version-check:
-  stage: test
-  script:
-    - composer vendor:check --json > versions.json
-    - |
-      if jq -e '.[] | select(.status=="UPDATE_AVAILABLE")' versions.json; then
-        echo "⚠️  Updates available - review versions.json artifact"
-      fi
-  artifacts:
-    paths:
-      - versions.json
-    when: always
-  allow_failure: true
-```
-
-#### GitHub Actions
-
-```yaml
-# .github/workflows/vendor-check.yml
-name: Check Vendor Versions
-
-on:
-  schedule:
-    - cron: '0 9 * * 1'  # Every Monday at 9 AM
-  workflow_dispatch:
-
-jobs:
-  check-versions:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.1'
-          
-      - name: Install dependencies
-        run: composer install
-        
-      - name: Check vendor versions
-        run: composer vendor:check --json > versions.json
-        
-      - name: Upload results
-        uses: actions/upload-artifact@v2
-        with:
-          name: version-report
-          path: versions.json
-```
-
-### Automated Notifications
-
-Create a script to notify your team:
-
-```bash
-#!/bin/bash
-# notify-updates.sh
-
-UPDATES=$(composer vendor:check --json | \
-  jq -r '.[] | select(.status=="UPDATE_AVAILABLE") | 
-  "\(.package): \(.installed_version) → \(.latest_version)"')
-
-if [ ! -z "$UPDATES" ]; then
-    # Send to Slack
-    curl -X POST -H 'Content-type: application/json' \
-      --data "{\"text\":\"Vendor updates available:\n$UPDATES\"}" \
-      $SLACK_WEBHOOK_URL
-fi
-```
-
-### Regular Reporting
-
-Add to crontab:
-
-```bash
-# Check every Monday at 9 AM and email results
-0 9 * * 1 cd /path/to/project && composer vendor:check | mail -s "Weekly Vendor Check" team@example.com
 ```
 
 ---
 
 ## Uninstallation
 
-### Remove Composer Plugin
-
 ```bash
-composer remove getjohn/magento2-vendor-checker
+composer remove getjohn/module-composer-vendor-checker
 ```
 
-### Remove Magento 2 Module
+## Requirements
 
-```bash
-php bin/magento module:disable GetJohn_VendorChecker
-php bin/magento setup:upgrade
-composer remove getjohn/magento2-vendor-checker
-rm -rf app/code/GetJohn/VendorChecker
-```
-
+- PHP 7.4 or higher
+- Composer 2.x
+- ext-json
+- guzzlehttp/guzzle ^6.5 or ^7.0

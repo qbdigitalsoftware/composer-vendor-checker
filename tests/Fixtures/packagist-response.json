@@ -1,0 +1,33 @@
+{
+    "minified": "composer/2.0",
+    "packages": {
+        "klaviyo/magento2-extension": [
+            {
+                "name": "klaviyo/magento2-extension",
+                "version": "4.5.0",
+                "version_normalized": "4.5.0.0",
+                "type": "magento2-module",
+                "time": "2026-01-15T10:00:00+00:00"
+            },
+            {
+                "name": "klaviyo/magento2-extension",
+                "version": "4.4.2",
+                "version_normalized": "4.4.2.0",
+                "type": "magento2-module",
+                "time": "2025-11-05T20:51:34+00:00"
+            },
+            {
+                "name": "klaviyo/magento2-extension",
+                "version": "dev-master",
+                "version_normalized": "9999999-dev",
+                "type": "magento2-module"
+            },
+            {
+                "name": "klaviyo/magento2-extension",
+                "version": "4.5.1-beta1",
+                "version_normalized": "4.5.1.0-beta1",
+                "type": "magento2-module"
+            }
+        ]
+    }
+}

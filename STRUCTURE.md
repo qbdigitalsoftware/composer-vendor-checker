@@ -1,98 +1,106 @@
 # Directory Structure
 
 ```
-magento2-vendor-checker/
+module-composer-vendor-checker/
 │
 ├── composer.json                          # Composer configuration (type: composer-plugin)
-├── registration.php                       # Magento 2 module registration
+├── phpunit.xml                            # PHPUnit test configuration
+├── .gitignore                             # Git ignore rules
 ├── LICENSE                                # MIT License
 ├── README.md                              # Full documentation
-├── .gitignore                             # Git ignore rules
+├── INSTALL.md                             # Installation guide
+├── CHANGELOG.md                           # Version history
+├── STRUCTURE.md                           # This file
+├── FLOW_DIAGRAM.md                        # Command flow diagram
 │
-├── etc/
-│   └── module.xml                         # Magento 2 module configuration
+├── config/
+│   ├── packages.php                       # Package configuration (skip lists, URL mappings)
+│   └── packages.php.example              # Example configuration template
 │
 ├── src/
-│   ├── ComposerPlugin.php                 # Main plugin class (implements PluginInterface)
+│   ├── ComposerPlugin.php                # Main plugin class (implements PluginInterface)
 │   ├── CommandProvider.php                # Provides commands to Composer
 │   │
 │   ├── Command/
-│   │   └── VendorCheckCommand.php         # Main CLI command (composer vendor:check)
+│   │   └── VendorCheckCommand.php        # CLI command (composer vendor:check)
 │   │
-│   └── Service/
-│       ├── VersionChecker.php             # Core version checking & web scraping logic
-│       └── ComposerIntegration.php        # Integration with composer.lock
+│   ├── Service/
+│   │   ├── ComposerIntegration.php       # Core orchestration: lock parsing, check dispatch, caching
+│   │   ├── VersionChecker.php            # HTTP client, Packagist API, private repo, website scraping
+│   │   ├── PackageResolver.php           # Determines check strategy per package
+│   │   └── ResultCache.php               # File-based result caching with TTL
+│   │
+│   └── Output/
+│       ├── OutputFormatter.php           # Table, JSON, CSV formatting
+│       └── ProgressReporter.php          # Per-package progress display
 │
-└── examples/
-    └── custom-config.php                  # Example custom configuration
+├── tests/
+│   ├── Unit/
+│   │   ├── Service/
+│   │   │   ├── PackageResolverTest.php   # Resolution strategy tests
+│   │   │   ├── VersionCheckerTest.php    # HTTP mocking, Packagist/private repo tests
+│   │   │   ├── ComposerIntegrationTest.php # Integration with fixtures
+│   │   │   └── ResultCacheTest.php       # Cache TTL, persistence tests
+│   │   ├── Output/
+│   │   │   └── OutputFormatterTest.php   # Table/JSON/CSV format tests
+│   │   └── Command/
+│   │       └── VendorCheckCommandTest.php # Command options and exit codes
+│   │
+│   └── Fixtures/
+│       ├── composer.lock                 # Minimal lock file with 7 test packages
+│       ├── composer.json                 # Test repos (amasty, xtento, magento, satis)
+│       ├── auth.json                     # Test HTTP basic credentials
+│       ├── packages.php                  # Test config with skip lists
+│       └── packagist-response.json       # Sample Packagist p2 API response
+│
+├── examples/
+│   └── custom-config.php                 # Programmatic usage example
+│
+└── docs/
+    └── ...                               # HTML delivery reports
 ```
 
 ## Key Files Explained
 
 ### src/
 
-- **ComposerPlugin.php** - Entry point for Composer plugin system
-  - Implements `PluginInterface` and `Capable`
-  - Returns `CommandProvider` capability
+- **ComposerPlugin.php** — Entry point for Composer plugin system. Implements `PluginInterface` and `Capable`, returns `CommandProvider` capability.
 
-- **CommandProvider.php** - Registers custom commands
-  - Implements `CommandProviderCapability`
-  - Returns array of command instances
+- **CommandProvider.php** — Registers custom commands. Returns `[new VendorCheckCommand()]`.
 
 ### src/Command/
 
-- **VendorCheckCommand.php** - The actual CLI command
-  - Extends Symfony's `BaseCommand`
-  - Handles all command options (--packages, --url, --compare-sources, etc.)
-  - Coordinates between services to execute checks
-  - Formats and displays output
+- **VendorCheckCommand.php** — The CLI command `composer vendor:check`. Handles options (`--format`, `--output`, `--no-cache`, `--clear-cache`, `--cache-ttl`, `--config`, etc.), sets up services, and coordinates the check flow.
 
 ### src/Service/
 
-Business logic separated into focused services:
+- **PackageResolver.php** — Determines how to check each package. Resolution: skip lists -> website overrides -> private repo -> Packagist (default).
 
-- **VersionChecker.php** - Core checking logic
-  - Vendor-specific parsing patterns
-  - Web scraping and DOM parsing
-  - Version extraction
-  - Changelog parsing
+- **ComposerIntegration.php** — Core orchestrator. Reads composer.lock, builds private repo map from composer.json + auth.json, loads config, dispatches checks via VersionChecker with cache and progress support.
 
-- **ComposerIntegration.php** - Composer integration
-  - Reads and parses composer.lock
-  - Maintains package URL mappings
-  - Filters packages by vendor
-  - Version comparison logic
-  - Report generation
+- **VersionChecker.php** — HTTP client with async pre-fetching. Queries Packagist p2 API, private Composer repos (V2/V1/Satis), and scrapes vendor websites with vendor-specific regex patterns.
 
-### examples/
+- **ResultCache.php** — Single JSON file cache with configurable TTL. Lazy directory creation, dirty tracking, and explicit flush for batched writes.
 
-- **custom-config.php** - Shows how to extend the module with custom vendors
+### src/Output/
+
+- **OutputFormatter.php** — Formats results as table (box-drawing report), JSON, or CSV. Handles file writing.
+
+- **ProgressReporter.php** — Per-package console progress: `[12/85] amasty/promo ... packagist OK`.
+
+### config/
+
+- **packages.php** — Package configuration. Defines `package_url_mappings`, `skip_vendors`, `skip_packages`, `skip_hosts`, `skip_patterns`. Optional — everything defaults to Packagist without config.
 
 ## How It All Works Together
 
 1. **Composer loads the plugin** (ComposerPlugin.php)
 2. **Plugin registers commands** (via CommandProvider.php)
 3. **User runs `composer vendor:check`**
-4. **VendorCheckCommand executes** with provided options
-5. **ComposerIntegration** reads composer.lock and gets package list
-6. **VersionChecker** scrapes vendor websites for each package
-7. **Results are formatted** and displayed to the user
-
-## Extension Points
-
-Want to customize? Here's where:
-
-1. **Add Package URLs**
-   - `ComposerIntegration::$packageUrlMappings`
-
-2. **Add Vendor Patterns**
-   - `VersionChecker::$vendorPatterns`
-
-3. **Add Command Options**
-   - `VendorCheckCommand::configure()`
-
-4. **Change Output Format**
-   - `VendorCheckCommand::display*()` methods
-
-5. **Add Version Sources**
-   - `VersionChecker::checkMultiplePackages()`
+4. **VendorCheckCommand** parses options, sets up cache, creates ComposerIntegration
+5. **ComposerIntegration** loads config, builds private repo map, creates PackageResolver
+6. **PackageResolver** determines check strategy for each package in composer.lock
+7. **ResultCache** returns cached results for packages checked within TTL
+8. **VersionChecker** pre-fetches URLs concurrently, then checks each cache miss
+9. **ProgressReporter** shows live per-package progress
+10. **OutputFormatter** renders results in the requested format

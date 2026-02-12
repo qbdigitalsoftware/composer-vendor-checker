@@ -2,6 +2,51 @@
 
 All notable changes to the Vendor Version Checker module are documented here.
 
+## v2.0.0 — 2026-02-12
+
+### Breaking Changes
+
+- **Removed Magento dependency** — No longer requires `magento/framework` or `ext-dom`. Works on any Composer project.
+- **Removed `generateReport()` from ComposerIntegration** — Report formatting moved to `OutputFormatter`.
+- **Removed `getSupportedVendors()`**, `addPackageUrlMapping()`, `getPackageUrlMappings()` from ComposerIntegration.
+- **Removed `--compare-sources` option** — Was defined but never implemented.
+- **Changed `checkForUpdates()` signature** — Now accepts optional `ProgressReporter` instead of `$verbose` boolean.
+- **`compareVersions()` is now `public static`** — Accessible without instantiation.
+- **Constructor signature changed** — `ComposerIntegration` now accepts `$configPath`, `$cache`, and `$versionChecker` parameters.
+
+### New Features
+
+- **Auto-discovery** — All packages from `composer.lock` are checked via Packagist by default. No hardcoded package lists needed.
+- **PackageResolver** — New class determines check strategy per package (skip/website/private_repo/packagist) with configurable skip lists.
+- **ResultCache** — File-based result caching with configurable TTL. Avoids redundant HTTP calls on repeated runs.
+- **ProgressReporter** — Per-package progress display: `[12/85] amasty/promo ... packagist OK`.
+- **OutputFormatter** — Formats results as table, JSON, or CSV with file write support.
+- **`--format` option** — Choose output format: `table` (default), `json`, `csv`.
+- **`--output` option** — Write formatted results directly to a file.
+- **`--no-cache` option** — Skip reading cached results.
+- **`--clear-cache` option** — Clear cache before running.
+- **`--cache-ttl` option** — Custom cache TTL in seconds (default: 3600).
+- **`--config` option** — Custom path to packages.php config file.
+- **`skip_vendors` config key** — Skip entire vendor prefixes (e.g., magento, laminas, symfony).
+- **`skip_packages` config key** — Skip specific packages by name.
+- **Packagist pre-fetch for all methods** — Website and private repo checks now pre-fetch Packagist URLs as fallback.
+
+### Improvements
+
+- **Config externalised** — Package URL mappings and skip lists moved from hardcoded arrays to `config/packages.php`.
+- **Skip hosts/patterns from config** — `buildPrivateRepoMap()` reads `skip_hosts` and `skip_patterns` from config instead of hardcoded values.
+- **68 unit tests** — Full test coverage with Guzzle MockHandler for HTTP mocking. Zero network calls.
+
+### Removed
+
+- `registration.php` — Magento module registration (no longer needed)
+- `etc/module.xml` — Magento module XML config (no longer needed)
+- `fetch-vendor-modules.sh` — Operational script (not part of plugin)
+- Hardcoded `$packageUrlMappings` and `$packagistPackages` arrays from ComposerIntegration
+- `--verbose` option redefinition (now uses Symfony's built-in `-v`)
+
+---
+
 ## v0.3.0 — 2026-02-11
 
 ### New Features

@@ -4,139 +4,128 @@
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│  User Terminal                                                            │
-│  $ composer vendor:check --packages=amasty/promo -v                      │
+│  User Terminal                                                           │
+│  $ composer vendor:check --format=csv --output=report.csv               │
 └────────────────────────────────┬─────────────────────────────────────────┘
                                  │
                                  ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
-│  Composer Core                                                            │
-│  - Loads installed plugins                                                │
-│  - Finds getjohn/magento2-vendor-checker                                  │
+│  Composer Core                                                           │
+│  - Loads installed plugins                                               │
+│  - Finds getjohn/module-composer-vendor-checker                          │
 └────────────────────────────────┬─────────────────────────────────────────┘
                                  │
                                  ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
-│  ComposerPlugin.php (implements PluginInterface, Capable)                 │
-│                                                                           │
-│  getCapabilities() returns:                                               │
-│    CommandProviderCapability::class => CommandProvider::class            │
+│  ComposerPlugin.php → CommandProvider.php → VendorCheckCommand.php       │
+│                                                                          │
+│  1. Parse options (--format, --output, --no-cache, --config, etc.)       │
+│  2. Set up ResultCache (unless --no-cache)                               │
+│  3. Handle --clear-cache                                                 │
+│  4. Create ComposerIntegration with config + cache                       │
+│  5. Create ProgressReporter                                              │
 └────────────────────────────────┬─────────────────────────────────────────┘
                                  │
                                  ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
-│  CommandProvider.php (implements CommandProviderCapability)               │
-│                                                                           │
-│  getCommands() returns:                                                   │
-│    [ new VendorCheckCommand() ]                                           │
+│  ComposerIntegration.__construct()                                       │
+│                                                                          │
+│  1. Load config (explicit path or bundled config/packages.php)           │
+│  2. Build private repo map from composer.json + auth.json                │
+│  3. Create PackageResolver with config + private repo map                │
 └────────────────────────────────┬─────────────────────────────────────────┘
                                  │
                                  ▼
 ┌──────────────────────────────────────────────────────────────────────────┐
-│  VendorCheckCommand.php (extends BaseCommand)                             │
-│                                                                           │
-│  configure():                                                             │
-│    - Sets name: "vendor:check"                                            │
-│    - Defines options: --packages, --url, --verbose, etc.                  │
-│                                                                           │
-│  execute($input, $output):                                                │
-│    1. Parse command options                                               │
-│    2. Determine mode (single URL / packages / all)                        │
-│    3. Call appropriate service methods                                    │
-│    4. Format and display results                                          │
+│  getInstalledPackages()                                                  │
+│                                                                          │
+│  Reads composer.lock → PackageResolver.resolveAll()                      │
+│                                                                          │
+│  For each package:                                                       │
+│    1. skip_packages? → SKIP                                              │
+│    2. skip_vendors?  → SKIP                                              │
+│    3. URL mapping?   → WEBSITE                                           │
+│    4. Private repo?  → PRIVATE_REPO                                      │
+│    5. Default        → PACKAGIST                                         │
 └────────────────────────────────┬─────────────────────────────────────────┘
                                  │
-                                 ├─────────────────┐
-                                 ▼                 ▼
-┌───────────────────────────────────────┐  ┌──────────────────────────────┐
-│  ComposerIntegration.php              │  │  VersionChecker.php          │
-│                                       │  │                              │
-│  Methods:                             │  │  Methods:                    │
-│  - getInstalledPackages()             │  │  - getVendorVersion($url)    │
-│  - checkForUpdates()                  │  │  - checkMultiplePackages()   │
-│  - getPackageUrlMappings()            │  │  - extractVersion()          │
-│  - compareVersions()                  │  │  - extractChangelog()        │
-│  - generateReport()                   │  │  - getComposerVersion()      │
-│                                       │  │  - getMarketplaceVersion()   │
-│  Uses:                                │  │                              │
-│  - Reads composer.lock                │  │  Uses:                       │
-│  - Maintains package->URL mappings    │  │  - GuzzleHttp\Client         │
-│  - Filters by vendor                  │  │  - DOM parsing               │
-│  - Creates human-readable reports     │  │  - Regex pattern matching    │
-└───────────────┬───────────────────────┘  └────────┬─────────────────────┘
-                │                                    │
-                │                                    │
-                └────────────┬───────────────────────┘
-                             ▼
+                                 ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│  checkForUpdates()                                                       │
+│                                                                          │
+│  Phase 1: Cache check                                                    │
+│    - For each non-skipped package: check ResultCache                     │
+│    - Cache hit → use cached result, advance progress                     │
+│    - Cache miss → add to toCheck list                                    │
+│                                                                          │
+│  Phase 2: Concurrent pre-fetch                                           │
+│    - warmHttpCache() pre-fetches all URLs concurrently via Guzzle async  │
+│    - Includes Packagist URLs as fallback for website/private_repo        │
+│                                                                          │
+│  Phase 3: Check each cache miss                                          │
+│    - checkPackage() dispatches to appropriate method                     │
+│    - Store result in ResultCache                                         │
+│    - Advance ProgressReporter                                            │
+│                                                                          │
+│  Phase 4: Flush cache to disk                                            │
+└────────────────────────────────┬─────────────────────────────────────────┘
+                                 │
+                    ┌────────────┼────────────┐
+                    ▼            ▼            ▼
+         ┌──────────────┐ ┌──────────┐ ┌───────────────┐
+         │  PACKAGIST   │ │ WEBSITE  │ │ PRIVATE_REPO  │
+         │              │ │          │ │               │
+         │ Packagist p2 │ │ Scrape   │ │ V2/V1/Satis  │
+         │ API check    │ │ vendor   │ │ with auth     │
+         │              │ │ page     │ │               │
+         │              │ │    ↓     │ │      ↓        │
+         │              │ │ Fallback │ │ Fallback      │
+         │              │ │ to       │ │ to            │
+         │              │ │ Packagist│ │ Packagist     │
+         └──────┬───────┘ └────┬─────┘ └──────┬────────┘
+                │              │              │
+                └──────────────┼──────────────┘
+                               ▼
                 ┌─────────────────────────────────┐
-                │  External Resources             │
-                │                                 │
-                │  - composer.lock file           │
-                │  - Vendor websites (HTTP)       │
-                │  - Magento Marketplace          │
-                │  - composer show command        │
+                │  Results Processing              │
+                │                                  │
+                │  Each result:                    │
+                │  {                               │
+                │    package: 'amasty/promo',      │
+                │    installed_version: '2.12.0',  │
+                │    latest_version: '2.14.0',     │
+                │    status: 'UPDATE_AVAILABLE',   │
+                │    source: 'packagist'           │
+                │  }                               │
                 └────────────┬────────────────────┘
                              ▼
                 ┌─────────────────────────────────┐
-                │  Results Processing             │
-                │                                 │
-                │  Array of results:              │
-                │  [                              │
-                │    package => 'amasty/promo',   │
-                │    installed => '2.22.0',       │
-                │    latest => '2.23.1',          │
-                │    status => 'UPDATE_AVAILABLE',│
-                │    changelog => [...]           │
-                │  ]                              │
+                │  OutputFormatter                 │
+                │                                  │
+                │  --format=table → Box-drawing    │
+                │  --format=json  → JSON           │
+                │  --format=csv   → CSV            │
+                │                                  │
+                │  --output=file → Write to disk   │
+                │  (else)        → Write to stdout │
                 └────────────┬────────────────────┘
                              ▼
                 ┌─────────────────────────────────┐
-                │  Output Formatting              │
-                │                                 │
-                │  If --json:                     │
-                │    → JSON to stdout             │
-                │  Else:                          │
-                │    → Human-readable report      │
-                │    → Status symbols (✓ ↑ ⚠ ✗)   │
-                │    → Summary statistics         │
-                └────────────┬────────────────────┘
-                             ▼
-┌──────────────────────────────────────────────────────────────────────────┐
-│  User Terminal                                                            │
-│                                                                           │
-│  ╔════════════════════════════════════════════════════════╗              │
-│  ║        Vendor Version Check Report                     ║              │
-│  ╚════════════════════════════════════════════════════════╝              │
-│                                                                           │
-│    ↑  amasty/promo                                                        │
-│        Installed: 2.22.0              Latest: 2.23.1                      │
-│        Recent changes:                                                    │
-│          • 2.23.1 - Sep 15, 2024                                          │
-│                                                                           │
-│  ─────────────────────────────────────────────────────────               │
-│  Summary: 0 up-to-date, 1 updates available, 0 errors                    │
-└──────────────────────────────────────────────────────────────────────────┘
+                │  Exit Code                       │
+                │                                  │
+                │  0 = all up to date              │
+                │  1 = updates available           │
+                │  2 = errors encountered          │
+                └─────────────────────────────────┘
 ```
 
-## Error Handling Flow
+## Progress Output During Check
 
 ```
-Try:
-  HTTP Request
-    ↓
-  Parse HTML
-    ↓
-  Extract Version
-    ↓
-Catch:
-  GuzzleException → Network error
-  DOMException → Parsing error
-  RegexException → Pattern mismatch
-    ↓
-Return:
-  Error status in result array
-    ↓
-Display:
-  ✗ symbol + error message
+  [ 1/24] stripe/stripe-payments                          packagist OK
+  [ 2/24] klaviyo/magento2-extension                      packagist UPDATE
+  [ 3/24] amasty/promo                                    cached UP_TO_DATE
+  [ 4/24] xtento/orderexport                              website OK
+  [ 5/24] aheadworks/module-blog                          website ERR
+  ...
 ```
-

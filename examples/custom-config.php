@@ -1,74 +1,74 @@
 <?php
 /**
- * Example: Custom Vendor URL Configuration
- * 
- * This file demonstrates how to extend the vendor checker with your own
- * custom package URL mappings and vendor patterns.
- * 
- * Usage:
- * 1. Copy this to your project's root directory
- * 2. Modify with your custom URLs
- * 3. Include it before running the checker
+ * Example: Programmatic Usage of Vendor Version Checker
+ *
+ * This demonstrates how to use the checker as a library with custom
+ * configuration, caching, and output formatting.
+ *
+ * For most use cases, running `composer vendor:check` from the CLI is
+ * sufficient. This file is for advanced programmatic usage.
  */
 
+use GetJohn\VendorChecker\Output\OutputFormatter;
 use GetJohn\VendorChecker\Service\ComposerIntegration;
-use GetJohn\VendorChecker\Service\VersionChecker;
+use GetJohn\VendorChecker\Service\ResultCache;
 
-// Example: Adding custom package URLs
+// Auto-discovery mode — works on any Composer project with zero config.
+// All packages from composer.lock are checked via Packagist by default.
 $integration = new ComposerIntegration('./composer.lock');
 
-// Add Amasty modules
-$integration->addPackageUrlMapping(
-    'amasty/custom-module',
-    'https://amasty.com/custom-module-for-magento-2.html'
+// With private repos — pass composer.json and auth.json paths
+$integration = new ComposerIntegration(
+    './composer.lock',
+    './composer.json',
+    './auth.json'
 );
 
-// Add Mageplaza modules
-$integration->addPackageUrlMapping(
-    'mageplaza/custom-extension',
-    'https://www.mageplaza.com/magento-2-custom-extension/'
+// With custom config — pass a config file path
+// See config/packages.php.example for the full config format.
+$integration = new ComposerIntegration(
+    './composer.lock',
+    './composer.json',
+    './auth.json',
+    __DIR__ . '/my-packages.php'
 );
 
-// Add BSS Commerce modules
-$integration->addPackageUrlMapping(
-    'bsscommerce/custom-module',
-    'https://bsscommerce.com/custom-module-for-magento-2.html'
+// With result caching — pass a ResultCache instance
+$cache = new ResultCache('./.vendor-check-cache', 3600);
+$integration = new ComposerIntegration(
+    './composer.lock',
+    './composer.json',
+    './auth.json',
+    null,   // use default config
+    $cache
 );
 
-// Example: Adding a completely new vendor with custom patterns
-// This requires extending the VersionChecker class or modifying it directly
+// Run the check (no progress reporter in programmatic mode)
+$results = $integration->checkForUpdates();
 
-/**
- * Custom Vendor Pattern Example
- * 
- * If you need to add a new vendor that's not supported out of the box,
- * you'll need to add their patterns to VersionChecker.php in the
- * $vendorPatterns array.
- * 
- * Example structure:
- * 
- * 'newvendor.com' => [
- *     'version_pattern' => '/Version:?\s*(\d+\.\d+\.\d+)/i',
- *     'changelog_pattern' => '/##\s*v?(\d+\.\d+\.\d+)\s*\(([^)]+)\)(.*?)(?=##|$)/s',
- *     'composer_pattern' => '/composer\s+require\s+([\w\-\/]+)/i'
- * ]
- */
+// Or filter to specific packages
+$results = $integration->checkForUpdates(null, ['stripe/stripe-payments', 'amasty/promo']);
 
-// Example: Run the checker programmatically
-$results = $integration->checkForUpdates(true);
+// Format as a table
+$formatter = new OutputFormatter();
+echo $formatter->formatTable($results);
 
-// Process results
+// Or format as JSON
+echo $formatter->formatJson($results);
+
+// Or write CSV to file
+$csv = $formatter->formatCsv($results);
+$formatter->writeToFile($csv, '/tmp/vendor-report.csv');
+
+// Process results programmatically
 foreach ($results as $result) {
     if ($result['status'] === 'UPDATE_AVAILABLE') {
         echo sprintf(
-            "Update available: %s (%s → %s)\n",
+            "Update available: %s (%s -> %s) [via %s]\n",
             $result['package'],
             $result['installed_version'],
-            $result['latest_version']
+            $result['latest_version'],
+            $result['source'] ?? 'unknown'
         );
     }
 }
-
-// Generate a report
-echo "\n";
-echo $integration->generateReport($results);

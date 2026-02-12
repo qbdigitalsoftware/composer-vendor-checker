@@ -6,24 +6,27 @@
 namespace GetJohn\VendorChecker\Command;
 
 use Composer\Command\BaseCommand;
+use GetJohn\VendorChecker\Output\OutputFormatter;
+use GetJohn\VendorChecker\Output\ProgressReporter;
 use GetJohn\VendorChecker\Service\ComposerIntegration;
+use GetJohn\VendorChecker\Service\ResultCache;
 use GetJohn\VendorChecker\Service\VersionChecker;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * Composer command to check vendor websites for module updates
+ * Composer command to check installed packages for available updates.
  */
 class VendorCheckCommand extends BaseCommand
 {
     /**
-     * Configure the command
+     * Configure the command.
      */
     protected function configure()
     {
         $this->setName('vendor:check')
-            ->setDescription('Check vendor websites for latest module versions')
+            ->setDescription('Check installed packages for available updates')
             ->addOption(
                 'path',
                 'p',
@@ -35,7 +38,7 @@ class VendorCheckCommand extends BaseCommand
                 'packages',
                 null,
                 InputOption::VALUE_OPTIONAL,
-                'Comma-separated list of package names to check (e.g., amasty/promo,mageplaza/layered-navigation)'
+                'Comma-separated list of package names to check'
             )
             ->addOption(
                 'url',
@@ -44,74 +47,106 @@ class VendorCheckCommand extends BaseCommand
                 'Single vendor URL to check'
             )
             ->addOption(
-                'verbose',
-                'v',
-                InputOption::VALUE_NONE,
-                'Show detailed output'
+                'format',
+                'f',
+                InputOption::VALUE_OPTIONAL,
+                'Output format: table, json, csv',
+                'table'
             )
             ->addOption(
-                'compare-sources',
-                'c',
-                InputOption::VALUE_NONE,
-                'Compare versions across Composer, Marketplace, and vendor sites'
+                'output',
+                'o',
+                InputOption::VALUE_OPTIONAL,
+                'Write results to file path'
             )
             ->addOption(
                 'json',
                 'j',
                 InputOption::VALUE_NONE,
-                'Output results as JSON'
+                'Output results as JSON (alias for --format=json)'
+            )
+            ->addOption(
+                'no-cache',
+                null,
+                InputOption::VALUE_NONE,
+                'Skip reading cached results'
+            )
+            ->addOption(
+                'clear-cache',
+                null,
+                InputOption::VALUE_NONE,
+                'Clear cache before running'
+            )
+            ->addOption(
+                'cache-ttl',
+                null,
+                InputOption::VALUE_OPTIONAL,
+                'Cache TTL in seconds',
+                3600
+            )
+            ->addOption(
+                'config',
+                'c',
+                InputOption::VALUE_OPTIONAL,
+                'Path to packages.php config file'
             )
             ->setHelp(<<<EOF
-The <info>vendor:check</info> command checks vendor websites for the latest module versions.
-
-<info>Supported Vendors:</info>
-  Amasty, Mageplaza, BSS Commerce, Aheadworks, MageMe, Mageworx, XTENTO
-  
-  Note: When checking all packages, only packages from supported vendors will be checked.
-  Use -v to see the list of supported vendors.
+The <info>vendor:check</info> command checks installed packages for available updates.
 
 <info>Usage:</info>
 
-  Check all installed packages (from supported vendors only):
+  Check all installed packages:
     <comment>composer vendor:check</comment>
 
   Check specific packages:
-    <comment>composer vendor:check --packages=amasty/promo,mageplaza/layered-navigation</comment>
+    <comment>composer vendor:check --packages=amasty/promo,stripe/stripe-payments</comment>
 
   Check a single vendor URL:
     <comment>composer vendor:check --url=https://amasty.com/admin-actions-log-for-magento-2.html</comment>
 
-  Compare versions from multiple sources:
-    <comment>composer vendor:check --compare-sources --packages=amasty/promo</comment>
-
-  Show detailed output with supported vendors:
+  Show detailed output:
     <comment>composer vendor:check -v</comment>
 
   Output as JSON:
-    <comment>composer vendor:check --json</comment>
+    <comment>composer vendor:check --format=json</comment>
+
+  Output as CSV to file:
+    <comment>composer vendor:check --format=csv --output=report.csv</comment>
+
+  Skip cache:
+    <comment>composer vendor:check --no-cache</comment>
+
+  Clear cache and re-check:
+    <comment>composer vendor:check --clear-cache</comment>
 
 EOF
             );
     }
 
     /**
-     * Execute the command
+     * Execute the command.
      *
      * @param InputInterface $input
      * @param OutputInterface $output
      * @return int
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $path = $input->getOption('path');
         $packages = $input->getOption('packages');
         $url = $input->getOption('url');
-        $verbose = $input->getOption('verbose');
-        $jsonOutput = $input->getOption('json');
+        $configPath = $input->getOption('config');
+        $outputPath = $input->getOption('output');
+        $noCache = $input->getOption('no-cache');
+        $clearCache = $input->getOption('clear-cache');
+        $cacheTtl = (int) $input->getOption('cache-ttl');
+
+        // Resolve format (--json is alias for --format=json)
+        $format = $input->getOption('json') ? 'json' : $input->getOption('format');
 
         // Single URL check (doesn't need ComposerIntegration)
         if ($url) {
-            return $this->checkSingleUrl($url, $output, $verbose, $jsonOutput);
+            return $this->checkSingleUrl($url, $output, $format);
         }
 
         if (!file_exists($path)) {
@@ -119,15 +154,31 @@ EOF
             return 2;
         }
 
-        // Resolve composer.json and auth.json from lock file directory
+        // Resolve companion files from lock file directory
         $lockDir = dirname(realpath($path) ?: $path);
         $composerJsonPath = $lockDir . '/composer.json';
         $authJsonPath = $lockDir . '/auth.json';
 
+        // Set up cache
+        $cache = null;
+        if (!$noCache) {
+            $cacheDir = $lockDir . '/.vendor-check-cache';
+            $cache = new ResultCache($cacheDir, $cacheTtl);
+
+            if ($clearCache) {
+                $cache->clear();
+                if ($format === 'table') {
+                    $output->writeln('<comment>Cache cleared.</comment>');
+                }
+            }
+        }
+
         $integration = new ComposerIntegration(
             $path,
             file_exists($composerJsonPath) ? $composerJsonPath : null,
-            file_exists($authJsonPath) ? $authJsonPath : null
+            file_exists($authJsonPath) ? $authJsonPath : null,
+            $configPath,
+            $cache
         );
 
         // Parse --packages filter
@@ -136,60 +187,89 @@ EOF
             $packageFilter = array_map('trim', explode(',', $packages));
         }
 
-        if (!$jsonOutput) {
+        // Show header for table format
+        if ($format === 'table') {
             $output->writeln("<info>Checking packages from:</info> $path");
-            if ($verbose) {
-                $supportedVendors = $integration->getSupportedVendors();
-                $output->writeln("<comment>Website vendors:</comment> " . implode(', ', $supportedVendors));
+            if ($output->isVerbose()) {
                 if (file_exists($authJsonPath)) {
                     $output->writeln("<comment>Private repos:</comment> enabled (auth.json found)");
+                }
+                if (!$noCache) {
+                    $output->writeln("<comment>Cache TTL:</comment> {$cacheTtl}s");
                 }
             }
             $output->writeln('');
         }
 
-        $results = $integration->checkForUpdates($verbose, $packageFilter);
+        // Set up progress reporter (suppress for non-table formats unless writing to file)
+        $progress = null;
+        if ($format === 'table' || $outputPath) {
+            $installedCount = count($integration->getInstalledPackages($packageFilter));
+            $progress = new ProgressReporter($output, $installedCount);
+        }
 
-        if ($jsonOutput) {
-            $output->writeln(json_encode($results, JSON_PRETTY_PRINT));
+        $results = $integration->checkForUpdates($progress, $packageFilter);
+
+        if ($progress !== null) {
+            $progress->finish();
+        }
+
+        // Format output
+        $formatter = new OutputFormatter();
+        switch ($format) {
+            case 'json':
+                $formatted = $formatter->formatJson($results);
+                break;
+            case 'csv':
+                $formatted = $formatter->formatCsv($results);
+                break;
+            default:
+                $formatted = $formatter->formatTable($results);
+                break;
+        }
+
+        // Write to file or stdout
+        if ($outputPath) {
+            $formatter->writeToFile($formatted, $outputPath);
+            if ($format === 'table') {
+                $output->writeln("<info>Results written to:</info> $outputPath");
+            }
         } else {
-            $report = $integration->generateReport($results);
-            $output->writeln($report);
+            $output->writeln($formatted);
         }
 
         return $this->getExitCode($results);
     }
 
     /**
-     * Check a single vendor URL
+     * Check a single vendor URL.
      *
      * @param string $url
      * @param OutputInterface $output
-     * @param bool $verbose
-     * @param bool $jsonOutput
+     * @param string $format
      * @return int
      */
-    protected function checkSingleUrl($url, OutputInterface $output, $verbose, $jsonOutput)
+    protected function checkSingleUrl($url, OutputInterface $output, $format)
     {
         $checker = new VersionChecker();
-        
-        if (!$jsonOutput) {
+
+        if ($format === 'table') {
             $output->writeln("<info>Checking vendor URL:</info> $url");
             $output->writeln('');
         }
 
         try {
             $result = $checker->getVendorVersion($url);
-            
-            if ($jsonOutput) {
+
+            if ($format === 'json') {
                 $output->writeln(json_encode($result, JSON_PRETTY_PRINT));
             } else {
-                $this->displaySingleResult($result, $output, $verbose);
+                $this->displaySingleResult($result, $output, $output->isVerbose());
             }
-            
+
             return 0;
         } catch (\Exception $e) {
-            if ($jsonOutput) {
+            if ($format === 'json') {
                 $output->writeln(json_encode(['error' => $e->getMessage()], JSON_PRETTY_PRINT));
             } else {
                 $output->writeln("<error>Error: {$e->getMessage()}</error>");
@@ -228,7 +308,7 @@ EOF
     }
 
     /**
-     * Display a single result
+     * Display a single URL check result.
      *
      * @param array $result
      * @param OutputInterface $output
@@ -242,12 +322,12 @@ EOF
         }
 
         $output->writeln("<info>Latest Version:</info> {$result['latest_version']}");
-        
+
         if ($verbose && isset($result['changelog'])) {
             $output->writeln('');
             $output->writeln('<info>Recent Changes:</info>');
             foreach (array_slice($result['changelog'], 0, 5) as $entry) {
-                $output->writeln("  • {$entry['version']} - {$entry['date']}");
+                $output->writeln("  {$entry['version']} - {$entry['date']}");
                 if (!empty($entry['changes'])) {
                     foreach (array_slice($entry['changes'], 0, 3) as $change) {
                         $output->writeln("    - $change");
@@ -256,5 +336,4 @@ EOF
             }
         }
     }
-
 }
