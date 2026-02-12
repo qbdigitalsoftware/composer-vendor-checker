@@ -16,33 +16,57 @@ class ComposerIntegration
     /** @var VersionChecker */
     protected $versionChecker;
 
-    /** @var array Known package URL mappings */
+    /** @var array Known package URL mappings for vendor website scraping */
     protected $packageUrlMappings = [
-        // Amasty modules
+        // Amasty modules (Cloudflare-protected — will fall back to error reporting)
         'amasty/module-admin-actions-log' => 'https://amasty.com/admin-actions-log-for-magento-2.html',
         'amasty/promo' => 'https://amasty.com/special-promotions-for-magento-2.html',
         'amasty/shopby' => 'https://amasty.com/improved-layered-navigation-for-magento-2.html',
         'amasty/geoip' => 'https://amasty.com/geoip-for-magento-2.html',
-        
+        'amasty/gdpr-cookie' => 'https://amasty.com/gdpr-cookie-compliance-for-magento-2.html',
+        'amasty/geoipredirect' => 'https://amasty.com/geoip-redirect-for-magento-2.html',
+        'amasty/module-gdpr' => 'https://amasty.com/gdpr-for-magento-2.html',
+        'amasty/number' => 'https://amasty.com/custom-order-number-for-magento-2.html',
+
+        // Aheadworks modules (Cloudflare-protected)
+        'aheadworks/module-blog' => 'https://aheadworks.com/magento-2-blog-extension',
+
         // Mageplaza modules
         'mageplaza/module-layered-navigation-m2' => 'https://www.mageplaza.com/magento-2-layered-navigation/',
         'mageplaza/layered-navigation-m2-pro' => 'https://www.mageplaza.com/magento-2-layered-navigation/',
         'mageplaza/module-layered-navigation-m2-ultimate' => 'https://www.mageplaza.com/magento-2-layered-navigation/',
-        
+        'mageplaza/module-smtp' => 'https://www.mageplaza.com/magento-2-smtp/',
+
         // BSS Commerce modules
         'bsscommerce/module-customer-approval' => 'https://bsscommerce.com/magento-2-customer-approval-extension.html',
-        
+        // Note: bsscommerce/disable-compare has no public product page — tracked via Packagist
+
         // MageMe modules
         'mageme/module-webforms-3' => 'https://mageme.com/magento-2-form-builder.html',
         'mageme/module-webforms' => 'https://mageme.com/magento-2-form-builder.html',
-        
-        // Mageworx modules
-        'mageworx/module-giftcards' => 'https://www.mageworx.com/magento-2-gift-cards.html',
-        
+
+        // MageWorx modules
+        // Note: mageworx/module-giftcards has no version info on product page — tracked via Packagist
+        // Note: mageworx/module-donationsmeta has no public product page — tracked via Packagist
+
         // XTENTO modules
         'xtento/orderexport' => 'https://www.xtento.com/magento-extensions/magento-order-export-module.html',
-        
-        // Add more mappings as needed
+    ];
+
+    /** @var array Packages to check via Packagist API only (no vendor website scraping) */
+    protected $packagistPackages = [
+        'taxjar/module-taxjar',
+        'webshopapps/module-matrixrate',
+        'klaviyo/magento2-extension',
+        'yotpo/magento2-module-yotpo-loyalty',
+        'yotpo/module-review',
+        'paradoxlabs/authnetcim',
+        'paradoxlabs/tokenbase',
+        'justuno.com/m2',
+        'stripe/stripe-payments',
+        'bsscommerce/disable-compare',
+        'mageworx/module-donationsmeta',
+        'mageworx/module-giftcards',
     ];
 
     /**
@@ -89,7 +113,7 @@ class ComposerIntegration
 
     /**
      * Get installed packages from composer.lock
-     * Only returns packages from vendors that have defined patterns in VersionChecker
+     * Returns packages that have URL mappings OR are in the Packagist-only list
      *
      * @param array $vendorFilter Optional vendor names to filter (e.g., ['amasty', 'mageplaza'])
      * @return array
@@ -101,7 +125,7 @@ class ComposerIntegration
         }
 
         $lockData = json_decode(file_get_contents($this->composerLockPath), true);
-        
+
         if (!isset($lockData['packages'])) {
             throw new \Exception("Invalid composer.lock format");
         }
@@ -109,29 +133,34 @@ class ComposerIntegration
         $supportedVendors = $this->versionChecker->getSupportedVendors();
 
         $packages = [];
-        
+
         foreach ($lockData['packages'] as $package) {
             $packageName = $package['name'];
             $vendor = $this->versionChecker->getVendorFromPackage($packageName);
-            
-            // Skip if vendor is not in our supported list
-            if (!in_array($vendor, $supportedVendors)) {
+
+            // Apply vendor filter if specified
+            if (!empty($vendorFilter) && !in_array($vendor, $vendorFilter)) {
                 continue;
             }
-            
-            // Apply additional vendor filter if specified
-            if (!empty($vendorFilter)) {
-                if (!in_array($vendor, $vendorFilter)) {
-                    continue;
-                }
-            }
 
-            // Only include packages we have URL mappings for
-            if (isset($this->packageUrlMappings[$packageName])) {
+            // Include if we have a URL mapping (vendor website check)
+            if (isset($this->packageUrlMappings[$packageName]) && in_array($vendor, $supportedVendors)) {
                 $packages[$packageName] = [
                     'name' => $packageName,
                     'version' => $package['version'],
-                    'url' => $this->packageUrlMappings[$packageName]
+                    'url' => $this->packageUrlMappings[$packageName],
+                    'check_method' => 'website'
+                ];
+                continue;
+            }
+
+            // Include if it's a Packagist-only package
+            if (in_array($packageName, $this->packagistPackages)) {
+                $packages[$packageName] = [
+                    'name' => $packageName,
+                    'version' => $package['version'],
+                    'url' => null,
+                    'check_method' => 'packagist'
                 ];
             }
         }
@@ -151,15 +180,64 @@ class ComposerIntegration
         $results = [];
 
         foreach ($installedPackages as $packageName => $packageInfo) {
+            $checkMethod = $packageInfo['check_method'] ?? 'website';
+
+            // Packagist-only packages — check directly via Packagist API
+            if ($checkMethod === 'packagist') {
+                $latestVersion = $this->versionChecker->getPackagistVersion($packageName);
+                if ($latestVersion !== null) {
+                    $results[] = [
+                        'package' => $packageName,
+                        'installed_version' => $packageInfo['version'],
+                        'latest_version' => $latestVersion,
+                        'vendor_url' => 'https://packagist.org/packages/' . $packageName,
+                        'source' => 'packagist',
+                        'status' => $this->compareVersions($packageInfo['version'], $latestVersion),
+                        'checked_at' => date('Y-m-d H:i:s')
+                    ];
+                } else {
+                    $results[] = [
+                        'package' => $packageName,
+                        'installed_version' => $packageInfo['version'],
+                        'latest_version' => 'N/A',
+                        'vendor_url' => null,
+                        'source' => 'packagist',
+                        'status' => 'UNAVAILABLE',
+                        'error' => 'Package not found on Packagist',
+                        'checked_at' => date('Y-m-d H:i:s')
+                    ];
+                }
+                continue;
+            }
+
+            // Website check with Packagist fallback
             try {
-                $vendorData = $this->versionChecker->getVendorVersion($packageInfo['url']);
-                
+                $vendorData = $this->versionChecker->getVendorVersion($packageInfo['url'], $packageName);
+
+                $latestVersion = $vendorData['latest_version'];
+
+                // Handle null version — page loaded but no version found
+                if ($latestVersion === null) {
+                    $results[] = [
+                        'package' => $packageName,
+                        'installed_version' => $packageInfo['version'],
+                        'latest_version' => 'N/A',
+                        'vendor_url' => $packageInfo['url'],
+                        'source' => $vendorData['source'] ?? 'vendor_website',
+                        'status' => 'UNAVAILABLE',
+                        'error' => 'No version information found on vendor page or Packagist',
+                        'checked_at' => $vendorData['checked_at']
+                    ];
+                    continue;
+                }
+
                 $result = [
                     'package' => $packageName,
                     'installed_version' => $packageInfo['version'],
-                    'latest_version' => $vendorData['latest_version'],
+                    'latest_version' => $latestVersion,
                     'vendor_url' => $packageInfo['url'],
-                    'status' => $this->compareVersions($packageInfo['version'], $vendorData['latest_version']),
+                    'source' => $vendorData['source'] ?? 'vendor_website',
+                    'status' => $this->compareVersions($packageInfo['version'], $latestVersion),
                     'checked_at' => $vendorData['checked_at']
                 ];
 
@@ -223,6 +301,7 @@ class ComposerIntegration
         $updateCount = 0;
         $upToDateCount = 0;
         $errorCount = 0;
+        $unavailableCount = 0;
 
         foreach ($results as $result) {
             $package = $result['package'];
@@ -246,15 +325,22 @@ class ComposerIntegration
                 case 'AHEAD_OF_VENDOR':
                     $statusSymbol = '⚠';
                     break;
+                case 'UNAVAILABLE':
+                    $statusSymbol = '?';
+                    $unavailableCount++;
+                    break;
                 case 'ERROR':
                     $statusSymbol = '✗';
                     $errorCount++;
                     break;
             }
 
+            $source = isset($result['source']) ? $result['source'] : '';
+            $sourceLabel = ($source === 'packagist') ? ' [via Packagist]' : '';
+
             $report[] = sprintf("  %s  %-50s", $statusSymbol, $package);
-            $report[] = sprintf("      Installed: %-20s  Latest: %s", $installed, $latest);
-            
+            $report[] = sprintf("      Installed: %-20s  Latest: %s%s", $installed, $latest, $sourceLabel);
+
             if (isset($result['recent_changes'])) {
                 $report[] = "      Recent changes:";
                 foreach ($result['recent_changes'] as $change) {
@@ -270,8 +356,8 @@ class ComposerIntegration
         }
 
         $report[] = "─────────────────────────────────────────────────────────────────────────────";
-        $report[] = sprintf("Summary: %d up-to-date, %d updates available, %d errors", 
-            $upToDateCount, $updateCount, $errorCount);
+        $report[] = sprintf("Summary: %d up-to-date, %d updates available, %d unavailable, %d errors",
+            $upToDateCount, $updateCount, $unavailableCount, $errorCount);
         $report[] = "";
 
         return implode("\n", $report);
