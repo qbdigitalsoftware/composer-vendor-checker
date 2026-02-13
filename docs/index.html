@@ -157,7 +157,13 @@
 
                 <!-- Cross-Store Updates Section -->
                 <div x-show="allStoresSection === 'updates'">
-                <h2 class="text-lg font-bold text-[#333333] mb-4">Updates Available Across All Stores</h2>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-[#333333]">Updates Available Across All Stores</h2>
+                    <button @click="downloadCrossStoreCsv()" class="px-4 py-1.5 text-sm font-medium bg-[#333333] text-white hover:bg-[#555555] transition-colors flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Download CSV
+                    </button>
+                </div>
                 <div class="bg-white border border-gray-200 overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
@@ -428,8 +434,9 @@
                     </div>
                 </div>
 
-                <!-- Filter Tabs -->
-                <div class="flex gap-2 flex-wrap mb-6">
+                <!-- Filter Tabs + Download -->
+                <div class="flex items-center justify-between flex-wrap gap-4 mb-6">
+                <div class="flex gap-2 flex-wrap">
                     <button @click="filter = 'all'"
                             :class="filter === 'all' ? 'bg-[#1c69af] text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'"
                             class="px-3 py-1.5 text-sm font-medium transition-colors">
@@ -455,6 +462,11 @@
                             class="px-3 py-1.5 text-sm font-medium transition-colors">
                         Unavailable <span class="ml-1 opacity-60" x-text="currentCounts.unavailable"></span>
                     </button>
+                </div>
+                <button @click="downloadStoreCsv()" class="px-4 py-1.5 text-sm font-medium bg-[#333333] text-white hover:bg-[#555555] transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Download CSV
+                </button>
                 </div>
 
                 <!-- Search -->
@@ -637,30 +649,95 @@ function dashboard() {
             return pkgs;
         },
 
-        downloadPhpCompatCsv() {
-            if (!this.phpCompat) return;
-            const esc = (v) => {
-                v = String(v || '');
-                return (v.includes(',') || v.includes('"') || v.includes('\n')) ? '"' + v.replace(/"/g, '""') + '"' : v;
-            };
-            const header = ['Package','Installed Version','Category','PHP 8.4 Compatible?','Risk Level','Errors','Warnings','Files Needing Changes','Action Required'];
-            const rows = [header.join(',')];
-            for (const p of this.phpCompat.packages) {
-                let compat = 'YES';
-                let action = 'No action needed';
-                if (p.status === 'FAIL') { compat = 'NO'; action = p.recommendation; }
-                else if (p.status === 'WARN') { compat = 'YES (warnings)'; action = p.recommendation; }
-                else if (p.status === 'NOT SCANNED') { compat = 'UNKNOWN'; action = p.recommendation; }
-                else if (p.status === 'NOT IN SCOPE') { compat = 'N/A'; action = 'Infrastructure package - not applicable'; }
-                rows.push([esc(p.package), esc(p.version), esc(p.category), esc(compat), esc(p.risk), esc(p.errors), esc(p.warnings), esc(p.files), esc(action)].join(','));
-            }
-            const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+        _esc(v) {
+            v = String(v == null ? '' : v);
+            return (v.includes(',') || v.includes('"') || v.includes('\n')) ? '"' + v.replace(/"/g, '""') + '"' : v;
+        },
+
+        _downloadFile(rows, filename) {
+            const bom = '\uFEFF';
+            const blob = new Blob([bom + rows.join('\n')], { type: 'text/csv;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'php84-compatibility-report.csv';
+            a.download = filename;
             a.click();
             URL.revokeObjectURL(url);
+        },
+
+        _formatStatus(status) {
+            const map = { 'UP_TO_DATE': 'Up to Date', 'UPDATE_AVAILABLE': 'Update Available', 'ERROR': 'Error', 'UNAVAILABLE': 'Unavailable', 'AHEAD_OF_VENDOR': 'Ahead of Vendor', 'SKIPPED': 'Skipped' };
+            return map[status] || status || '';
+        },
+
+        _formatRisk(risk) {
+            const map = { 'NONE': 'None', 'LOW': 'Low', 'MEDIUM': 'Medium', 'UNKNOWN': 'Unknown' };
+            return map[risk] || risk || '';
+        },
+
+        downloadPhpCompatCsv() {
+            if (!this.phpCompat) return;
+            const e = this._esc.bind(this);
+            const header = ['Package','Installed Version','Category','PHP 8.4 Compatible?','Risk Level','Errors','Warnings','Files Needing Changes','Action Required'];
+            const rows = [header.join(',')];
+            for (const p of this.filteredPhpCompat) {
+                let compat = 'Yes';
+                let action = 'No action needed';
+                if (p.status === 'FAIL') { compat = 'No'; action = p.recommendation; }
+                else if (p.status === 'WARN') { compat = 'Yes (warnings)'; action = p.recommendation; }
+                else if (p.status === 'NOT SCANNED') { compat = 'Unknown'; action = p.recommendation; }
+                else if (p.status === 'NOT IN SCOPE') { compat = 'N/A'; action = 'Infrastructure package — not applicable'; }
+                const risk = this._formatRisk(p.risk);
+                const errors = (p.errors === 'N/A' || p.errors === '-') ? '' : p.errors;
+                const warnings = (p.warnings === 'N/A' || p.warnings === '-') ? '' : p.warnings;
+                rows.push([e(p.package), e(p.version), e(p.category), e(compat), e(risk), e(errors), e(warnings), e(p.files), e(action)].join(','));
+            }
+            const suffix = this.phpCompatFilter !== 'all' ? '-' + this.phpCompatFilter.toLowerCase().replace(/ /g, '-') : '';
+            this._downloadFile(rows, 'php84-compatibility-report' + suffix + '.csv');
+        },
+
+        downloadCrossStoreCsv() {
+            if (!this.crossStoreUpdates || !this.storeNames) return;
+            const e = this._esc.bind(this);
+            const header = ['Package'];
+            for (const name of this.storeNames) {
+                header.push(name + ' Installed', name + ' Latest', name + ' Status', name + ' Source');
+            }
+            const rows = [header.join(',')];
+            for (const pkg of this.crossStoreUpdates) {
+                const row = [e(pkg.package)];
+                for (const name of this.storeNames) {
+                    const s = pkg.stores[name];
+                    if (s) {
+                        row.push(e(s.installed || ''), e(s.latest || ''), e(this._formatStatus(s.status)), e(s.source || ''));
+                    } else {
+                        row.push('', '', '', '');
+                    }
+                }
+                rows.push(row.join(','));
+            }
+            this._downloadFile(rows, 'cross-store-report.csv');
+        },
+
+        downloadStoreCsv() {
+            if (!this.activeStore || this.activeStore === 'ALL') return;
+            const e = this._esc.bind(this);
+            const header = ['Package', 'Installed Version', 'Latest Version', 'Status', 'Source', 'Notes'];
+            const rows = [header.join(',')];
+            for (const r of this.filteredResults) {
+                const status = this._formatStatus(r.status);
+                let notes = '';
+                if (r.error) {
+                    if (r.error.includes('auth may be expired')) notes = 'Auth expired';
+                    else if (r.error.includes('Cloudflare')) notes = 'Cloudflare blocked';
+                    else if (r.error.includes('not found on Packagist')) notes = 'Not on Packagist';
+                    else if (r.error.includes('No version')) notes = 'No version on page';
+                    else notes = r.error.substring(0, 120);
+                }
+                rows.push([e(r.package), e(r.installed_version), e(r.latest_version || ''), e(status), e(r.source || ''), e(notes)].join(','));
+            }
+            const suffix = this.filter !== 'all' ? '-' + this.filter.toLowerCase().replace(/_/g, '-') : '';
+            this._downloadFile(rows, this.activeStore.toLowerCase() + '-vendor-report' + suffix + '.csv');
         },
     };
 }
