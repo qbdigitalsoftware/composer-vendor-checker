@@ -121,10 +121,10 @@
 
 ## Progress Output During Check
 
-```
+```text
   [ 1/24] stripe/stripe-payments                          packagist OK
   [ 2/24] klaviyo/magento2-extension                      packagist UPDATE
-  [ 3/24] amasty/promo                                    cached UP_TO_DATE
+  [ 3/24] amasty/promo                                    cached OK
   [ 4/24] xtento/orderexport                              website OK
   [ 5/24] aheadworks/module-blog                          website ERR
   ...

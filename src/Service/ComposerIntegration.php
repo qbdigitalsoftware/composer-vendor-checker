@@ -459,7 +459,7 @@ class ComposerIntegration
     {
         try {
             $vendorData = $this->versionChecker->getVendorVersion($url, $name);
-            $latestVersion = $vendorData['latest_version'];
+            $latestVersion = isset($vendorData['latest_version']) ? $vendorData['latest_version'] : null;
 
             if ($latestVersion === null) {
                 return [

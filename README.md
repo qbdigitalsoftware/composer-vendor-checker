@@ -142,7 +142,7 @@ composer vendor:check --config=/path/to/packages.php
 
 ## Example Output
 
-```
+```text
 Checking packages from: ./composer.lock
 
   [ 1/24] stripe/stripe-payments                          packagist OK

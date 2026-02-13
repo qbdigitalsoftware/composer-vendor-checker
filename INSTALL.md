@@ -55,7 +55,7 @@ composer vendor:check --url=https://amasty.com/admin-actions-log-for-magento-2.h
 
 ### Expected Output
 
-```
+```text
 Checking packages from: ./composer.lock
 
   [ 1/42] stripe/stripe-payments                          packagist OK

@@ -28,6 +28,7 @@ class OutputFormatter
         $upToDateCount = 0;
         $errorCount = 0;
         $unavailableCount = 0;
+        $aheadCount = 0;
 
         foreach ($results as $result) {
             $package = $result['package'];
@@ -47,6 +48,7 @@ class OutputFormatter
                     break;
                 case 'AHEAD_OF_VENDOR':
                     $statusSymbol = '⚠';
+                    $aheadCount++;
                     break;
                 case 'UNAVAILABLE':
                     $statusSymbol = '?';
@@ -84,9 +86,10 @@ class OutputFormatter
 
         $report[] = "  " . str_repeat("─", 74);
         $report[] = sprintf(
-            "  Summary: %d up-to-date, %d updates available, %d unavailable, %d errors",
+            "  Summary: %d up-to-date, %d updates available, %d ahead, %d unavailable, %d errors",
             $upToDateCount,
             $updateCount,
+            $aheadCount,
             $unavailableCount,
             $errorCount
         );

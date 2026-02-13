@@ -157,14 +157,6 @@ class ComposerIntegrationTest extends TestCase
             ],
         ]);
 
-        $klaviyoResponse = json_encode([
-            'packages' => [
-                'klaviyo/magento2-extension' => [
-                    ['version' => '4.5.0'],
-                ],
-            ],
-        ]);
-
         // We need enough responses for warmCache (multiple URLs) + actual checks.
         // With 4 non-skipped packages (amasty, klaviyo, xtento, stripe), the warm cache
         // fetches multiple URLs. Let's provide generous 200 responses.

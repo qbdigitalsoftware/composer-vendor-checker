@@ -146,6 +146,14 @@ EOF
 
         // Single URL check (doesn't need ComposerIntegration)
         if ($url) {
+            if ($outputPath) {
+                $output->writeln('<error>--output is not supported with --url</error>');
+                return 2;
+            }
+            if ($format === 'csv') {
+                $output->writeln('<error>CSV format is not supported for single URL checks</error>');
+                return 2;
+            }
             return $this->checkSingleUrl($url, $output, $format);
         }
 
@@ -290,7 +298,7 @@ EOF
         $hasUpdates = false;
 
         foreach ($results as $result) {
-            if ($result['status'] === 'ERROR') {
+            if ($result['status'] === 'ERROR' || $result['status'] === 'UNAVAILABLE') {
                 $hasErrors = true;
             }
             if ($result['status'] === 'UPDATE_AVAILABLE') {

@@ -142,6 +142,24 @@ class OutputFormatterTest extends TestCase
     {
         $output = $this->formatter->formatTable([]);
         $this->assertStringContainsString('0 up-to-date', $output);
+        $this->assertStringContainsString('0 ahead', $output);
         $this->assertStringContainsString('0 errors', $output);
+    }
+
+    public function testFormatTableCountsAheadOfVendor()
+    {
+        $results = [
+            [
+                'package' => 'test/pkg',
+                'installed_version' => '3.0.0',
+                'latest_version' => '2.5.0',
+                'status' => 'AHEAD_OF_VENDOR',
+                'source' => 'packagist',
+            ],
+        ];
+
+        $output = $this->formatter->formatTable($results);
+        $this->assertStringContainsString('1 ahead', $output);
+        $this->assertStringContainsString('⚠', $output);
     }
 }
