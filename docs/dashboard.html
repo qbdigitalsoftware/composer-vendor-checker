@@ -420,6 +420,13 @@
                                                         <svg :class="expanded ? 'rotate-180' : ''" class="w-3 h-3 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                                                     </button>
                                                     <div x-show="expanded" @click.outside="expanded = false" class="absolute right-4 z-20 mt-1 w-[620px] bg-white border border-gray-200 shadow-lg p-3 max-h-56 overflow-y-auto">
+                                                        <div class="flex items-center justify-between mb-2 pb-2 border-b border-gray-100">
+                                                            <span class="text-xs font-medium text-gray-500" x-text="pkg.files.split('; ').length + ' affected file' + (pkg.files.split('; ').length !== 1 ? 's' : '')"></span>
+                                                            <button @click.stop="downloadFilesCsv(pkg)" class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-[#333333] text-white hover:bg-[#555555] transition-colors">
+                                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                                                CSV
+                                                            </button>
+                                                        </div>
                                                         <template x-for="(f, i) in pkg.files.split('; ')" :key="f">
                                                             <div class="flex items-start gap-2 py-1" :class="i > 0 ? 'border-t border-gray-100' : ''">
                                                                 <svg class="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
@@ -822,6 +829,17 @@ function dashboard() {
             }
             const suffix = this.filter !== 'all' ? '-' + this.filter.toLowerCase().replace(/_/g, '-') : '';
             this._downloadFile(rows, this.activeStore.toLowerCase() + '-vendor-report' + suffix + '.csv');
+        },
+
+        downloadFilesCsv(pkg) {
+            const e = this._escCsv;
+            const files = pkg.files.split('; ');
+            const rows = ['Package,File Path,Status,Errors,Warnings'];
+            for (const f of files) {
+                rows.push([e(pkg.package), e(f), e(pkg.status), e(pkg.errors), e(pkg.warnings)].join(','));
+            }
+            const name = pkg.package.replace(/\//g, '-') + '-affected-files.csv';
+            this._downloadFile(rows, name);
         },
     };
 }
