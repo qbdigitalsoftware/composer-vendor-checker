@@ -540,35 +540,157 @@
     <!-- Amasty Licensing Investigation -->
     <section id="amasty" class="max-w-5xl mx-auto px-6 pb-8 scroll-mt-20">
         <div class="bg-white border border-gray-200 p-6">
-            <div class="flex items-center gap-2 mb-4">
+            <div class="flex items-center gap-2 mb-1">
                 <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-800">INVESTIGATION</span>
                 <h2 class="text-lg font-bold text-[#333333]">Amasty Licensing &mdash; Blocker Discovered During Scan</h2>
             </div>
-            <p class="text-sm text-gray-600 mb-4">During source code acquisition, all 14 Amasty packages returned HTTP 403 errors from <code class="bg-gray-100 px-1 text-xs">composer.amasty.com</code>. Investigation revealed that Amasty deprecated all global Composer access keys on 1 January 2026, replacing them with project-based keys. The credentials in <code class="bg-gray-100 px-1 text-xs">auth.json</code> are expired global keys and will no longer work for any operation (installs, updates, or version queries).</p>
+            <p class="text-sm text-gray-500 mb-5">This issue was discovered during source code acquisition and affects both the PHP 8.4 scan (Task 2) and ongoing Composer operations.</p>
 
-            <div class="bg-amber-50 border border-amber-200 p-4 text-sm mb-4">
-                <div class="font-medium text-amber-800 mb-2">Action Required by Client</div>
-                <ol class="space-y-1 text-amber-700 list-decimal ml-4">
-                    <li>Log in to Amasty customer portal</li>
-                    <li>Create a Project for the Merchandise Store</li>
-                    <li>Assign all 14 purchased Amasty extensions to the project</li>
-                    <li>Generate new project-level Composer keys</li>
-                    <li>Update <code class="bg-amber-100 px-1">auth.json</code> with new credentials</li>
-                    <li>Verify with <code class="bg-amber-100 px-1">composer update amasty/* --dry-run</code></li>
-                </ol>
+            <!-- What Happened -->
+            <div class="mb-5">
+                <h3 class="text-xs font-semibold text-[#333333] uppercase tracking-wider mb-3">What Happened</h3>
+                <div class="grid md:grid-cols-3 gap-3">
+                    <div class="border border-red-200 bg-red-50/50 p-3">
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+                            <span class="text-sm font-medium text-red-800">HTTP 403 on All Requests</span>
+                        </div>
+                        <p class="text-xs text-red-700">Every request to <code class="bg-red-100 px-1 text-[11px]">composer.amasty.com</code> returns 403 Forbidden. Installs, updates, and version queries all fail.</p>
+                    </div>
+                    <div class="border border-amber-200 bg-amber-50/50 p-3">
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <svg class="w-4 h-4 text-amber-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                            <span class="text-sm font-medium text-amber-800">Global Keys Deprecated</span>
+                        </div>
+                        <p class="text-xs text-amber-700">Amasty retired all global Composer access keys on <strong>1 January 2026</strong>. The credentials in <code class="bg-amber-100 px-1 text-[11px]">auth.json</code> are expired global keys.</p>
+                    </div>
+                    <div class="border border-[#1c69af]/20 bg-[#1c69af]/[0.03] p-3">
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <svg class="w-4 h-4 text-[#1c69af] flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                            <span class="text-sm font-medium text-[#1c69af]">New System: Project Keys</span>
+                        </div>
+                        <p class="text-xs text-gray-600">Amasty now requires <strong>project-based keys</strong> &mdash; created per-project in the Amasty portal with specific extensions assigned to each.</p>
+                    </div>
+                </div>
             </div>
 
-            <div class="bg-gray-50 border border-gray-200 p-4 text-sm">
-                <div class="font-medium text-[#333333] mb-2">Impact on This Scan</div>
-                <p class="text-gray-600 mb-2">The 14 Amasty packages could not be scanned for PHP 8.4 compatibility. Once new project-level keys are provided, we can:</p>
-                <ul class="space-y-1 text-gray-600">
-                    <li class="flex gap-2"><span class="text-gray-400">&bull;</span> Download source code for all 14 Amasty packages</li>
-                    <li class="flex gap-2"><span class="text-gray-400">&bull;</span> Run the same PHPCompatibility scan against them</li>
-                    <li class="flex gap-2"><span class="text-gray-400">&bull;</span> Update the Module Register with their PHP 8.4 status</li>
-                    <li class="flex gap-2"><span class="text-gray-400">&bull;</span> The Vendor Checker tool (Task 1) will also be able to query Amasty versions via private repo</li>
-                </ul>
-                <p class="text-gray-600 mt-2">Full migration steps documented in <code class="bg-gray-100 px-1 text-xs">PHP-8.4-Compatibility-Report.md</code>.</p>
+            <!-- 14 Affected Packages -->
+            <div class="mb-5" x-data="{ open: false }">
+                <button @click="open = !open" :aria-expanded="open" class="w-full flex items-center justify-between text-xs font-semibold text-[#333333] uppercase tracking-wider mb-2">
+                    <span>14 Affected Packages</span>
+                    <svg :class="open ? 'rotate-180' : ''" class="w-4 h-4 text-gray-400 transition-transform" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                </button>
+                <div x-show="open" x-collapse x-cloak>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-1.5 text-xs">
+                        <div class="flex items-center gap-1.5 px-2 py-1.5 bg-gray-50 border border-gray-200"><span class="w-1.5 h-1.5 bg-gray-400 flex-shrink-0" aria-hidden="true"></span>amasty/advanced-conditions</div>
+                        <div class="flex items-center gap-1.5 px-2 py-1.5 bg-gray-50 border border-gray-200"><span class="w-1.5 h-1.5 bg-gray-400 flex-shrink-0" aria-hidden="true"></span>amasty/base</div>
+                        <div class="flex items-center gap-1.5 px-2 py-1.5 bg-gray-50 border border-gray-200"><span class="w-1.5 h-1.5 bg-gray-400 flex-shrink-0" aria-hidden="true"></span>amasty/commonrules</div>
+                        <div class="flex items-center gap-1.5 px-2 py-1.5 bg-gray-50 border border-gray-200"><span class="w-1.5 h-1.5 bg-gray-400 flex-shrink-0" aria-hidden="true"></span>amasty/feed</div>
+                        <div class="flex items-center gap-1.5 px-2 py-1.5 bg-gray-50 border border-gray-200"><span class="w-1.5 h-1.5 bg-gray-400 flex-shrink-0" aria-hidden="true"></span>amasty/geoip</div>
+                        <div class="flex items-center gap-1.5 px-2 py-1.5 bg-gray-50 border border-gray-200"><span class="w-1.5 h-1.5 bg-gray-400 flex-shrink-0" aria-hidden="true"></span>amasty/module-special-promo</div>
+                        <div class="flex items-center gap-1.5 px-2 py-1.5 bg-gray-50 border border-gray-200"><span class="w-1.5 h-1.5 bg-gray-400 flex-shrink-0" aria-hidden="true"></span>amasty/module-special-promo-pro</div>
+                        <div class="flex items-center gap-1.5 px-2 py-1.5 bg-gray-50 border border-gray-200"><span class="w-1.5 h-1.5 bg-gray-400 flex-shrink-0" aria-hidden="true"></span>amasty/orderattr</div>
+                        <div class="flex items-center gap-1.5 px-2 py-1.5 bg-gray-50 border border-gray-200"><span class="w-1.5 h-1.5 bg-gray-400 flex-shrink-0" aria-hidden="true"></span>amasty/promo</div>
+                        <div class="flex items-center gap-1.5 px-2 py-1.5 bg-gray-50 border border-gray-200"><span class="w-1.5 h-1.5 bg-gray-400 flex-shrink-0" aria-hidden="true"></span>amasty/rgrid</div>
+                        <div class="flex items-center gap-1.5 px-2 py-1.5 bg-gray-50 border border-gray-200"><span class="w-1.5 h-1.5 bg-gray-400 flex-shrink-0" aria-hidden="true"></span>amasty/rules</div>
+                        <div class="flex items-center gap-1.5 px-2 py-1.5 bg-gray-50 border border-gray-200"><span class="w-1.5 h-1.5 bg-gray-400 flex-shrink-0" aria-hidden="true"></span>amasty/shiprestriction</div>
+                        <div class="flex items-center gap-1.5 px-2 py-1.5 bg-gray-50 border border-gray-200"><span class="w-1.5 h-1.5 bg-gray-400 flex-shrink-0" aria-hidden="true"></span>amasty/shiprules</div>
+                        <div class="flex items-center gap-1.5 px-2 py-1.5 bg-gray-50 border border-gray-200"><span class="w-1.5 h-1.5 bg-gray-400 flex-shrink-0" aria-hidden="true"></span>amasty/table-rate-shipping</div>
+                    </div>
+                </div>
             </div>
+
+            <!-- Action Required -->
+            <div class="mb-5">
+                <h3 class="text-xs font-semibold text-[#333333] uppercase tracking-wider mb-3">Action Required by Client</h3>
+                <div class="border-l-2 border-amber-400 bg-amber-50/50 p-4">
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3">
+                            <span class="inline-flex items-center justify-center w-6 h-6 bg-amber-200 text-amber-800 text-[11px] font-bold flex-shrink-0">1</span>
+                            <div>
+                                <div class="text-sm font-medium text-[#333333]">Log in to Amasty customer portal</div>
+                                <p class="text-xs text-gray-500 mt-0.5">Use the account that originally purchased the 14 extensions.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="inline-flex items-center justify-center w-6 h-6 bg-amber-200 text-amber-800 text-[11px] font-bold flex-shrink-0">2</span>
+                            <div>
+                                <div class="text-sm font-medium text-[#333333]">Create a Project for the Merchandise Store</div>
+                                <p class="text-xs text-gray-500 mt-0.5">Projects replace the old &ldquo;Order Sharing&rdquo; system. Each Magento instance should have its own project.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="inline-flex items-center justify-center w-6 h-6 bg-amber-200 text-amber-800 text-[11px] font-bold flex-shrink-0">3</span>
+                            <div>
+                                <div class="text-sm font-medium text-[#333333]">Assign all 14 purchased extensions to the project</div>
+                                <p class="text-xs text-gray-500 mt-0.5">Each extension must be explicitly linked to the project before Composer keys will grant access.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="inline-flex items-center justify-center w-6 h-6 bg-amber-200 text-amber-800 text-[11px] font-bold flex-shrink-0">4</span>
+                            <div>
+                                <div class="text-sm font-medium text-[#333333]">Generate new project-level Composer keys</div>
+                                <p class="text-xs text-gray-500 mt-0.5">The portal will produce a new username/password pair scoped to this project.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="inline-flex items-center justify-center w-6 h-6 bg-amber-200 text-amber-800 text-[11px] font-bold flex-shrink-0">5</span>
+                            <div>
+                                <div class="text-sm font-medium text-[#333333]">Update <code class="bg-amber-100 px-1 text-xs">auth.json</code> with new credentials</div>
+                                <p class="text-xs text-gray-500 mt-0.5">Replace the existing <code class="bg-gray-100 px-1 text-[11px]">composer.amasty.com</code> entry. Both local and cloud environments need updating.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="inline-flex items-center justify-center w-6 h-6 bg-amber-200 text-amber-800 text-[11px] font-bold flex-shrink-0">6</span>
+                            <div>
+                                <div class="text-sm font-medium text-[#333333]">Verify access</div>
+                                <div class="mt-1 bg-white border border-amber-200 px-3 py-2 font-mono text-[11px] text-gray-600">
+                                    composer update amasty/* --dry-run
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Impact + What We Can Do Once Resolved -->
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    <h3 class="text-xs font-semibold text-[#333333] uppercase tracking-wider mb-3">Impact on This Scan</h3>
+                    <div class="border border-gray-200 p-4 h-full">
+                        <div class="flex items-center gap-2 mb-3">
+                            <div class="text-2xl font-bold text-gray-400">14</div>
+                            <div class="text-xs text-gray-500 leading-tight">packages could not<br>be scanned for PHP 8.4</div>
+                        </div>
+                        <p class="text-xs text-gray-500">These packages are marked as <span class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-gray-200 text-gray-700">NOT SCANNED</span> in the Module Register. Their PHP 8.4 compatibility status is unknown until source code can be obtained.</p>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-xs font-semibold text-[#333333] uppercase tracking-wider mb-3">Once Keys Are Provided</h3>
+                    <div class="border border-gray-200 p-4 h-full">
+                        <ul class="space-y-2">
+                            <li class="flex items-start gap-2 text-xs text-gray-600">
+                                <svg class="w-4 h-4 text-[#1c69af] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                Download source code for all 14 Amasty packages
+                            </li>
+                            <li class="flex items-start gap-2 text-xs text-gray-600">
+                                <svg class="w-4 h-4 text-[#1c69af] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                Run the same PHPCompatibility scan against them
+                            </li>
+                            <li class="flex items-start gap-2 text-xs text-gray-600">
+                                <svg class="w-4 h-4 text-[#1c69af] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                Update the Module Register with their PHP 8.4 status
+                            </li>
+                            <li class="flex items-start gap-2 text-xs text-gray-600">
+                                <svg class="w-4 h-4 text-[#1c69af] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                Enable Amasty version tracking in the Vendor Checker tool
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-xs text-gray-400 mt-4">Full migration steps documented in <code class="bg-gray-100 px-1 text-[11px]">PHP-8.4-Compatibility-Report.md</code>.</p>
         </div>
     </section>
 
