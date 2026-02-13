@@ -30,7 +30,7 @@
                 </div>
                 <div class="text-right text-sm text-gray-400">
                     <div>GetJohn &mdash; Merchandise Store</div>
-                    <div>12 February 2026</div>
+                    <div>13 February 2026</div>
                 </div>
             </div>
         </div>
@@ -456,6 +456,39 @@
         </div>
     </section>
 
+    <!-- Dashboard Improvements (13 Feb) -->
+    <section class="max-w-5xl mx-auto px-6 pb-8">
+        <div class="bg-white border border-gray-200 p-6">
+            <div class="flex items-center gap-2 mb-4">
+                <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-[#1c69af]/10 text-[#1c69af]">UPDATE</span>
+                <h2 class="text-lg font-bold text-[#333333]">Dashboard &amp; Tooling Improvements &mdash; 13 February 2026</h2>
+            </div>
+
+            <div class="space-y-3">
+                <div class="border-l-2 border-[#1c69af] pl-4">
+                    <div class="text-sm font-medium text-[#333333]">PHP 8.4 Table Layout Optimisation</div>
+                    <p class="text-sm text-gray-600 mt-1">The 9-column PHP 8.4 compatibility table was reworked with explicit column widths to prevent data-sparse columns (Errors, Warnings, Risk) from consuming space needed by Package and Recommendation. Numeric columns are now centre-aligned. The table scrolls horizontally below 960px rather than crushing content.</p>
+                </div>
+                <div class="border-l-2 border-[#1c69af] pl-4">
+                    <div class="text-sm font-medium text-[#333333]">Files Popover</div>
+                    <p class="text-sm text-gray-600 mt-1">The &ldquo;affected files&rdquo; dropdown was converted from an inline expanding panel (which was constrained to the narrow column width) to an absolute-positioned popover (420px wide) with shadow, z-index stacking above the sticky nav, and click-outside-to-close behaviour. File paths are now fully readable without character-by-character wrapping.</p>
+                </div>
+                <div class="border-l-2 border-[#1c69af] pl-4">
+                    <div class="text-sm font-medium text-[#333333]">Accessibility Improvements</div>
+                    <p class="text-sm text-gray-600 mt-1">Added the <code class="bg-gray-100 px-1 text-xs">@alpinejs/collapse</code> plugin for the Actions Required banner animation. All decorative SVG icons now carry <code class="bg-gray-100 px-1 text-xs">aria-hidden="true"</code>. Both search inputs have explicit <code class="bg-gray-100 px-1 text-xs">aria-label</code> attributes. Vendor version status dots now use <code class="bg-gray-100 px-1 text-xs">role="img"</code> with <code class="bg-gray-100 px-1 text-xs">aria-label</code> so colour is not the sole status indicator.</p>
+                </div>
+                <div class="border-l-2 border-[#1c69af] pl-4">
+                    <div class="text-sm font-medium text-[#333333]">Standalone Runner</div>
+                    <p class="text-sm text-gray-600 mt-1">Added <code class="bg-gray-100 px-1 text-xs">run-check.php</code> &mdash; a CLI script for running vendor version checks outside the Composer plugin context. Supports JSON, CSV, and table output formats with optional file output and result caching.</p>
+                </div>
+                <div class="border-l-2 border-[#1c69af] pl-4">
+                    <div class="text-sm font-medium text-[#333333]">Version Control</div>
+                    <p class="text-sm text-gray-600 mt-1">The <code class="bg-gray-100 px-1 text-xs">docs/</code> directory is now tracked in version control. All reports, scan data, and the interactive dashboard are committed alongside the module source code.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Acceptance Criteria -->
     <section class="max-w-5xl mx-auto px-6 pb-8">
         <div class="bg-[#1c69af]/5 border border-[#1c69af]/20 p-6">
@@ -545,7 +578,26 @@
                     </tr>
                     <tr class="border-b border-gray-100">
                         <td class="px-3 py-2 text-gray-600 pl-6"><code class="text-xs">index.html</code></td>
-                        <td class="px-3 py-2 text-gray-600">Interactive HTML dashboard includes a PHP 8.4 Compatibility Assessment section with summary cards, risk breakdown, expandable error table, and recommended upgrade path.</td>
+                        <td class="px-3 py-2 text-gray-600">Interactive HTML dashboard with PHP 8.4 Compatibility Assessment, optimised table layout with popover file viewer, and accessibility improvements (Alpine.js collapse, aria attributes, screen reader labels).</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="px-3 py-2 text-gray-600 pl-6"><code class="text-xs">cross-store-report.csv</code></td>
+                        <td class="px-3 py-2 text-gray-600">Cross-store vendor version comparison data (CSV). Multi-store view of all packages across all 6 Magento instances.</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="px-3 py-2 text-gray-600 pl-6"><code class="text-xs">php84-compatibility-report.csv</code></td>
+                        <td class="px-3 py-2 text-gray-600">PHP 8.4 compatibility scan summary (CSV). Per-package status, risk, error/warning counts, and affected files.</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="px-3 py-2 text-gray-600 pl-6"><code class="text-xs">results.json</code></td>
+                        <td class="px-3 py-2 text-gray-600">Complete scan results data (JSON). Powers the interactive dashboard; includes all store data, version comparisons, and PHP 8.4 compatibility results.</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="px-3 py-2 font-medium text-[#333333]" colspan="2"><span class="text-[#1c69af]">module-composer-vendor-checker/</span> &mdash; Tooling</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="px-3 py-2 text-gray-600 pl-6"><code class="text-xs">run-check.php</code></td>
+                        <td class="px-3 py-2 text-gray-600"><strong>Standalone CLI runner</strong> &mdash; run vendor version checks outside the Composer plugin. Usage: <code class="bg-gray-100 px-1 text-xs">php run-check.php &lt;path-to-composer.lock&gt; [--format=json|csv|table] [--output=file]</code>. Supports result caching via <code class="bg-gray-100 px-1 text-xs">--no-cache</code> flag.</td>
                     </tr>
                 </tbody>
             </table>
@@ -604,7 +656,7 @@
     <footer class="bg-[#333333] mt-4">
         <div class="max-w-5xl mx-auto px-6 py-6">
             <div class="flex items-center justify-between text-xs text-gray-400">
-                <div>GetJohn &mdash; Task 2 Delivery Report &mdash; 12 February 2026</div>
+                <div>GetJohn &mdash; Task 2 Delivery Report &mdash; 13 February 2026</div>
                 <div>Merchandise Store &mdash; Magento 2.4.5 Enterprise Cloud</div>
             </div>
         </div>
