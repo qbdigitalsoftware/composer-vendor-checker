@@ -2,4 +2,3 @@
 /composer.lock
 /.vendor-check-cache/
 /.phpunit.result.cache
-/docs/

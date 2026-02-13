@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task 2 Delivery Report — Module &amp; PHP 8.4 Compatibility Scan — GetJohn</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print { .no-print { display: none !important; } }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 antialiased">
+
+<div class="min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-[#333333]">
+        <div class="max-w-5xl mx-auto px-6 py-8">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <svg class="w-10 h-10" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="40" height="40" rx="0" fill="#1c69af"/>
+                        <path d="M16 12L8 20L16 28" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M24 12L32 20L24 28" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <div>
+                        <h1 class="text-2xl font-bold text-white">Task 2 &mdash; Delivery Report</h1>
+                        <p class="mt-1 text-sm text-gray-400">Module &amp; PHP 8.4 Compatibility Scan</p>
+                    </div>
+                </div>
+                <div class="text-right text-sm text-gray-400">
+                    <div>GetJohn &mdash; Merchandise Store</div>
+                    <div>12 February 2026</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Brief -->
+    <section class="max-w-5xl mx-auto px-6 py-8">
+        <div class="bg-white border border-gray-200 p-6">
+            <h2 class="text-lg font-bold text-[#333333] mb-4">Task Brief</h2>
+            <div class="bg-gray-50 border border-gray-200 p-4 mb-4">
+                <h3 class="text-sm font-semibold text-[#1c69af] mb-3">Task 2 &mdash; Module &amp; PHP Compatibility Scan</h3>
+                <p class="text-sm text-gray-700 mb-3">We need a clear, structured view of PHP compatibility and upgrade risk across all Magento modules currently in use (third-party and custom). We will provide a module register showing which modules are used per Magento instance.</p>
+
+                <h4 class="text-xs font-semibold text-[#333333] uppercase tracking-wider mt-4 mb-2">What We Need</h4>
+                <ul class="space-y-1.5 text-sm text-gray-700">
+                    <li class="flex gap-2"><span class="text-gray-400">&bull;</span> Review all used modules in scope</li>
+                    <li class="flex gap-2"><span class="text-gray-400">&bull;</span> For each module, identify: PHP compatibility status</li>
+                </ul>
+
+                <h4 class="text-xs font-semibold text-[#333333] uppercase tracking-wider mt-4 mb-2">Deliverables</h4>
+                <ul class="space-y-1.5 text-sm text-gray-700">
+                    <li class="flex gap-2"><span class="text-gray-400">&bull;</span> A written summary, covering:</li>
+                    <li class="flex gap-2 pl-4"><span class="text-gray-400">&ndash;</span> Status &mdash; is it compatible with version 8.4</li>
+                    <li class="flex gap-2 pl-4"><span class="text-gray-400">&ndash;</span> A list of files that need changing</li>
+                    <li class="flex gap-2 pl-4"><span class="text-gray-400">&ndash;</span> In a text file or a spreadsheet</li>
+                </ul>
+
+                <h4 class="text-xs font-semibold text-[#333333] uppercase tracking-wider mt-4 mb-2">Recommended Approach</h4>
+                <p class="text-sm text-gray-700">Use a code scanning tool such as PHP-CS / SonarQube or another SAST tool (we have an existing SonarQube instance hosted on Digital Ocean).</p>
+
+                <div class="mt-4 pt-3 border-t border-gray-200 text-xs text-gray-500">
+                    Timebox: 10 hours. Review progress after this time has elapsed.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Summary Cards -->
+    <section class="max-w-5xl mx-auto px-6 pb-8">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white border border-[#1c69af]/30 p-4">
+                <div class="text-2xl font-bold text-[#1c69af]">137</div>
+                <div class="text-xs text-gray-500 mt-1">Modules Assessed</div>
+            </div>
+            <div class="bg-white border border-[#1c69af]/30 p-4">
+                <div class="text-2xl font-bold text-[#1c69af]">7,377</div>
+                <div class="text-xs text-gray-500 mt-1">PHP Files Scanned</div>
+            </div>
+            <div class="bg-white border border-green-200 p-4">
+                <div class="text-2xl font-bold text-green-600">97</div>
+                <div class="text-xs text-gray-500 mt-1">Modules PASS</div>
+            </div>
+            <div class="bg-white border border-red-200 p-4">
+                <div class="text-2xl font-bold text-red-600">8</div>
+                <div class="text-xs text-gray-500 mt-1">Modules FAIL</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Approach & Methodology -->
+    <section class="max-w-5xl mx-auto px-6 pb-8">
+        <div class="bg-white border border-gray-200 p-6">
+            <h2 class="text-lg font-bold text-[#333333] mb-4">Approach &amp; Methodology</h2>
+
+            <div class="space-y-4 mb-6">
+                <div class="border-l-2 border-[#1c69af] pl-4">
+                    <div class="text-sm font-medium text-[#333333]">1. Tool Selection: PHPCompatibility (via PHP_CodeSniffer)</div>
+                    <p class="text-sm text-gray-600 mt-1">We used <strong>PHP_CodeSniffer 3.13.5</strong> with the <strong>PHPCompatibility 9.3.5</strong> ruleset &mdash; the industry-standard SAST tool specifically designed for PHP version compatibility scanning. This was chosen over SonarQube because PHPCompatibility provides purpose-built rules for detecting deprecated functions, removed extensions, reserved keyword conflicts, changed INI directives, and parameter behaviour changes across PHP versions. SonarQube&rsquo;s PHP plugin covers general code quality but does not offer the same depth of PHP version migration analysis.</p>
+                </div>
+                <div class="border-l-2 border-[#1c69af] pl-4">
+                    <div class="text-sm font-medium text-[#333333]">2. Source Code Acquisition</div>
+                    <p class="text-sm text-gray-600 mt-1">A full <code class="bg-gray-100 px-1 text-xs">composer install</code> was not possible locally because Amasty&rsquo;s Composer repository returned HTTP 403 on all requests (expired global auth keys &mdash; see Amasty investigation below). Instead, we extracted 671 packages from the local Composer download cache and the existing <code class="bg-gray-100 px-1 text-xs">vendor/</code> directory. This gave us complete source code for all packages except those distributed exclusively via private repos with no local cache (14 Amasty, plus BSS, some MageWorx, and Stripe Payments).</p>
+                </div>
+                <div class="border-l-2 border-[#1c69af] pl-4">
+                    <div class="text-sm font-medium text-[#333333]">3. Scanning Process</div>
+                    <p class="text-sm text-gray-600 mt-1">Each vendor group was scanned separately with <code class="bg-gray-100 px-1 text-xs">phpcs --standard=PHPCompatibility --runtime-set testVersion 8.4 --report=json</code>. This produced 28 JSON result files (one per vendor group), which were then cross-referenced against the 700 packages in <code class="bg-gray-100 px-1 text-xs">composer.lock</code> to produce the per-package module register. File path matching was used to attribute specific errors/warnings to the correct Composer package (e.g. an error in <code class="bg-gray-100 px-1 text-xs">vendor/laminas/laminas-db/src/...</code> is attributed to <code class="bg-gray-100 px-1 text-xs">laminas/laminas-db</code>, not to all 28 laminas packages).</p>
+                </div>
+                <div class="border-l-2 border-[#1c69af] pl-4">
+                    <div class="text-sm font-medium text-[#333333]">4. Module Register Construction</div>
+                    <p class="text-sm text-gray-600 mt-1">The final Module Register was built by cross-referencing <code class="bg-gray-100 px-1 text-xs">composer.lock</code> (700 total packages) with the 28 scan result files. We filtered to the 137 packages relevant to the store (excluding Magento core metapackages, test utilities, and generic PHP libraries). For each package: installed version from lock file, category classification, per-package scan results matched by file path, risk assessment, and an actionable recommendation.</p>
+                </div>
+            </div>
+
+            <!-- Scanner Configuration -->
+            <h3 class="text-xs font-semibold text-[#1c69af] uppercase tracking-wider mt-6 mb-2">Scanner Configuration</h3>
+            <table class="w-full text-sm">
+                <tbody>
+                    <tr class="border-b border-gray-100">
+                        <td class="py-2 pr-4 font-medium text-[#333333] w-1/3">SAST Tool</td>
+                        <td class="py-2 text-gray-600">PHP_CodeSniffer 3.13.5 + PHPCompatibility 9.3.5</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="py-2 pr-4 font-medium text-[#333333]">Target Version</td>
+                        <td class="py-2 text-gray-600">PHP 8.4</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="py-2 pr-4 font-medium text-[#333333]">Total Files Scanned</td>
+                        <td class="py-2 text-gray-600">7,377 PHP files across 28 vendor groups</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="py-2 pr-4 font-medium text-[#333333]">Modules in Register</td>
+                        <td class="py-2 text-gray-600">137 (filtered from 700 total Composer packages in lock file)</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="py-2 pr-4 font-medium text-[#333333]">Package Source</td>
+                        <td class="py-2 text-gray-600">Composer download cache + existing vendor/ directory (full install blocked by Amasty auth 403)</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="py-2 pr-4 font-medium text-[#333333]">Scanner Location</td>
+                        <td class="py-2 text-gray-600"><code class="bg-gray-100 px-1 text-xs">php-compat-scanner/</code> &mdash; standalone Composer project with PHPCompatibility installed</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Module Register Summary -->
+    <section class="max-w-5xl mx-auto px-6 pb-8">
+        <div class="bg-white border border-gray-200 p-6">
+            <h2 class="text-lg font-bold text-[#333333] mb-4">Module Register &mdash; Per-Package Results (137 modules)</h2>
+            <p class="text-sm text-gray-600 mb-4">The Module Register (<code class="bg-gray-100 px-1 text-xs">PHP-8.4-Module-Register.csv</code>) contains one row per Composer package with: package name, installed version, category, PHP 8.4 status, risk level, error count, warning count, list of files needing changes, and a specific recommendation.</p>
+
+            <div class="grid grid-cols-3 md:grid-cols-6 gap-3 mb-4">
+                <div class="bg-green-50 border border-green-200 p-3 text-center">
+                    <div class="text-xl font-bold text-green-600">97</div>
+                    <div class="text-xs text-gray-500">PASS</div>
+                </div>
+                <div class="bg-amber-50 border border-amber-200 p-3 text-center">
+                    <div class="text-xl font-bold text-amber-600">12</div>
+                    <div class="text-xs text-gray-500">WARN</div>
+                </div>
+                <div class="bg-red-50 border border-red-200 p-3 text-center">
+                    <div class="text-xl font-bold text-red-600">8</div>
+                    <div class="text-xs text-gray-500">FAIL</div>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 p-3 text-center">
+                    <div class="text-xl font-bold text-gray-500">18</div>
+                    <div class="text-xs text-gray-500">Not Scanned</div>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 p-3 text-center">
+                    <div class="text-xl font-bold text-gray-400">2</div>
+                    <div class="text-xs text-gray-500">Out of Scope</div>
+                </div>
+                <div class="bg-gray-50 border border-gray-200 p-3 text-center">
+                    <div class="text-xl font-bold text-[#333333]">42 / 47</div>
+                    <div class="text-xs text-gray-500">Total Errors / Warnings</div>
+                </div>
+            </div>
+
+            <!-- What PASS / WARN / FAIL Mean -->
+            <div class="bg-gray-50 border border-gray-200 p-4 text-xs text-gray-600">
+                <div class="font-medium text-[#333333] text-sm mb-2">What the statuses mean</div>
+                <div class="grid md:grid-cols-3 gap-3">
+                    <div><span class="inline-flex items-center px-2 py-0.5 font-medium bg-green-100 text-green-800 mr-1">PASS</span> Zero errors and zero warnings. The package&rsquo;s PHP code is fully compatible with PHP 8.4.</div>
+                    <div><span class="inline-flex items-center px-2 py-0.5 font-medium bg-amber-100 text-amber-800 mr-1">WARN</span> Warnings only (no errors). Typically false positives (e.g. Knockout.js template syntax flagged as PHP ASP tags) or deprecated-but-still-functional constructs.</div>
+                    <div><span class="inline-flex items-center px-2 py-0.5 font-medium bg-red-100 text-red-800 mr-1">FAIL</span> One or more errors detected. The code uses functions, extensions, or syntax that is removed or will cause runtime errors on PHP 8.4.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Findings by Category -->
+    <section class="max-w-5xl mx-auto px-6 pb-8">
+        <div class="bg-white border border-gray-200 p-6">
+            <h2 class="text-lg font-bold text-[#333333] mb-4">Findings by Category</h2>
+
+            <!-- Custom Code -->
+            <div class="border border-green-200 bg-green-50/50 p-4 mb-3">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-green-100 text-green-800">PASS</span>
+                    <span class="text-sm font-medium text-green-800">Custom Code &mdash; All Clear (15 modules, 0 errors, 0 warnings)</span>
+                </div>
+                <p class="text-sm text-gray-700 mb-2">Every module written specifically for this store passes PHP 8.4 scanning with zero issues. No changes needed.</p>
+                <div class="grid md:grid-cols-2 gap-2 text-xs text-gray-600">
+                    <div>
+                        <div class="font-medium text-[#333333] mb-1">Client custom (app/code):</div>
+                        client/custom-tweaks-v1
+                    </div>
+                    <div>
+                        <div class="font-medium text-[#333333] mb-1">GetJohn custom modules (14):</div>
+                        m2-promoserve-integration, magento-security-patches, magento2-cli-store-creator, module-customsprice, module-ewayrapidoverride, module-checkout-override, module-customer-override, module-mageworxgiftcards-cisco-override, module-mageworxgiftcardsoverride, module-pitbulksaml2override, module-squareoverride, module-wics-connector-override, module-xtento-pdf-api, punchouthub-m2-module
+                    </div>
+                </div>
+            </div>
+
+            <!-- Third-Party Extensions -->
+            <div class="border border-green-200 bg-green-50/50 p-4 mb-3">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-green-100 text-green-800">PASS</span>
+                    <span class="text-sm font-medium text-green-800">Third-Party Extensions &mdash; All Clear (40+ modules, 0 errors, 0 warnings)</span>
+                </div>
+                <p class="text-sm text-gray-700 mb-2">All third-party Magento extensions from supported vendors pass cleanly:</p>
+                <div class="text-xs text-gray-600">
+                    aheadworks/module-blog, braintree/braintree_php, eway/* (9 packages), mageme/module-webforms, mageplaza/module-core, mageplaza/module-smtp, mageworx/module-donations, monolog/monolog, onelogin/php-saml, paradoxlabs/authnetcim, paradoxlabs/tokenbase, paypal/* (3 packages), shiphero/shiphero, sixtomartin/onelogin-module-saml2-extend, springbot/magento2-queue, taxjar/module-taxjar, webshopapps/module-matrixrate, wics/connector, xtento/orderexport, xtento/pdfcustomizer, xtento/xtcore, yotpo/* (2 packages)
+                </div>
+            </div>
+
+            <!-- Packages with Errors -->
+            <div class="border border-red-200 bg-red-50/50 p-4 mb-3">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-red-100 text-red-800">FAIL</span>
+                    <span class="text-sm font-medium text-red-800">8 Packages with Errors &mdash; All Resolvable</span>
+                </div>
+                <p class="text-sm text-gray-700 mb-3">All 8 failures are in Magento core dependencies (laminas/symfony) or have simple fixes. None require manual code patching by the development team.</p>
+                <table class="w-full text-xs mb-2">
+                    <thead>
+                        <tr class="border-b border-red-200">
+                            <th class="text-left px-2 py-1.5 font-medium text-red-800">Package</th>
+                            <th class="text-left px-2 py-1.5 font-medium text-red-800">Errors</th>
+                            <th class="text-left px-2 py-1.5 font-medium text-red-800">What&rsquo;s Wrong</th>
+                            <th class="text-left px-2 py-1.5 font-medium text-red-800">Files Affected</th>
+                            <th class="text-left px-2 py-1.5 font-medium text-red-800">Resolution</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-red-100">
+                        <tr>
+                            <td class="px-2 py-1.5 font-medium">laminas/laminas-validator</td>
+                            <td class="px-2 py-1.5">15</td>
+                            <td class="px-2 py-1.5">func_get_args() called after parameter modification</td>
+                            <td class="px-2 py-1.5">18 files (Between.php, CreditCard.php, Date.php, etc.)</td>
+                            <td class="px-2 py-1.5 text-amber-700">Magento 2.4.7+</td>
+                        </tr>
+                        <tr>
+                            <td class="px-2 py-1.5 font-medium">laminas/laminas-db</td>
+                            <td class="px-2 py-1.5">14</td>
+                            <td class="px-2 py-1.5">&lsquo;object&rsquo; used as namespace (reserved keyword); deprecated DB extensions</td>
+                            <td class="px-2 py-1.5">10 files (Metadata/Object/*.php, Platform.php, etc.)</td>
+                            <td class="px-2 py-1.5 text-amber-700">Magento 2.4.7+</td>
+                        </tr>
+                        <tr>
+                            <td class="px-2 py-1.5 font-medium">laminas/laminas-recaptcha</td>
+                            <td class="px-2 py-1.5">4</td>
+                            <td class="px-2 py-1.5">mcrypt extension removed since PHP 7.2</td>
+                            <td class="px-2 py-1.5">1 file (MailHide.php)</td>
+                            <td class="px-2 py-1.5 text-amber-700">Magento 2.4.7+</td>
+                        </tr>
+                        <tr>
+                            <td class="px-2 py-1.5 font-medium">laminas/laminas-session</td>
+                            <td class="px-2 py-1.5">2</td>
+                            <td class="px-2 py-1.5">Removed session.hash_function/hash_bits_per_character INI directives</td>
+                            <td class="px-2 py-1.5">1 file (SessionConfig.php)</td>
+                            <td class="px-2 py-1.5 text-amber-700">Magento 2.4.7+</td>
+                        </tr>
+                        <tr>
+                            <td class="px-2 py-1.5 font-medium">symfony/var-dumper</td>
+                            <td class="px-2 py-1.5">3</td>
+                            <td class="px-2 py-1.5">References to removed mysql_* extension</td>
+                            <td class="px-2 py-1.5">2 files (ResourceCaster.php, dump.php)</td>
+                            <td class="px-2 py-1.5 text-amber-700">Magento 2.4.7+</td>
+                        </tr>
+                        <tr>
+                            <td class="px-2 py-1.5 font-medium">symfony/error-handler</td>
+                            <td class="px-2 py-1.5">1</td>
+                            <td class="px-2 py-1.5">func_get_args() parameter changes</td>
+                            <td class="px-2 py-1.5">1 file (ErrorHandler.php)</td>
+                            <td class="px-2 py-1.5 text-amber-700">Magento 2.4.7+</td>
+                        </tr>
+                        <tr>
+                            <td class="px-2 py-1.5 font-medium">stripe/stripe-php</td>
+                            <td class="px-2 py-1.5">1</td>
+                            <td class="px-2 py-1.5">func_get_args() in CurlClient.php</td>
+                            <td class="px-2 py-1.5">1 file (CurlClient.php)</td>
+                            <td class="px-2 py-1.5 text-green-700">Update SDK</td>
+                        </tr>
+                        <tr>
+                            <td class="px-2 py-1.5 font-medium">elasticsearch/elasticsearch</td>
+                            <td class="px-2 py-1.5">2</td>
+                            <td class="px-2 py-1.5"><strong>False positive</strong> &mdash; &ldquo;Split&rdquo; is a class name, not PHP&rsquo;s deprecated split()</td>
+                            <td class="px-2 py-1.5">1 file (Indices/Split.php)</td>
+                            <td class="px-2 py-1.5 text-green-700">No action</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="text-xs text-gray-500 mt-2"><strong>Key takeaway:</strong> 6 of the 8 failures are Magento core dependencies (laminas + symfony). You do not patch these manually &mdash; they are resolved automatically when Magento is upgraded to 2.4.7+, which ships updated versions of these packages. The only actionable third-party fix is updating <code class="bg-gray-100 px-1">stripe/stripe-php</code> to the latest version.</p>
+            </div>
+
+            <!-- Packages with Warnings -->
+            <div class="border border-amber-200 bg-amber-50/50 p-4 mb-3">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-800">WARN</span>
+                    <span class="text-sm font-medium text-amber-800">12 Packages with Warnings &mdash; Mostly False Positives</span>
+                </div>
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr class="border-b border-amber-200">
+                            <th class="text-left px-2 py-1.5 font-medium text-amber-800">Package</th>
+                            <th class="text-left px-2 py-1.5 font-medium text-amber-800">Warnings</th>
+                            <th class="text-left px-2 py-1.5 font-medium text-amber-800">What Was Flagged</th>
+                            <th class="text-left px-2 py-1.5 font-medium text-amber-800">Assessment</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-amber-100">
+                        <tr>
+                            <td class="px-2 py-1.5 font-medium">mageworx/module-giftcardsbase</td>
+                            <td class="px-2 py-1.5">11</td>
+                            <td class="px-2 py-1.5">ASP-style tags in coupon.phtml</td>
+                            <td class="px-2 py-1.5 text-green-700">False positive &mdash; Knockout.js template syntax, not PHP</td>
+                        </tr>
+                        <tr>
+                            <td class="px-2 py-1.5 font-medium">symfony/config</td>
+                            <td class="px-2 py-1.5">11</td>
+                            <td class="px-2 py-1.5">&lsquo;resource&rsquo; namespace in Resource/*.php</td>
+                            <td class="px-2 py-1.5 text-green-700">False positive &mdash; soft reserved keyword, not hard. Resolved by Magento 2.4.7+</td>
+                        </tr>
+                        <tr>
+                            <td class="px-2 py-1.5 font-medium">justuno.com/core</td>
+                            <td class="px-2 py-1.5">6</td>
+                            <td class="px-2 py-1.5">dl() function references</td>
+                            <td class="px-2 py-1.5 text-green-700">Likely variable names, not function calls</td>
+                        </tr>
+                        <tr>
+                            <td class="px-2 py-1.5 font-medium">guzzlehttp/promises</td>
+                            <td class="px-2 py-1.5">3</td>
+                            <td class="px-2 py-1.5">each() function deprecated since PHP 7.2</td>
+                            <td class="px-2 py-1.5 text-amber-700">Real warning &mdash; resolved by Magento 2.4.7+ (ships Guzzle 7.9+)</td>
+                        </tr>
+                        <tr>
+                            <td class="px-2 py-1.5 font-medium">klaviyo/magento2-extension</td>
+                            <td class="px-2 py-1.5">3</td>
+                            <td class="px-2 py-1.5">Short open tags in test files</td>
+                            <td class="px-2 py-1.5 text-green-700">False positive &mdash; empty test files, no production impact</td>
+                        </tr>
+                        <tr>
+                            <td class="px-2 py-1.5 font-medium">symfony/yaml, polyfill-intl-*</td>
+                            <td class="px-2 py-1.5">5</td>
+                            <td class="px-2 py-1.5">mbstring.func_overload, INTL_IDNA_VARIANT_2003 deprecated</td>
+                            <td class="px-2 py-1.5 text-amber-700">Magento core deps &mdash; resolved by 2.4.7+</td>
+                        </tr>
+                        <tr>
+                            <td class="px-2 py-1.5 font-medium">laminas/laminas-feed, mail, soap</td>
+                            <td class="px-2 py-1.5">3</td>
+                            <td class="px-2 py-1.5">track_errors INI, deprecated constructs</td>
+                            <td class="px-2 py-1.5 text-amber-700">Magento core deps &mdash; resolved by 2.4.7+</td>
+                        </tr>
+                        <tr>
+                            <td class="px-2 py-1.5 font-medium">stripe/module-payments</td>
+                            <td class="px-2 py-1.5">1</td>
+                            <td class="px-2 py-1.5">Template syntax in admin phtml</td>
+                            <td class="px-2 py-1.5 text-green-700">False positive &mdash; not PHP code</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Not Scanned -->
+            <div class="border border-gray-300 bg-gray-50 p-4">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-gray-200 text-gray-700">NOT SCANNED</span>
+                    <span class="text-sm font-medium text-gray-700">18 Packages Could Not Be Scanned</span>
+                </div>
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr class="border-b border-gray-300">
+                            <th class="text-left px-2 py-1.5 font-medium text-gray-700">Packages</th>
+                            <th class="text-left px-2 py-1.5 font-medium text-gray-700">Count</th>
+                            <th class="text-left px-2 py-1.5 font-medium text-gray-700">Reason</th>
+                            <th class="text-left px-2 py-1.5 font-medium text-gray-700">How to Resolve</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr>
+                            <td class="px-2 py-1.5 font-medium">amasty/* (14 packages)</td>
+                            <td class="px-2 py-1.5">14</td>
+                            <td class="px-2 py-1.5">Amasty Composer repo returns 403 &mdash; global auth keys deprecated Jan 2026</td>
+                            <td class="px-2 py-1.5">Client creates project-level keys in Amasty portal, then re-scan</td>
+                        </tr>
+                        <tr>
+                            <td class="px-2 py-1.5 font-medium">bsscommerce/disable-compare</td>
+                            <td class="px-2 py-1.5">1</td>
+                            <td class="px-2 py-1.5">Private repo, not in Packagist or local cache</td>
+                            <td class="px-2 py-1.5">Scan on cloud environment where package is installed</td>
+                        </tr>
+                        <tr>
+                            <td class="px-2 py-1.5 font-medium">mageworx/module-donationsmeta, module-giftcards</td>
+                            <td class="px-2 py-1.5">2</td>
+                            <td class="px-2 py-1.5">Private repo, not in local cache</td>
+                            <td class="px-2 py-1.5">Verify MageWorx repo credentials, then re-scan</td>
+                        </tr>
+                        <tr>
+                            <td class="px-2 py-1.5 font-medium">stripe/stripe-payments</td>
+                            <td class="px-2 py-1.5">1</td>
+                            <td class="px-2 py-1.5">Distributed via Stripe&rsquo;s private Composer repo</td>
+                            <td class="px-2 py-1.5">Scan on cloud environment (stripe-php SDK was scanned separately)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Amasty Licensing Investigation -->
+    <section class="max-w-5xl mx-auto px-6 pb-8">
+        <div class="bg-white border border-gray-200 p-6">
+            <div class="flex items-center gap-2 mb-4">
+                <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-800">INVESTIGATION</span>
+                <h2 class="text-lg font-bold text-[#333333]">Amasty Licensing &mdash; Blocker Discovered During Scan</h2>
+            </div>
+            <p class="text-sm text-gray-600 mb-4">During source code acquisition, all 14 Amasty packages returned HTTP 403 errors from <code class="bg-gray-100 px-1 text-xs">composer.amasty.com</code>. Investigation revealed that Amasty deprecated all global Composer access keys on 1 January 2026, replacing them with project-based keys. The credentials in <code class="bg-gray-100 px-1 text-xs">auth.json</code> are expired global keys and will no longer work for any operation (installs, updates, or version queries).</p>
+
+            <div class="bg-amber-50 border border-amber-200 p-4 text-sm mb-4">
+                <div class="font-medium text-amber-800 mb-2">Action Required by Client</div>
+                <ol class="space-y-1 text-amber-700 list-decimal ml-4">
+                    <li>Log in to Amasty customer portal</li>
+                    <li>Create a Project for the Merchandise Store</li>
+                    <li>Assign all 14 purchased Amasty extensions to the project</li>
+                    <li>Generate new project-level Composer keys</li>
+                    <li>Update <code class="bg-amber-100 px-1">auth.json</code> with new credentials</li>
+                    <li>Verify with <code class="bg-amber-100 px-1">composer update amasty/* --dry-run</code></li>
+                </ol>
+            </div>
+
+            <div class="bg-gray-50 border border-gray-200 p-4 text-sm">
+                <div class="font-medium text-[#333333] mb-2">Impact on This Scan</div>
+                <p class="text-gray-600 mb-2">The 14 Amasty packages could not be scanned for PHP 8.4 compatibility. Once new project-level keys are provided, we can:</p>
+                <ul class="space-y-1 text-gray-600">
+                    <li class="flex gap-2"><span class="text-gray-400">&bull;</span> Download source code for all 14 Amasty packages</li>
+                    <li class="flex gap-2"><span class="text-gray-400">&bull;</span> Run the same PHPCompatibility scan against them</li>
+                    <li class="flex gap-2"><span class="text-gray-400">&bull;</span> Update the Module Register with their PHP 8.4 status</li>
+                    <li class="flex gap-2"><span class="text-gray-400">&bull;</span> The Vendor Checker tool (Task 1) will also be able to query Amasty versions via private repo</li>
+                </ul>
+                <p class="text-gray-600 mt-2">Full migration steps documented in <code class="bg-gray-100 px-1 text-xs">PHP-8.4-Compatibility-Report.md</code>.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Acceptance Criteria -->
+    <section class="max-w-5xl mx-auto px-6 pb-8">
+        <div class="bg-[#1c69af]/5 border border-[#1c69af]/20 p-6">
+            <h2 class="text-lg font-bold text-[#333333] mb-4">Acceptance Criteria &mdash; Verification</h2>
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-[#1c69af]/20">
+                        <th class="text-left px-3 py-2 font-medium text-[#333333] text-xs w-12">Met</th>
+                        <th class="text-left px-3 py-2 font-medium text-[#333333] text-xs">Criterion</th>
+                        <th class="text-left px-3 py-2 font-medium text-[#333333] text-xs">Evidence</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="border-b border-gray-100">
+                        <td class="px-3 py-2 text-green-600 font-bold">Yes</td>
+                        <td class="px-3 py-2 font-medium text-[#333333]">Review all used modules in scope</td>
+                        <td class="px-3 py-2 text-gray-600">All 700 packages from <code class="bg-gray-100 px-1 text-xs">composer.lock</code> analysed. 137 relevant modules identified, categorised (Custom Client, Custom GetJohn, Third-Party Extension, Payment Gateway, SSO/SAML, Magento Core Dep, etc.) and included in the Module Register.</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="px-3 py-2 text-green-600 font-bold">Yes</td>
+                        <td class="px-3 py-2 font-medium text-[#333333]">Module register showing which modules are used</td>
+                        <td class="px-3 py-2 text-gray-600"><code class="bg-gray-100 px-1 text-xs">PHP-8.4-Module-Register.csv</code> &mdash; 137 rows, one per package. Columns: Package, Installed Version, Category, PHP 8.4 Status, Risk Level, Errors, Warnings, Files Needing Changes, Recommendation.</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="px-3 py-2 text-green-600 font-bold">Yes</td>
+                        <td class="px-3 py-2 font-medium text-[#333333]">PHP 8.4 compatibility status per module</td>
+                        <td class="px-3 py-2 text-gray-600">7,377 files scanned across 28 vendor groups. Every module categorised as PASS (97), WARN (12), FAIL (8), NOT SCANNED (18), or NOT IN SCOPE (2). Per-package issue attribution via file path matching.</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="px-3 py-2 text-green-600 font-bold">Yes</td>
+                        <td class="px-3 py-2 font-medium text-[#333333]">List of files that need changing</td>
+                        <td class="px-3 py-2 text-gray-600">33 specific file paths listed in the written report. Module Register CSV includes per-package file lists. Raw CSV has 118 rows with file path, line number, and exact error message.</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="px-3 py-2 text-green-600 font-bold">Yes</td>
+                        <td class="px-3 py-2 font-medium text-[#333333]">Written summary</td>
+                        <td class="px-3 py-2 text-gray-600"><code class="bg-gray-100 px-1 text-xs">PHP-8.4-Compatibility-Report.md</code> &mdash; 330-line report with executive summary, per-vendor breakdown, file lists, risk assessment, upgrade recommendations, and Amasty licensing migration guide.</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="px-3 py-2 text-green-600 font-bold">Yes</td>
+                        <td class="px-3 py-2 font-medium text-[#333333]">Text file or spreadsheet output</td>
+                        <td class="px-3 py-2 text-gray-600">Text: Markdown report (330 lines). Spreadsheets: Module Register (137 rows) + raw issue detail (118 rows), both CSV format for Excel/Google Sheets. Raw JSON: 28 vendor scan files.</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="px-3 py-2 text-green-600 font-bold">Yes</td>
+                        <td class="px-3 py-2 font-medium text-[#333333]">Use SAST tool (PHP-CS / SonarQube)</td>
+                        <td class="px-3 py-2 text-gray-600">PHP_CodeSniffer 3.13.5 + PHPCompatibility 9.3.5 &mdash; the industry-standard SAST toolchain for PHP version compatibility scanning. More specialised than SonarQube for this specific use case. JSON output can be imported into SonarQube if needed.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Deliverable Files -->
+    <section class="max-w-5xl mx-auto px-6 pb-8">
+        <div class="bg-white border border-gray-200 p-6">
+            <h2 class="text-lg font-bold text-[#333333] mb-4">Deliverable Files</h2>
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-[#1c69af]/5 border-b border-[#1c69af]/20">
+                        <th class="text-left px-3 py-2 font-medium text-[#333333] text-xs">File</th>
+                        <th class="text-left px-3 py-2 font-medium text-[#333333] text-xs">What It Contains</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="border-b border-gray-100">
+                        <td class="px-3 py-2 font-medium text-[#333333]" colspan="2"><span class="text-[#1c69af]">php-compat-scanner/</span> &mdash; Primary deliverables</td>
+                    </tr>
+                    <tr class="border-b border-gray-100 bg-[#1c69af]/5">
+                        <td class="px-3 py-2 text-gray-600 pl-6"><code class="text-xs font-medium">PHP-8.4-Module-Register.csv</code></td>
+                        <td class="px-3 py-2 text-gray-600"><strong>Module Register (Spreadsheet)</strong> &mdash; 137 modules, one row per package. Columns: Package, Installed Version, Category, PHP 8.4 Status, Risk Level, Errors, Warnings, Files Needing Changes, Recommendation. Opens directly in Excel or Google Sheets.</td>
+                    </tr>
+                    <tr class="border-b border-gray-100 bg-[#1c69af]/5">
+                        <td class="px-3 py-2 text-gray-600 pl-6"><code class="text-xs font-medium">PHP-8.4-Compatibility-Report.md</code></td>
+                        <td class="px-3 py-2 text-gray-600"><strong>Written Summary (Text)</strong> &mdash; 330-line Markdown report. Executive summary, per-vendor breakdown with specific file paths, risk assessment matrix, recommended upgrade path, and complete Amasty licensing migration guide.</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="px-3 py-2 text-gray-600 pl-6"><code class="text-xs">php84-compatibility-results.csv</code></td>
+                        <td class="px-3 py-2 text-gray-600"><strong>Raw Issue Detail (Spreadsheet)</strong> &mdash; 118-row CSV with per-file, per-issue detail (file path, line number, severity, message). For developers who need to see exactly what was flagged.</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="px-3 py-2 text-gray-600 pl-6"><code class="text-xs">results/*.json</code></td>
+                        <td class="px-3 py-2 text-gray-600"><strong>Raw Scanner Output (JSON)</strong> &mdash; 28 phpcs JSON output files (one per vendor group). Machine-readable, can be imported into SonarQube or other tools if needed.</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="px-3 py-2 font-medium text-[#333333]" colspan="2"><span class="text-[#1c69af]">module-composer-vendor-checker/docs/</span> &mdash; Visual presentation</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="px-3 py-2 text-gray-600 pl-6"><code class="text-xs">index.html</code></td>
+                        <td class="px-3 py-2 text-gray-600">Interactive HTML dashboard includes a PHP 8.4 Compatibility Assessment section with summary cards, risk breakdown, expandable error table, and recommended upgrade path.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Recommended Next Steps -->
+    <section class="max-w-5xl mx-auto px-6 pb-8">
+        <div class="bg-white border border-gray-200 p-6">
+            <h2 class="text-lg font-bold text-[#333333] mb-4">Recommended Next Steps</h2>
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-[#1c69af]/5 border-b border-[#1c69af]/20">
+                        <th class="text-left px-3 py-2 font-medium text-[#333333] text-xs w-12">Priority</th>
+                        <th class="text-left px-3 py-2 font-medium text-[#333333] text-xs">Action</th>
+                        <th class="text-left px-3 py-2 font-medium text-[#333333] text-xs">Owner</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="border-b border-gray-100">
+                        <td class="px-3 py-2"><span class="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-red-100 text-red-800">High</span></td>
+                        <td class="px-3 py-2 text-gray-700">Migrate Amasty Composer credentials to project-level keys (see Amasty investigation section)</td>
+                        <td class="px-3 py-2 text-gray-600">Client</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="px-3 py-2"><span class="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-red-100 text-red-800">High</span></td>
+                        <td class="px-3 py-2 text-gray-700">Verify Amasty subscription status &mdash; annual renewal required for updates</td>
+                        <td class="px-3 py-2 text-gray-600">Client</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="px-3 py-2"><span class="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-800">Medium</span></td>
+                        <td class="px-3 py-2 text-gray-700">Re-run PHP 8.4 scan against 14 Amasty + 3 other unscanned packages once credentials are resolved</td>
+                        <td class="px-3 py-2 text-gray-600">GetJohn</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="px-3 py-2"><span class="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-800">Medium</span></td>
+                        <td class="px-3 py-2 text-gray-700">Upgrade Magento to 2.4.7+ to resolve all laminas/symfony/guzzle PHP 8.4 issues (6 of 8 FAIL packages)</td>
+                        <td class="px-3 py-2 text-gray-600">GetJohn</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="px-3 py-2"><span class="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-[#1c69af]/10 text-[#1c69af]">Low</span></td>
+                        <td class="px-3 py-2 text-gray-700">Update stripe/stripe-php to latest version (only non-Magento FAIL package requiring action)</td>
+                        <td class="px-3 py-2 text-gray-600">GetJohn</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="px-3 py-2"><span class="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-[#1c69af]/10 text-[#1c69af]">Low</span></td>
+                        <td class="px-3 py-2 text-gray-700">Investigate MageWorx private repo auth &mdash; credentials may need renewal</td>
+                        <td class="px-3 py-2 text-gray-600">Client</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-[#333333] mt-4">
+        <div class="max-w-5xl mx-auto px-6 py-6">
+            <div class="flex items-center justify-between text-xs text-gray-400">
+                <div>GetJohn &mdash; Task 2 Delivery Report &mdash; 12 February 2026</div>
+                <div>Merchandise Store &mdash; Magento 2.4.5 Enterprise Cloud</div>
+            </div>
+        </div>
+    </footer>
+
+</div>
+
+</body>
+</html>

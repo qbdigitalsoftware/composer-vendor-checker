@@ -31,5 +31,10 @@
     },
     "extra": {
         "class": "GetJohn\\VendorChecker\\ComposerPlugin"
+    },
+    "config": {
+        "allow-plugins": {
+            "getjohn/module-composer-vendor-checker": true
+        }
     }
 }
