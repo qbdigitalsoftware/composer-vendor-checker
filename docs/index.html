@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vendor Version Checker — GetJohn</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         [x-cloak] { display: none !important; }
@@ -99,7 +100,7 @@
                             <span class="inline-block w-2.5 h-2.5 bg-red-500"></span>
                             <h3 class="text-sm font-bold text-red-800">Actions Required &mdash; Credential Renewal</h3>
                         </div>
-                        <svg :class="actionsOpen ? 'rotate-180' : ''" class="w-4 h-4 text-red-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        <svg :class="actionsOpen ? 'rotate-180' : ''" class="w-4 h-4 text-red-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
                     <div x-show="actionsOpen" x-collapse class="mt-4 space-y-4">
                         <p class="text-xs text-red-700">The following vendors are returning errors across all stores because Composer authentication credentials have expired or need migration. <strong>One action from the client unblocks all three.</strong></p>
@@ -291,19 +292,19 @@
                         </button>
                     </div>
                     <button @click="downloadPhpCompatCsv()" class="px-4 py-1.5 text-sm font-medium bg-[#333333] text-white hover:bg-[#555555] transition-colors flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         Download CSV
                     </button>
                     </div>
 
                     <!-- Search -->
                     <div class="mb-4">
-                        <input type="text" x-model="phpCompatSearch" placeholder="Search packages..."
+                        <input type="text" x-model="phpCompatSearch" placeholder="Search packages..." aria-label="Search PHP compatibility packages"
                                class="w-full md:w-80 px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:border-[#1c69af]">
                     </div>
 
                     <!-- PHP Compat Table -->
-                    <div class="bg-white border border-gray-200 overflow-x-auto">
+                    <div class="bg-white border border-gray-200 overflow-x-auto" style="overflow-y: visible;">
                         <table class="w-full text-sm" style="min-width: 960px;">
                             <thead>
                                 <tr class="bg-[#1c69af]/5 border-b border-[#1c69af]/20">
@@ -359,14 +360,14 @@
                                             <template x-if="pkg.files && pkg.files.length > 0">
                                                 <div>
                                                     <button @click="expanded = !expanded" class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium bg-[#1c69af]/10 text-[#1c69af] hover:bg-[#1c69af]/20 transition-colors whitespace-nowrap">
-                                                        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                                        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                                         <span x-text="pkg.files.split('; ').length + ' file' + (pkg.files.split('; ').length !== 1 ? 's' : '')"></span>
-                                                        <svg :class="expanded ? 'rotate-180' : ''" class="w-3 h-3 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                                        <svg :class="expanded ? 'rotate-180' : ''" class="w-3 h-3 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                                                     </button>
                                                     <div x-show="expanded" @click.outside="expanded = false" class="absolute right-4 z-20 mt-1 w-[420px] bg-white border border-gray-200 shadow-lg p-3 max-h-56 overflow-y-auto">
                                                         <template x-for="(f, i) in pkg.files.split('; ')" :key="f">
                                                             <div class="flex items-start gap-2 py-1" :class="i > 0 ? 'border-t border-gray-100' : ''">
-                                                                <svg class="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                                                <svg class="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                                                                 <code class="text-xs text-gray-700 font-mono break-all leading-snug" x-text="f"></code>
                                                             </div>
                                                         </template>
@@ -458,7 +459,7 @@
 
                 <!-- Search -->
                 <div class="mb-4">
-                    <input type="text" x-model="search" placeholder="Search packages..."
+                    <input type="text" x-model="search" placeholder="Search packages..." aria-label="Search vendor packages"
                            class="w-full md:w-80 px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:border-[#1c69af]">
                 </div>
 
@@ -479,11 +480,11 @@
                             <template x-for="result in filteredResults" :key="result.package">
                                 <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                     <td class="px-4 py-3">
-                                        <span x-show="result.status === 'UP_TO_DATE'" class="inline-block w-2.5 h-2.5 bg-green-500" title="Up to date"></span>
-                                        <span x-show="result.status === 'UPDATE_AVAILABLE'" class="inline-block w-2.5 h-2.5 bg-amber-500" title="Update available"></span>
-                                        <span x-show="result.status === 'ERROR'" class="inline-block w-2.5 h-2.5 bg-red-500" title="Error"></span>
-                                        <span x-show="result.status === 'UNAVAILABLE'" class="inline-block w-2.5 h-2.5 bg-gray-400" title="Unavailable"></span>
-                                        <span x-show="result.status === 'AHEAD_OF_VENDOR'" class="inline-block w-2.5 h-2.5 bg-blue-500" title="Ahead of vendor"></span>
+                                        <span x-show="result.status === 'UP_TO_DATE'" class="inline-block w-2.5 h-2.5 bg-green-500" title="Up to date" role="img" aria-label="Up to date"></span>
+                                        <span x-show="result.status === 'UPDATE_AVAILABLE'" class="inline-block w-2.5 h-2.5 bg-amber-500" title="Update available" role="img" aria-label="Update available"></span>
+                                        <span x-show="result.status === 'ERROR'" class="inline-block w-2.5 h-2.5 bg-red-500" title="Error" role="img" aria-label="Error"></span>
+                                        <span x-show="result.status === 'UNAVAILABLE'" class="inline-block w-2.5 h-2.5 bg-gray-400" title="Unavailable" role="img" aria-label="Unavailable"></span>
+                                        <span x-show="result.status === 'AHEAD_OF_VENDOR'" class="inline-block w-2.5 h-2.5 bg-blue-500" title="Ahead of vendor" role="img" aria-label="Ahead of vendor"></span>
                                     </td>
                                     <td class="px-4 py-3">
                                         <div class="font-medium text-[#333333]" x-text="result.package"></div>
