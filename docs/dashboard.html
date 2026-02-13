@@ -57,6 +57,7 @@
     <!-- Store Selector Tabs -->
     <nav class="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div class="max-w-7xl mx-auto px-6">
+            <p class="text-xs text-gray-400 pt-2 pb-1">Select <strong>All Stores</strong> for cross-store comparisons and PHP 8.4 compatibility, or choose an individual store to inspect its packages.</p>
             <div class="flex gap-1 overflow-x-auto py-2">
                 <button @click="selectStore('ALL')"
                         :class="activeStore === 'ALL' ? 'bg-[#1c69af] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
@@ -79,6 +80,8 @@
         <!-- All-stores overview grid -->
         <template x-if="activeStore === 'ALL'">
             <div>
+                <h2 class="text-lg font-bold text-[#333333] mb-1">Store Overview</h2>
+                <p class="text-sm text-gray-500 mb-4">Each card represents a Magento store instance discovered in the version check results. The counts show how many Composer packages on that store are up to date, have updates available, returned errors, or could not be resolved. Click any card to drill into that store's full package list.</p>
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
                     <template x-for="name in storeNames" :key="name">
                         <button @click="selectStore(name)" class="bg-white border border-gray-200 p-4 text-left hover:border-[#1c69af] transition-colors">
@@ -158,6 +161,7 @@
                 </div>
 
                 <!-- Section Tabs within All Stores -->
+                <p class="text-xs text-gray-400 mb-2">Toggle between the PHP 8.4 compatibility audit (module-level scan results) and the cross-store update matrix (version drift across environments).</p>
                 <div class="flex gap-2 mb-6">
                     <button @click="allStoresSection = 'php84'"
                             :class="allStoresSection === 'php84' ? 'bg-[#1c69af] text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'"
@@ -267,6 +271,7 @@
                     </div>
 
                     <!-- PHP Compat Summary Cards -->
+                    <p class="text-xs text-gray-400 mb-2">Counts from the PHPCompatibility static analysis scan. PASS = no issues found, WARN = deprecation notices only, FAIL = breaking errors that must be fixed before PHP 8.4 deployment, Not Scanned = source code unavailable (private repos), Out of Scope = packages excluded from analysis.</p>
                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
                         <div class="bg-white border border-gray-200 p-4">
                             <div class="text-2xl font-bold text-[#333333]" x-text="phpCompat ? phpCompat.total : '-'"></div>
@@ -295,6 +300,7 @@
                     </div>
 
                     <!-- Risk Breakdown -->
+                    <p class="text-xs text-gray-400 mb-2">Risk is categorised by who owns the fix. Custom code issues need developer attention, core dependency issues are resolved by upgrading Magento, and unscanned packages need valid Composer credentials before they can be assessed.</p>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                         <div class="bg-green-50 border border-green-200 p-4">
                             <div class="text-sm font-semibold text-green-800 mb-1">No Risk &mdash; Custom Code</div>
@@ -311,6 +317,7 @@
                     </div>
 
                     <!-- PHP Compat Filter + Download -->
+                    <p class="text-xs text-gray-400 mb-2">Filter the table below by scan result. The full module list includes package name, installed version, scan category, risk level, error/warning counts, affected files, and a recommended action. Export to CSV for offline review or reporting.</p>
                     <div class="flex items-center justify-between flex-wrap gap-4 mb-4">
                     <div class="flex gap-2 flex-wrap">
                         <button @click="phpCompatFilter = 'all'"
@@ -453,30 +460,39 @@
         <!-- Single store view -->
         <template x-if="activeStore !== 'ALL'">
             <div>
+                <h2 class="text-lg font-bold text-[#333333] mb-1" x-text="activeStore + ' — Package Overview'"></h2>
+                <p class="text-sm text-gray-500 mb-4">Version check results for all third-party Composer packages installed on this store. The summary cards below show the breakdown by status — how many packages are current, how many have newer versions available, and how many could not be checked due to authentication or network errors.</p>
+
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                     <div class="bg-white border border-[#1c69af]/30 p-4">
                         <div class="text-2xl font-bold text-[#333333]" x-text="currentCounts.total">-</div>
                         <div class="text-xs text-gray-500 mt-1">Total Checked</div>
+                        <div class="text-[10px] text-gray-400 mt-0.5">All packages scanned</div>
                     </div>
                     <div class="bg-white border border-green-200 p-4">
                         <div class="text-2xl font-bold text-green-600" x-text="currentCounts.upToDate">-</div>
                         <div class="text-xs text-gray-500 mt-1">Up to Date</div>
+                        <div class="text-[10px] text-gray-400 mt-0.5">Running latest version</div>
                     </div>
                     <div class="bg-white border border-amber-200 p-4">
                         <div class="text-2xl font-bold text-amber-600" x-text="currentCounts.updateAvailable">-</div>
                         <div class="text-xs text-gray-500 mt-1">Updates Available</div>
+                        <div class="text-[10px] text-gray-400 mt-0.5">Newer version exists</div>
                     </div>
                     <div class="bg-white border border-gray-300 p-4">
                         <div class="text-2xl font-bold text-gray-500" x-text="currentCounts.unavailable">-</div>
                         <div class="text-xs text-gray-500 mt-1">Unavailable</div>
+                        <div class="text-[10px] text-gray-400 mt-0.5">No version source found</div>
                     </div>
                     <div class="bg-white border border-red-200 p-4">
                         <div class="text-2xl font-bold text-red-600" x-text="currentCounts.error">-</div>
                         <div class="text-xs text-gray-500 mt-1">Errors</div>
+                        <div class="text-[10px] text-gray-400 mt-0.5">Check failed (auth/network)</div>
                     </div>
                 </div>
 
                 <!-- Filter Tabs + Download -->
+                <p class="text-xs text-gray-400 mb-2">Filter the table by status to focus on packages that need attention. The count beside each filter shows how many packages match. Use the CSV export to share results with your team.</p>
                 <div class="flex items-center justify-between flex-wrap gap-4 mb-6">
                 <div class="flex gap-2 flex-wrap">
                     <button @click="filter = 'all'"
@@ -518,6 +534,32 @@
                 </div>
 
                 <!-- Results Table -->
+                <p class="text-sm text-gray-500 mb-2">Each row represents a Composer package installed on this store. The <strong>Installed</strong> column shows the version currently in <code class="bg-gray-100 px-1 text-xs">composer.lock</code>, while <strong>Latest</strong> shows the newest version found by the checker. <strong>Source</strong> indicates where the latest version was discovered (Packagist, vendor website, or private Composer repo). <strong>Notes</strong> flags any issues encountered during the check.</p>
+
+                <!-- Legend -->
+                <div class="flex flex-wrap gap-3 mb-4 text-xs">
+                    <div class="flex items-center gap-1.5">
+                        <span class="inline-block w-2.5 h-2.5 bg-green-500"></span>
+                        <span class="text-gray-500">Up to date</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="inline-block w-2.5 h-2.5 bg-amber-500"></span>
+                        <span class="text-gray-500">Update available</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="inline-block w-2.5 h-2.5 bg-red-500"></span>
+                        <span class="text-gray-500">Error (auth or network failure)</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="inline-block w-2.5 h-2.5 bg-gray-400"></span>
+                        <span class="text-gray-500">Unavailable (no version source)</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="inline-block w-2.5 h-2.5 bg-blue-500"></span>
+                        <span class="text-gray-500">Ahead of vendor (installed is newer)</span>
+                    </div>
+                </div>
+
                 <div class="bg-white border border-gray-200 overflow-hidden">
                     <table class="w-full text-sm">
                         <thead>
