@@ -152,69 +152,171 @@
     <!-- Approach & Methodology -->
     <section id="methodology" class="max-w-5xl mx-auto px-6 pb-8 scroll-mt-20">
         <div class="bg-white border border-gray-200 p-6">
-            <h2 class="text-lg font-bold text-[#333333] mb-4">Approach &amp; Methodology</h2>
+            <h2 class="text-lg font-bold text-[#333333] mb-1">Approach &amp; Methodology</h2>
+            <p class="text-sm text-gray-500 mb-6">How we acquired source code, scanned it, and built the Module Register.</p>
 
-            <div class="space-y-4 mb-6">
-                <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
-                    <div class="text-sm font-medium text-[#333333] flex items-start gap-2">
-                        <span class="inline-flex items-center justify-center w-5 h-5 bg-[#1c69af] text-white text-[10px] font-bold flex-shrink-0">1</span>
-                        <span>Tool Selection: PHPCompatibility (via PHP_CodeSniffer)</span>
-                    </div>
-                    <p class="text-sm text-gray-600 mt-1">We used <strong>PHP_CodeSniffer 3.13.5</strong> with the <strong>PHPCompatibility 9.3.5</strong> ruleset &mdash; the industry-standard SAST tool specifically designed for PHP version compatibility scanning. This was chosen over SonarQube because PHPCompatibility provides purpose-built rules for detecting deprecated functions, removed extensions, reserved keyword conflicts, changed INI directives, and parameter behaviour changes across PHP versions. SonarQube&rsquo;s PHP plugin covers general code quality but does not offer the same depth of PHP version migration analysis.</p>
+            <!-- Tool Selection -->
+            <div class="mb-6">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="inline-flex items-center justify-center w-6 h-6 bg-[#1c69af] text-white text-[10px] font-bold flex-shrink-0">1</span>
+                    <h3 class="text-sm font-bold text-[#333333]">Tool Selection</h3>
                 </div>
-                <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
-                    <div class="text-sm font-medium text-[#333333] flex items-start gap-2">
-                        <span class="inline-flex items-center justify-center w-5 h-5 bg-[#1c69af] text-white text-[10px] font-bold flex-shrink-0">2</span>
-                        <span>Source Code Acquisition</span>
+                <div class="grid md:grid-cols-2 gap-3">
+                    <div class="border border-green-200 bg-green-50/50 p-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <svg class="w-4 h-4 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                            <span class="text-sm font-medium text-green-800">PHPCompatibility 9.3.5</span>
+                            <span class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-green-100 text-green-700">SELECTED</span>
+                        </div>
+                        <p class="text-xs text-gray-600">Industry-standard SAST ruleset purpose-built for PHP version migration. Detects deprecated functions, removed extensions, reserved keyword conflicts, changed INI directives, and parameter behaviour changes across PHP versions.</p>
+                        <div class="mt-2 bg-white border border-green-200 px-3 py-2 font-mono text-[11px] text-gray-600">
+                            PHP_CodeSniffer 3.13.5 + PHPCompatibility 9.3.5
+                        </div>
                     </div>
-                    <p class="text-sm text-gray-600 mt-1">A full <code class="bg-gray-100 px-1 text-xs">composer install</code> was not possible locally because Amasty&rsquo;s Composer repository returned HTTP 403 on all requests (expired global auth keys &mdash; see Amasty investigation below). Instead, we extracted 671 packages from the local Composer download cache and the existing <code class="bg-gray-100 px-1 text-xs">vendor/</code> directory. This gave us complete source code for all packages except those distributed exclusively via private repos with no local cache (14 Amasty, plus BSS, some MageWorx, and Stripe Payments).</p>
+                    <div class="border border-gray-200 bg-gray-50/50 p-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"/></svg>
+                            <span class="text-sm font-medium text-gray-500">SonarQube</span>
+                            <span class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium bg-gray-200 text-gray-500">CONSIDERED</span>
+                        </div>
+                        <p class="text-xs text-gray-500">SonarQube&rsquo;s PHP plugin covers general code quality (bugs, code smells, security hotspots) but does not offer the same depth of PHP version migration analysis. Its compatibility rules are limited to a small subset of deprecations. PHPCompatibility output can be imported into SonarQube if needed.</p>
+                    </div>
                 </div>
-                <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
-                    <div class="text-sm font-medium text-[#333333] flex items-start gap-2">
-                        <span class="inline-flex items-center justify-center w-5 h-5 bg-[#1c69af] text-white text-[10px] font-bold flex-shrink-0">3</span>
-                        <span>Scanning Process</span>
-                    </div>
-                    <p class="text-sm text-gray-600 mt-1">Each vendor group was scanned separately with <code class="bg-gray-100 px-1 text-xs">phpcs --standard=PHPCompatibility --runtime-set testVersion 8.4 --report=json</code>. This produced 28 JSON result files (one per vendor group), which were then cross-referenced against the 700 packages in <code class="bg-gray-100 px-1 text-xs">composer.lock</code> to produce the per-package module register. File path matching was used to attribute specific errors/warnings to the correct Composer package (e.g. an error in <code class="bg-gray-100 px-1 text-xs">vendor/laminas/laminas-db/src/...</code> is attributed to <code class="bg-gray-100 px-1 text-xs">laminas/laminas-db</code>, not to all 28 laminas packages).</p>
+            </div>
+
+            <!-- Source Code Acquisition -->
+            <div class="mb-6">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="inline-flex items-center justify-center w-6 h-6 bg-[#1c69af] text-white text-[10px] font-bold flex-shrink-0">2</span>
+                    <h3 class="text-sm font-bold text-[#333333]">Source Code Acquisition</h3>
                 </div>
-                <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
-                    <div class="text-sm font-medium text-[#333333] flex items-start gap-2">
-                        <span class="inline-flex items-center justify-center w-5 h-5 bg-[#1c69af] text-white text-[10px] font-bold flex-shrink-0">4</span>
-                        <span>Module Register Construction</span>
+                <div class="border border-gray-200 p-4 mb-3">
+                    <p class="text-sm text-gray-600 mb-3">A full <code class="bg-gray-100 px-1 text-xs">composer install</code> was not possible locally because Amasty&rsquo;s Composer repository returned HTTP 403 on all requests (expired global auth keys &mdash; see <a href="#amasty" class="text-[#1c69af] hover:underline">Amasty investigation</a>). Instead, we sourced packages from two alternative locations:</p>
+                    <div class="grid md:grid-cols-3 gap-3">
+                        <div class="bg-[#1c69af]/[0.03] border border-[#1c69af]/10 p-3">
+                            <div class="text-xl font-bold text-[#1c69af]">671</div>
+                            <div class="text-xs text-gray-500 mb-1">packages recovered</div>
+                            <p class="text-[11px] text-gray-400">From Composer download cache + existing <code class="bg-gray-100 px-0.5 text-[10px]">vendor/</code> directory</p>
+                        </div>
+                        <div class="bg-amber-50/50 border border-amber-200 p-3">
+                            <div class="text-xl font-bold text-amber-600">18</div>
+                            <div class="text-xs text-gray-500 mb-1">packages unavailable</div>
+                            <p class="text-[11px] text-gray-400">Private repos with no local cache &mdash; 14 Amasty, BSS, MageWorx (2), Stripe Payments</p>
+                        </div>
+                        <div class="bg-gray-50 border border-gray-200 p-3">
+                            <div class="text-xl font-bold text-[#333333]">700</div>
+                            <div class="text-xs text-gray-500 mb-1">total in composer.lock</div>
+                            <p class="text-[11px] text-gray-400">Complete package inventory from the Merchandise Store lock file</p>
+                        </div>
                     </div>
-                    <p class="text-sm text-gray-600 mt-1">The final Module Register was built by cross-referencing <code class="bg-gray-100 px-1 text-xs">composer.lock</code> (700 total packages) with the 28 scan result files. We filtered to the 137 packages relevant to the store (excluding Magento core metapackages, test utilities, and generic PHP libraries). For each package: installed version from lock file, category classification, per-package scan results matched by file path, risk assessment, and an actionable recommendation.</p>
+                </div>
+            </div>
+
+            <!-- Scanning Process -->
+            <div class="mb-6">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="inline-flex items-center justify-center w-6 h-6 bg-[#1c69af] text-white text-[10px] font-bold flex-shrink-0">3</span>
+                    <h3 class="text-sm font-bold text-[#333333]">Scanning Process</h3>
+                </div>
+                <div class="border border-gray-200 p-4">
+                    <p class="text-sm text-gray-600 mb-3">Each vendor group was scanned separately, producing 28 JSON result files. Results were then attributed to individual Composer packages via file path matching.</p>
+                    <div class="bg-gray-50 border border-gray-200 px-3 py-2 font-mono text-[11px] text-gray-600 mb-3">
+                        phpcs --standard=PHPCompatibility --runtime-set testVersion 8.4 --report=json
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-3">
+                        <div class="flex items-start gap-2">
+                            <svg class="w-4 h-4 text-[#1c69af] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            <div>
+                                <div class="text-xs font-medium text-[#333333]">Per-vendor isolation</div>
+                                <p class="text-[11px] text-gray-500">28 separate scan runs &mdash; one per vendor group &mdash; to keep results traceable and debugging straightforward.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <svg class="w-4 h-4 text-[#1c69af] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            <div>
+                                <div class="text-xs font-medium text-[#333333]">Per-package attribution</div>
+                                <p class="text-[11px] text-gray-500">File path matching ensures an error in <code class="bg-gray-100 px-0.5 text-[10px]">vendor/laminas/laminas-db/src/...</code> is attributed to <code class="bg-gray-100 px-0.5 text-[10px]">laminas/laminas-db</code>, not to all 28 laminas packages.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Module Register Construction -->
+            <div class="mb-6">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="inline-flex items-center justify-center w-6 h-6 bg-[#1c69af] text-white text-[10px] font-bold flex-shrink-0">4</span>
+                    <h3 class="text-sm font-bold text-[#333333]">Module Register Construction</h3>
+                </div>
+                <div class="border border-gray-200 p-4">
+                    <p class="text-sm text-gray-600 mb-3">The final register was built by cross-referencing <code class="bg-gray-100 px-1 text-xs">composer.lock</code> with the 28 scan result files, then filtering to the 137 packages relevant to the store.</p>
+                    <div class="flex flex-wrap gap-x-6 gap-y-3">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 bg-gray-100 border border-gray-200 flex items-center justify-center">
+                                <span class="text-[10px] font-bold text-gray-400">700</span>
+                            </div>
+                            <svg class="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            <div class="w-8 h-8 bg-[#1c69af]/10 border border-[#1c69af]/20 flex items-center justify-center">
+                                <span class="text-[10px] font-bold text-[#1c69af]">137</span>
+                            </div>
+                            <span class="text-xs text-gray-500">Filtered from total packages to store-relevant modules</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4">
+                        <div class="text-center p-2 bg-gray-50 border border-gray-200">
+                            <div class="text-[11px] font-medium text-[#333333]">Installed Version</div>
+                            <p class="text-[10px] text-gray-400">from lock file</p>
+                        </div>
+                        <div class="text-center p-2 bg-gray-50 border border-gray-200">
+                            <div class="text-[11px] font-medium text-[#333333]">Category</div>
+                            <p class="text-[10px] text-gray-400">custom, third-party, core dep</p>
+                        </div>
+                        <div class="text-center p-2 bg-gray-50 border border-gray-200">
+                            <div class="text-[11px] font-medium text-[#333333]">Scan Results</div>
+                            <p class="text-[10px] text-gray-400">matched by file path</p>
+                        </div>
+                        <div class="text-center p-2 bg-gray-50 border border-gray-200">
+                            <div class="text-[11px] font-medium text-[#333333]">Recommendation</div>
+                            <p class="text-[10px] text-gray-400">risk level + action</p>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-gray-400 mt-3">Excluded: Magento core metapackages, test utilities, generic PHP libraries (e.g. psr/*, league/*, symfony polyfills).</p>
                 </div>
             </div>
 
             <!-- Scanner Configuration -->
-            <h3 class="text-xs font-semibold text-[#1c69af] uppercase tracking-wider mt-6 mb-2">Scanner Configuration</h3>
-            <table class="w-full text-sm">
-                <tbody>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-2 pr-4 font-medium text-[#333333] w-1/3">SAST Tool</td>
-                        <td class="py-2 text-gray-600">PHP_CodeSniffer 3.13.5 + PHPCompatibility 9.3.5</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-2 pr-4 font-medium text-[#333333]">Target Version</td>
-                        <td class="py-2 text-gray-600">PHP 8.4</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-2 pr-4 font-medium text-[#333333]">Total Files Scanned</td>
-                        <td class="py-2 text-gray-600">7,377 PHP files across 28 vendor groups</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-2 pr-4 font-medium text-[#333333]">Modules in Register</td>
-                        <td class="py-2 text-gray-600">137 (filtered from 700 total Composer packages in lock file)</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-2 pr-4 font-medium text-[#333333]">Package Source</td>
-                        <td class="py-2 text-gray-600">Composer download cache + existing vendor/ directory (full install blocked by Amasty auth 403)</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-2 pr-4 font-medium text-[#333333]">Scanner Location</td>
-                        <td class="py-2 text-gray-600"><code class="bg-gray-100 px-1 text-xs">php-compat-scanner/</code> &mdash; standalone Composer project with PHPCompatibility installed</td>
-                    </tr>
-                </tbody>
-            </table>
+            <h3 class="text-xs font-semibold text-[#333333] uppercase tracking-wider mb-3">Scanner Configuration</h3>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div class="border border-gray-200 p-3">
+                    <div class="text-[10px] text-gray-400 uppercase tracking-wider mb-0.5">SAST Tool</div>
+                    <div class="text-sm font-medium text-[#333333]">PHP_CodeSniffer 3.13.5</div>
+                    <div class="text-xs text-gray-500">+ PHPCompatibility 9.3.5</div>
+                </div>
+                <div class="border border-gray-200 p-3">
+                    <div class="text-[10px] text-gray-400 uppercase tracking-wider mb-0.5">Target Version</div>
+                    <div class="text-sm font-medium text-[#333333]">PHP 8.4</div>
+                </div>
+                <div class="border border-gray-200 p-3">
+                    <div class="text-[10px] text-gray-400 uppercase tracking-wider mb-0.5">Files Scanned</div>
+                    <div class="text-sm font-medium text-[#333333]">7,377</div>
+                    <div class="text-xs text-gray-500">across 28 vendor groups</div>
+                </div>
+                <div class="border border-gray-200 p-3">
+                    <div class="text-[10px] text-gray-400 uppercase tracking-wider mb-0.5">Modules in Register</div>
+                    <div class="text-sm font-medium text-[#333333]">137</div>
+                    <div class="text-xs text-gray-500">of 700 total packages</div>
+                </div>
+                <div class="border border-gray-200 p-3">
+                    <div class="text-[10px] text-gray-400 uppercase tracking-wider mb-0.5">Package Source</div>
+                    <div class="text-sm font-medium text-[#333333]">Composer cache + vendor/</div>
+                    <div class="text-xs text-gray-500">full install blocked by Amasty 403</div>
+                </div>
+                <div class="border border-gray-200 p-3">
+                    <div class="text-[10px] text-gray-400 uppercase tracking-wider mb-0.5">Scanner Location</div>
+                    <div class="text-sm font-medium text-[#333333]"><code class="text-xs">php-compat-scanner/</code></div>
+                    <div class="text-xs text-gray-500">standalone Composer project</div>
+                </div>
+            </div>
         </div>
     </section>
 
