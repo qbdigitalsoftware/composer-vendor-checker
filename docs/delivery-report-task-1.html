@@ -155,9 +155,15 @@
                         <span class="flex-1 text-sm font-medium text-[#333333]">fix: correct getSupportedVendors return format</span>
                     </button>
                     <div x-show="expandedCommit === 1" x-collapse x-cloak class="px-4 pb-4 border-t border-gray-100">
-                        <div class="pt-3 text-sm text-gray-600">
-                            <div class="font-medium text-[#333333] mb-1">What Changed</div>
-                            Fixed method that was breaking vendor key &rarr; name mapping with incorrect <code class="bg-gray-100 px-1 text-xs">explode()</code> call
+                        <div class="pt-3 text-sm text-gray-600 space-y-3">
+                            <div>
+                                <div class="font-medium text-[#333333] mb-1">Why</div>
+                                <code class="bg-gray-100 px-1 text-xs">getSupportedVendors()</code> was treating vendor keys as domain names and splitting on <code class="bg-gray-100 px-1 text-xs">.</code>, which caused mismatches &mdash; packages couldn't be matched to their vendor entries in the config. This blocked all version checks from returning results.
+                            </div>
+                            <div>
+                                <div class="font-medium text-[#333333] mb-1">What Changed</div>
+                                Removed the incorrect <code class="bg-gray-100 px-1 text-xs">explode('.', $domain)[0]</code> transformation. VersionChecker already returns clean vendor keys, so no transformation is needed.
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -173,9 +179,15 @@
                         <span class="flex-1 text-sm font-medium text-[#333333]">fix: correct XTENTO M2 version extraction, add Packagist fallback and Cloudflare detection</span>
                     </button>
                     <div x-show="expandedCommit === 2" x-collapse x-cloak class="px-4 pb-4 border-t border-gray-100">
-                        <div class="pt-3 text-sm text-gray-600">
-                            <div class="font-medium text-[#333333] mb-1">What Changed</div>
-                            XTENTO picks M2 version (not M1). Packagist API fallback when scraping fails. Cloudflare Managed Challenge detection with clear messaging.
+                        <div class="pt-3 text-sm text-gray-600 space-y-3">
+                            <div>
+                                <div class="font-medium text-[#333333] mb-1">Why</div>
+                                XTENTO's version page lists both Magento 1 and Magento 2 versions &mdash; the scraper was picking the M1 version, returning incorrect data. Several vendor websites also block automated requests with Cloudflare challenges, causing silent failures with no fallback.
+                            </div>
+                            <div>
+                                <div class="font-medium text-[#333333] mb-1">What Changed</div>
+                                Implemented <code class="bg-gray-100 px-1 text-xs">version_select: highest</code> strategy with case-sensitive pattern to select the correct M2 version via <code class="bg-gray-100 px-1 text-xs">version_compare</code>. Added Packagist API as a fallback source when website scraping fails (results labelled <code class="bg-gray-100 px-1 text-xs">[via Packagist]</code>). Added Cloudflare Managed Challenge detection with clear messaging. Updated User-Agent to standard Chrome to reduce bot detection.
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -191,9 +203,15 @@
                         <span class="flex-1 text-sm font-medium text-[#333333]">feat: expand package tracking to 22 packages with Packagist-only support</span>
                     </button>
                     <div x-show="expandedCommit === 3" x-collapse x-cloak class="px-4 pb-4 border-t border-gray-100">
-                        <div class="pt-3 text-sm text-gray-600">
-                            <div class="font-medium text-[#333333] mb-1">What Changed</div>
-                            Added Packagist-only tracking for Klaviyo, TaxJar, Yotpo, ParadoxLabs, Justuno, Stripe, etc. UNAVAILABLE status. Version source tracking.
+                        <div class="pt-3 text-sm text-gray-600 space-y-3">
+                            <div>
+                                <div class="font-medium text-[#333333] mb-1">Why</div>
+                                The store uses many third-party packages that don't have dedicated version pages (Klaviyo, TaxJar, Yotpo, Stripe, etc.) &mdash; these were not being tracked at all. Additionally, some vendors serve pages that load but don't expose a parsable version number, which was silently ignored.
+                            </div>
+                            <div>
+                                <div class="font-medium text-[#333333] mb-1">What Changed</div>
+                                Expanded tracking from ~10 to 22 packages. Added Packagist-only tracking for TaxJar, WebShopApps, Klaviyo, Yotpo, ParadoxLabs, Justuno, Stripe, BSS Commerce, and MageWorx. Introduced <code class="bg-gray-100 px-1 text-xs">UNAVAILABLE</code> status for pages that load but expose no version. Added version source tracking in report output.
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -209,9 +227,15 @@
                         <span class="flex-1 text-sm font-medium text-[#333333]">docs: add v0.2.0 and v0.3.0 CHANGELOG entries</span>
                     </button>
                     <div x-show="expandedCommit === 4" x-collapse x-cloak class="px-4 pb-4 border-t border-gray-100">
-                        <div class="pt-3 text-sm text-gray-600">
-                            <div class="font-medium text-[#333333] mb-1">What Changed</div>
-                            CHANGELOG.md with detailed entries for both version bumps
+                        <div class="pt-3 text-sm text-gray-600 space-y-3">
+                            <div>
+                                <div class="font-medium text-[#333333] mb-1">Why</div>
+                                Two significant versions (v0.2.0 and v0.3.0) had been released without changelog documentation. A clear change history is needed for auditability and for the client to understand what each version introduced.
+                            </div>
+                            <div>
+                                <div class="font-medium text-[#333333] mb-1">What Changed</div>
+                                Added CHANGELOG.md with detailed entries for both version bumps &mdash; covering Packagist fallback, Cloudflare detection, expanded package coverage (v0.2.0), and private repo support, concurrent HTTP, exit codes (v0.3.0).
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -227,9 +251,15 @@
                         <span class="flex-1 text-sm font-medium text-[#333333]">feat: add private Composer repo support with auth.json integration</span>
                     </button>
                     <div x-show="expandedCommit === 5" x-collapse x-cloak class="px-4 pb-4 border-t border-gray-100">
-                        <div class="pt-3 text-sm text-gray-600">
-                            <div class="font-medium text-[#333333] mb-1">What Changed</div>
-                            Auto-detect private repos from composer.json. Auth.json credential matching. Multi-format Satis resolution (V2/V1/packages.json/provider-includes).
+                        <div class="pt-3 text-sm text-gray-600 space-y-3">
+                            <div>
+                                <div class="font-medium text-[#333333] mb-1">Why</div>
+                                The Cisco store uses a private Satis repository (<code class="bg-gray-100 px-1 text-xs">cisco.satis.getjohn.co.uk</code>) for custom modules. Without private repo support, the checker had no way to resolve latest versions for these packages &mdash; they were entirely invisible to the tool.
+                            </div>
+                            <div>
+                                <div class="font-medium text-[#333333] mb-1">What Changed</div>
+                                Auto-detect private repos from <code class="bg-gray-100 px-1 text-xs">composer.json</code> repository definitions. Authenticate using <code class="bg-gray-100 px-1 text-xs">auth.json</code> HTTP basic auth credentials. Query private Satis/Composer repos supporting V2 (<code class="bg-gray-100 px-1 text-xs">p2/</code>), V1 (<code class="bg-gray-100 px-1 text-xs">p/</code>), full <code class="bg-gray-100 px-1 text-xs">packages.json</code>, and Satis <code class="bg-gray-100 px-1 text-xs">provider-includes</code> with hash-based URL resolution. Rewrote <code class="bg-gray-100 px-1 text-xs">VendorCheckCommand::execute()</code> to resolve auth paths from the lock file directory.
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -245,9 +275,15 @@
                         <span class="flex-1 text-sm font-medium text-[#333333]">fix: improve Cloudflare detection and remove dead code</span>
                     </button>
                     <div x-show="expandedCommit === 6" x-collapse x-cloak class="px-4 pb-4 border-t border-gray-100">
-                        <div class="pt-3 text-sm text-gray-600">
-                            <div class="font-medium text-[#333333] mb-1">What Changed</div>
-                            Hybrid Cloudflare detection (headers + body). Removed dead methods: checkMultiplePackages, getComposerVersion, getMarketplaceVersion, getMarketplaceUrl.
+                        <div class="pt-3 text-sm text-gray-600 space-y-3">
+                            <div>
+                                <div class="font-medium text-[#333333] mb-1">Why</div>
+                                The initial string-based Cloudflare detection was unreliable &mdash; it only checked the response body, which could miss challenge pages that return different HTML structures. The codebase also contained dead methods from earlier iterations, including <code class="bg-gray-100 px-1 text-xs">getComposerVersion()</code> which used <code class="bg-gray-100 px-1 text-xs">shell_exec</code> (a security risk).
+                            </div>
+                            <div>
+                                <div class="font-medium text-[#333333] mb-1">What Changed</div>
+                                Replaced string-based detection with a hybrid approach: header-based detection (<code class="bg-gray-100 px-1 text-xs">cf-ray</code>, <code class="bg-gray-100 px-1 text-xs">cf-mitigated</code>) with body marker fallback for reliable challenge page identification. Removed unused methods: <code class="bg-gray-100 px-1 text-xs">checkMultiplePackages</code>, <code class="bg-gray-100 px-1 text-xs">getComposerVersion</code>, <code class="bg-gray-100 px-1 text-xs">getMarketplaceVersion</code>, <code class="bg-gray-100 px-1 text-xs">getMarketplaceUrl</code>.
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -263,9 +299,15 @@
                         <span class="flex-1 text-sm font-medium text-[#333333]">feat: add concurrent HTTP requests, exit codes, and --packages filter</span>
                     </button>
                     <div x-show="expandedCommit === 7" x-collapse x-cloak class="px-4 pb-4 border-t border-gray-100">
-                        <div class="pt-3 text-sm text-gray-600">
-                            <div class="font-medium text-[#333333] mb-1">What Changed</div>
-                            warmCache/cachedGet for parallel HTTP. Exit codes (0=current, 1=updates, 2=errors) for CI/CD. --packages filter option.
+                        <div class="pt-3 text-sm text-gray-600 space-y-3">
+                            <div>
+                                <div class="font-medium text-[#333333] mb-1">Why</div>
+                                With 29 packages to check, sequential HTTP requests made execution slow (&gt;30 seconds). The tool also had no machine-readable exit codes, making it unsuitable for CI/CD pipelines. Developers had no way to check a single package without running the full suite.
+                            </div>
+                            <div>
+                                <div class="font-medium text-[#333333] mb-1">What Changed</div>
+                                Implemented <code class="bg-gray-100 px-1 text-xs">warmCache()</code> / <code class="bg-gray-100 px-1 text-xs">cachedGet()</code> using Guzzle async promises for concurrent HTTP requests, significantly reducing execution time. Added exit codes: <code class="bg-gray-100 px-1 text-xs">0</code> = all current, <code class="bg-gray-100 px-1 text-xs">1</code> = updates available, <code class="bg-gray-100 px-1 text-xs">2</code> = errors &mdash; enabling CI/CD integration. Added <code class="bg-gray-100 px-1 text-xs">--packages</code> filter option to check specific packages only.
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -281,9 +323,15 @@
                         <span class="flex-1 text-sm font-medium text-[#333333]">docs: update README for v0.3.0 with private repo and multi-source docs</span>
                     </button>
                     <div x-show="expandedCommit === 8" x-collapse x-cloak class="px-4 pb-4 border-t border-gray-100">
-                        <div class="pt-3 text-sm text-gray-600">
-                            <div class="font-medium text-[#333333] mb-1">What Changed</div>
-                            Complete README rewrite. Three version source tables. Private repo docs. Installation, usage, architecture, troubleshooting.
+                        <div class="pt-3 text-sm text-gray-600 space-y-3">
+                            <div>
+                                <div class="font-medium text-[#333333] mb-1">Why</div>
+                                The README still referenced Magento Marketplace comparison (no longer supported) and didn't document any of the new capabilities &mdash; private repos, multi-source resolution, Packagist-only tracking, or the new CLI options. Anyone picking up the project would have no guide to how it actually works.
+                            </div>
+                            <div>
+                                <div class="font-medium text-[#333333] mb-1">What Changed</div>
+                                Complete README rewrite covering three version source types (website scraping, private Composer repos, Packagist API). Added private repo auto-detection docs, supported vendor status table, installation and usage instructions, architecture overview, and troubleshooting section. Removed outdated Marketplace references.
+                            </div>
                         </div>
                     </div>
                 </div>
