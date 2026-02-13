@@ -571,12 +571,24 @@
                     <p class="text-sm text-gray-600 mt-1">The 9-column PHP 8.4 compatibility table was reworked with explicit column widths to prevent data-sparse columns (Errors, Warnings, Risk) from consuming space needed by Package and Recommendation. Numeric columns are now centre-aligned. The table scrolls horizontally below 960px rather than crushing content.</p>
                 </div>
                 <div class="border-l-2 border-[#1c69af] pl-4">
-                    <div class="text-sm font-medium text-[#333333]">Files Popover</div>
-                    <p class="text-sm text-gray-600 mt-1">The &ldquo;affected files&rdquo; dropdown was converted from an inline expanding panel (which was constrained to the narrow column width) to an absolute-positioned popover (420px wide) with shadow, z-index stacking above the sticky nav, and click-outside-to-close behaviour. File paths are now fully readable without character-by-character wrapping.</p>
+                    <div class="text-sm font-medium text-[#333333]">Files Popover &amp; Per-Package CSV Export</div>
+                    <p class="text-sm text-gray-600 mt-1">The &ldquo;affected files&rdquo; dropdown was converted from an inline expanding panel to an absolute-positioned popover (620px wide) with shadow, z-index stacking above the sticky nav, and click-outside-to-close behaviour. Each popover now includes a header with file count and a CSV download button that exports the affected file paths for that specific package.</p>
+                </div>
+                <div class="border-l-2 border-[#1c69af] pl-4">
+                    <div class="text-sm font-medium text-[#333333]">Contextual Descriptions &amp; Visual Legends</div>
+                    <p class="text-sm text-gray-600 mt-1">Every data display section in the dashboard now includes a description explaining what the data represents, why it&rsquo;s relevant, and how to interpret it. This covers: the store selector tabs, all-stores overview grid, section tabs, PHP 8.4 summary cards, risk breakdown cards, filter controls, single store summary cards, filter tabs, and both results tables. Visual legends with colour-coded status indicators were added to the cross-store update matrix and the single store results table.</p>
                 </div>
                 <div class="border-l-2 border-[#1c69af] pl-4">
                     <div class="text-sm font-medium text-[#333333]">Accessibility Improvements</div>
                     <p class="text-sm text-gray-600 mt-1">Added the <code class="bg-gray-100 px-1 text-xs">@alpinejs/collapse</code> plugin for the Actions Required banner animation. All decorative SVG icons now carry <code class="bg-gray-100 px-1 text-xs">aria-hidden="true"</code>. Both search inputs have explicit <code class="bg-gray-100 px-1 text-xs">aria-label</code> attributes. Vendor version status dots now use <code class="bg-gray-100 px-1 text-xs">role="img"</code> with <code class="bg-gray-100 px-1 text-xs">aria-label</code> so colour is not the sole status indicator.</p>
+                </div>
+                <div class="border-l-2 border-[#1c69af] pl-4">
+                    <div class="text-sm font-medium text-[#333333]">Downloadable File Links</div>
+                    <p class="text-sm text-gray-600 mt-1">All inline references to CSV and JSON files across both delivery reports are now clickable download links. File references in deliverable tables link directly to the hosted file with download icons distinguishing downloads from navigation links.</p>
+                </div>
+                <div class="border-l-2 border-[#1c69af] pl-4">
+                    <div class="text-sm font-medium text-[#333333]">Landing Page &amp; Navigation</div>
+                    <p class="text-sm text-gray-600 mt-1">A dedicated landing page (<a href="index.html" class="text-[#1c69af] hover:underline">index.html</a>) was created as the entry point for all deliverables &mdash; linking to both delivery reports, the interactive dashboard, and all downloadable files (CSVs + JSON). All pages have consistent &ldquo;Home&rdquo; navigation back to the landing page.</p>
                 </div>
                 <div class="border-l-2 border-[#1c69af] pl-4">
                     <div class="text-sm font-medium text-[#333333]">Standalone Runner</div>

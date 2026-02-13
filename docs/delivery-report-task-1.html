@@ -545,7 +545,7 @@
                 </div>
                 <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
                     <div class="text-sm font-medium text-[#333333] mb-1">HTML Dashboard</div>
-                    <p class="text-sm text-gray-600">Interactive dashboard with TailwindCSS + Alpine.js. Summary cards, filterable results table, version source badges, module documentation, supported vendors, known limitations. Works offline via inlined JSON data.</p>
+                    <p class="text-sm text-gray-600">Multi-store interactive dashboard (<a href="dashboard.html" class="text-[#1c69af] hover:underline">dashboard.html</a>) with TailwindCSS + Alpine.js. Features: 6-store overview grid, cross-store update matrix with visual legend, PHP 8.4 compatibility assessment with executive summary and risk breakdown, per-package file popovers with CSV export, single store drill-down with summary cards and status legend, contextual descriptions on all data sections, and CSV exports for all views. Hosted alongside a <a href="index.html" class="text-[#1c69af] hover:underline">landing page</a> linking to all deliverables.</p>
                 </div>
             </div>
         </div>
@@ -607,7 +607,7 @@
                             </svg>
                         </td>
                         <td class="px-3 py-2 font-medium text-[#333333]">Ensure output is usable for analysis and reporting</td>
-                        <td class="px-3 py-2 text-gray-600"><code class="bg-gray-100 px-1 text-xs">--json</code> output for CI/CD pipelines. Exit codes for automation. HTML dashboard for visual review. Version source badges for traceability.</td>
+                        <td class="px-3 py-2 text-gray-600"><code class="bg-gray-100 px-1 text-xs">--json</code> output for CI/CD pipelines. Exit codes for automation. Multi-store HTML dashboard with cross-store comparison, PHP 8.4 assessment, per-package CSV exports, contextual descriptions, and visual legends. CSV exports for all views.</td>
                     </tr>
                     <tr class="border-b border-gray-100">
                         <td class="px-3 py-2">
@@ -685,8 +685,20 @@
             <table class="w-full text-sm">
                 <tbody>
                     <tr class="border-b border-gray-100">
-                        <td class="py-2 pr-4 text-gray-600 w-2/5"><a href="dashboard.html" class="inline-flex items-center gap-1 text-[#1c69af] hover:underline"><code class="text-xs">dashboard.html</code><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a></td>
-                        <td class="py-2 text-gray-600">Interactive dashboard (TailwindCSS + Alpine.js)</td>
+                        <td class="py-2 pr-4 text-gray-600 w-2/5"><a href="index.html" class="inline-flex items-center gap-1 text-[#1c69af] hover:underline"><code class="text-xs">index.html</code><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a></td>
+                        <td class="py-2 text-gray-600">Landing page &mdash; links to all reports, dashboard, and downloads</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="py-2 pr-4 text-gray-600"><a href="dashboard.html" class="inline-flex items-center gap-1 text-[#1c69af] hover:underline"><code class="text-xs">dashboard.html</code><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg></a></td>
+                        <td class="py-2 text-gray-600">Multi-store interactive dashboard (TailwindCSS + Alpine.js)</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="py-2 pr-4 text-gray-600"><a href="cross-store-report.csv" download class="inline-flex items-center gap-1 text-[#1c69af] hover:underline"><code class="text-xs">cross-store-report.csv</code><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3"/></svg></a></td>
+                        <td class="py-2 text-gray-600">Cross-store vendor version comparison (913 rows, 6 stores)</td>
+                    </tr>
+                    <tr class="border-b border-gray-100">
+                        <td class="py-2 pr-4 text-gray-600"><a href="php84-compatibility-report.csv" download class="inline-flex items-center gap-1 text-[#1c69af] hover:underline"><code class="text-xs">php84-compatibility-report.csv</code><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3"/></svg></a></td>
+                        <td class="py-2 text-gray-600">PHP 8.4 compatibility scan results (137 modules)</td>
                     </tr>
                     <tr class="border-b border-gray-100">
                         <td class="py-2 pr-4 text-gray-600"><a href="results.json" download class="inline-flex items-center gap-1 text-[#1c69af] hover:underline"><code class="text-xs">results.json</code><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3"/></svg></a></td>
