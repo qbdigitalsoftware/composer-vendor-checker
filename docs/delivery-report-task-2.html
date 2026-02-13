@@ -58,7 +58,10 @@
                 <a href="#brief" @click="activeSection = 'brief'" :class="activeSection === 'brief' ? 'bg-[#1c69af] text-white' : 'text-gray-600 hover:bg-gray-100'" class="px-3 py-1.5 rounded whitespace-nowrap transition-colors">Brief</a>
                 <a href="#summary" @click="activeSection = 'summary'" :class="activeSection === 'summary' ? 'bg-[#1c69af] text-white' : 'text-gray-600 hover:bg-gray-100'" class="px-3 py-1.5 rounded whitespace-nowrap transition-colors">Summary</a>
                 <a href="#methodology" @click="activeSection = 'methodology'" :class="activeSection === 'methodology' ? 'bg-[#1c69af] text-white' : 'text-gray-600 hover:bg-gray-100'" class="px-3 py-1.5 rounded whitespace-nowrap transition-colors">Methodology</a>
+                <a href="#module-register" @click="activeSection = 'module-register'" :class="activeSection === 'module-register' ? 'bg-[#1c69af] text-white' : 'text-gray-600 hover:bg-gray-100'" class="px-3 py-1.5 rounded whitespace-nowrap transition-colors">Module Register</a>
                 <a href="#findings" @click="activeSection = 'findings'" :class="activeSection === 'findings' ? 'bg-[#1c69af] text-white' : 'text-gray-600 hover:bg-gray-100'" class="px-3 py-1.5 rounded whitespace-nowrap transition-colors">Findings</a>
+                <a href="#amasty" @click="activeSection = 'amasty'" :class="activeSection === 'amasty' ? 'bg-[#1c69af] text-white' : 'text-gray-600 hover:bg-gray-100'" class="px-3 py-1.5 rounded whitespace-nowrap transition-colors">Amasty</a>
+                <a href="#dashboard-updates" @click="activeSection = 'dashboard-updates'" :class="activeSection === 'dashboard-updates' ? 'bg-[#1c69af] text-white' : 'text-gray-600 hover:bg-gray-100'" class="px-3 py-1.5 rounded whitespace-nowrap transition-colors">Dashboard</a>
                 <a href="#acceptance" @click="activeSection = 'acceptance'" :class="activeSection === 'acceptance' ? 'bg-[#1c69af] text-white' : 'text-gray-600 hover:bg-gray-100'" class="px-3 py-1.5 rounded whitespace-nowrap transition-colors">Acceptance</a>
                 <a href="#files" @click="activeSection = 'files'" :class="activeSection === 'files' ? 'bg-[#1c69af] text-white' : 'text-gray-600 hover:bg-gray-100'" class="px-3 py-1.5 rounded whitespace-nowrap transition-colors">Files</a>
                 <a href="#next-steps" @click="activeSection = 'next-steps'" :class="activeSection === 'next-steps' ? 'bg-[#1c69af] text-white' : 'text-gray-600 hover:bg-gray-100'" class="px-3 py-1.5 rounded whitespace-nowrap transition-colors">Next Steps</a>
@@ -153,19 +156,31 @@
 
             <div class="space-y-4 mb-6">
                 <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
-                    <div class="text-sm font-medium text-[#333333]">1. Tool Selection: PHPCompatibility (via PHP_CodeSniffer)</div>
+                    <div class="text-sm font-medium text-[#333333] flex items-start gap-2">
+                        <span class="inline-flex items-center justify-center w-5 h-5 bg-[#1c69af] text-white text-[10px] font-bold flex-shrink-0">1</span>
+                        <span>Tool Selection: PHPCompatibility (via PHP_CodeSniffer)</span>
+                    </div>
                     <p class="text-sm text-gray-600 mt-1">We used <strong>PHP_CodeSniffer 3.13.5</strong> with the <strong>PHPCompatibility 9.3.5</strong> ruleset &mdash; the industry-standard SAST tool specifically designed for PHP version compatibility scanning. This was chosen over SonarQube because PHPCompatibility provides purpose-built rules for detecting deprecated functions, removed extensions, reserved keyword conflicts, changed INI directives, and parameter behaviour changes across PHP versions. SonarQube&rsquo;s PHP plugin covers general code quality but does not offer the same depth of PHP version migration analysis.</p>
                 </div>
                 <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
-                    <div class="text-sm font-medium text-[#333333]">2. Source Code Acquisition</div>
+                    <div class="text-sm font-medium text-[#333333] flex items-start gap-2">
+                        <span class="inline-flex items-center justify-center w-5 h-5 bg-[#1c69af] text-white text-[10px] font-bold flex-shrink-0">2</span>
+                        <span>Source Code Acquisition</span>
+                    </div>
                     <p class="text-sm text-gray-600 mt-1">A full <code class="bg-gray-100 px-1 text-xs">composer install</code> was not possible locally because Amasty&rsquo;s Composer repository returned HTTP 403 on all requests (expired global auth keys &mdash; see Amasty investigation below). Instead, we extracted 671 packages from the local Composer download cache and the existing <code class="bg-gray-100 px-1 text-xs">vendor/</code> directory. This gave us complete source code for all packages except those distributed exclusively via private repos with no local cache (14 Amasty, plus BSS, some MageWorx, and Stripe Payments).</p>
                 </div>
                 <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
-                    <div class="text-sm font-medium text-[#333333]">3. Scanning Process</div>
+                    <div class="text-sm font-medium text-[#333333] flex items-start gap-2">
+                        <span class="inline-flex items-center justify-center w-5 h-5 bg-[#1c69af] text-white text-[10px] font-bold flex-shrink-0">3</span>
+                        <span>Scanning Process</span>
+                    </div>
                     <p class="text-sm text-gray-600 mt-1">Each vendor group was scanned separately with <code class="bg-gray-100 px-1 text-xs">phpcs --standard=PHPCompatibility --runtime-set testVersion 8.4 --report=json</code>. This produced 28 JSON result files (one per vendor group), which were then cross-referenced against the 700 packages in <code class="bg-gray-100 px-1 text-xs">composer.lock</code> to produce the per-package module register. File path matching was used to attribute specific errors/warnings to the correct Composer package (e.g. an error in <code class="bg-gray-100 px-1 text-xs">vendor/laminas/laminas-db/src/...</code> is attributed to <code class="bg-gray-100 px-1 text-xs">laminas/laminas-db</code>, not to all 28 laminas packages).</p>
                 </div>
                 <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
-                    <div class="text-sm font-medium text-[#333333]">4. Module Register Construction</div>
+                    <div class="text-sm font-medium text-[#333333] flex items-start gap-2">
+                        <span class="inline-flex items-center justify-center w-5 h-5 bg-[#1c69af] text-white text-[10px] font-bold flex-shrink-0">4</span>
+                        <span>Module Register Construction</span>
+                    </div>
                     <p class="text-sm text-gray-600 mt-1">The final Module Register was built by cross-referencing <code class="bg-gray-100 px-1 text-xs">composer.lock</code> (700 total packages) with the 28 scan result files. We filtered to the 137 packages relevant to the store (excluding Magento core metapackages, test utilities, and generic PHP libraries). For each package: installed version from lock file, category classification, per-package scan results matched by file path, risk assessment, and an actionable recommendation.</p>
                 </div>
             </div>
@@ -204,7 +219,7 @@
     </section>
 
     <!-- Module Register Summary -->
-    <section class="max-w-5xl mx-auto px-6 pb-8">
+    <section id="module-register" class="max-w-5xl mx-auto px-6 pb-8 scroll-mt-20">
         <div class="bg-white border border-gray-200 p-6">
             <h2 class="text-lg font-bold text-[#333333] mb-4">Module Register &mdash; Per-Package Results (137 modules)</h2>
             <p class="text-sm text-gray-600 mb-4">The Module Register (<a href="php84-compatibility-report.csv" download class="inline-flex items-center gap-1 text-[#1c69af] hover:underline"><code class="bg-[#1c69af]/10 px-1 text-xs text-[#1c69af]">PHP-8.4-Module-Register.csv</code><svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3"/></svg></a>) contains one row per Composer package with: package name, installed version, category, PHP 8.4 status, risk level, error count, warning count, list of files needing changes, and a specific recommendation.</p>
@@ -254,7 +269,7 @@
             <h2 class="text-lg font-bold text-[#333333] mb-4">Findings by Category</h2>
 
             <!-- Custom Code -->
-            <div x-data="{ open: true }" class="mb-3">
+            <div x-data="{ open: false }" class="mb-3">
                 <div class="border border-green-200 bg-green-50/50 p-4">
                     <button @click="open = !open" :aria-expanded="open" class="w-full flex items-center justify-between mb-2">
                         <div class="flex items-center gap-2">
@@ -282,7 +297,7 @@
             </div>
 
             <!-- Third-Party Extensions -->
-            <div x-data="{ open: true }" class="mb-3">
+            <div x-data="{ open: false }" class="mb-3">
                 <div class="border border-green-200 bg-green-50/50 p-4">
                     <button @click="open = !open" :aria-expanded="open" class="w-full flex items-center justify-between mb-2">
                         <div class="flex items-center gap-2">
@@ -391,7 +406,7 @@
             </div>
 
             <!-- Packages with Warnings -->
-            <div x-data="{ open: true }" class="mb-3">
+            <div x-data="{ open: false }" class="mb-3">
                 <div class="border border-amber-200 bg-amber-50/50 p-4">
                     <button @click="open = !open" :aria-expanded="open" class="w-full flex items-center justify-between mb-2">
                         <div class="flex items-center gap-2">
@@ -523,7 +538,7 @@
     </section>
 
     <!-- Amasty Licensing Investigation -->
-    <section class="max-w-5xl mx-auto px-6 pb-8">
+    <section id="amasty" class="max-w-5xl mx-auto px-6 pb-8 scroll-mt-20">
         <div class="bg-white border border-gray-200 p-6">
             <div class="flex items-center gap-2 mb-4">
                 <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-800">INVESTIGATION</span>
@@ -558,7 +573,7 @@
     </section>
 
     <!-- Dashboard Improvements (13 Feb) -->
-    <section class="max-w-5xl mx-auto px-6 pb-8">
+    <section id="dashboard-updates" class="max-w-5xl mx-auto px-6 pb-8 scroll-mt-20">
         <div class="bg-white border border-gray-200 p-6">
             <div class="flex items-center gap-2 mb-4">
                 <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-[#1c69af]/10 text-[#1c69af]">UPDATE</span>
@@ -566,35 +581,35 @@
             </div>
 
             <div class="space-y-3">
-                <div class="border-l-2 border-[#1c69af] pl-4">
+                <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
                     <div class="text-sm font-medium text-[#333333]">PHP 8.4 Table Layout Optimisation</div>
                     <p class="text-sm text-gray-600 mt-1">The 9-column PHP 8.4 compatibility table was reworked with explicit column widths to prevent data-sparse columns (Errors, Warnings, Risk) from consuming space needed by Package and Recommendation. Numeric columns are now centre-aligned. The table scrolls horizontally below 960px rather than crushing content.</p>
                 </div>
-                <div class="border-l-2 border-[#1c69af] pl-4">
+                <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
                     <div class="text-sm font-medium text-[#333333]">Files Popover &amp; Per-Package CSV Export</div>
                     <p class="text-sm text-gray-600 mt-1">The &ldquo;affected files&rdquo; dropdown was converted from an inline expanding panel to an absolute-positioned popover (620px wide) with shadow, z-index stacking above the sticky nav, and click-outside-to-close behaviour. Each popover now includes a header with file count and a CSV download button that exports the affected file paths for that specific package.</p>
                 </div>
-                <div class="border-l-2 border-[#1c69af] pl-4">
+                <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
                     <div class="text-sm font-medium text-[#333333]">Contextual Descriptions &amp; Visual Legends</div>
                     <p class="text-sm text-gray-600 mt-1">Every data display section in the dashboard now includes a description explaining what the data represents, why it&rsquo;s relevant, and how to interpret it. This covers: the store selector tabs, all-stores overview grid, section tabs, PHP 8.4 summary cards, risk breakdown cards, filter controls, single store summary cards, filter tabs, and both results tables. Visual legends with colour-coded status indicators were added to the cross-store update matrix and the single store results table.</p>
                 </div>
-                <div class="border-l-2 border-[#1c69af] pl-4">
+                <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
                     <div class="text-sm font-medium text-[#333333]">Accessibility Improvements</div>
                     <p class="text-sm text-gray-600 mt-1">Added the <code class="bg-gray-100 px-1 text-xs">@alpinejs/collapse</code> plugin for the Actions Required banner animation. All decorative SVG icons now carry <code class="bg-gray-100 px-1 text-xs">aria-hidden="true"</code>. Both search inputs have explicit <code class="bg-gray-100 px-1 text-xs">aria-label</code> attributes. Vendor version status dots now use <code class="bg-gray-100 px-1 text-xs">role="img"</code> with <code class="bg-gray-100 px-1 text-xs">aria-label</code> so colour is not the sole status indicator.</p>
                 </div>
-                <div class="border-l-2 border-[#1c69af] pl-4">
+                <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
                     <div class="text-sm font-medium text-[#333333]">Downloadable File Links</div>
                     <p class="text-sm text-gray-600 mt-1">All inline references to CSV and JSON files across both delivery reports are now clickable download links. File references in deliverable tables link directly to the hosted file with download icons distinguishing downloads from navigation links.</p>
                 </div>
-                <div class="border-l-2 border-[#1c69af] pl-4">
+                <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
                     <div class="text-sm font-medium text-[#333333]">Landing Page &amp; Navigation</div>
                     <p class="text-sm text-gray-600 mt-1">A dedicated landing page (<a href="index.html" class="text-[#1c69af] hover:underline">index.html</a>) was created as the entry point for all deliverables &mdash; linking to both delivery reports, the interactive dashboard, and all downloadable files (CSVs + JSON). All pages have consistent &ldquo;Home&rdquo; navigation back to the landing page.</p>
                 </div>
-                <div class="border-l-2 border-[#1c69af] pl-4">
+                <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
                     <div class="text-sm font-medium text-[#333333]">Standalone Runner</div>
                     <p class="text-sm text-gray-600 mt-1">Added <code class="bg-gray-100 px-1 text-xs">run-check.php</code> &mdash; a CLI script for running vendor version checks outside the Composer plugin context. Supports JSON, CSV, and table output formats with optional file output and result caching.</p>
                 </div>
-                <div class="border-l-2 border-[#1c69af] pl-4">
+                <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
                     <div class="text-sm font-medium text-[#333333]">Version Control</div>
                     <p class="text-sm text-gray-600 mt-1">The <code class="bg-gray-100 px-1 text-xs">docs/</code> directory is now tracked in version control. All reports, scan data, and the interactive dashboard are committed alongside the module source code.</p>
                 </div>
@@ -603,7 +618,7 @@
     </section>
 
     <!-- Acceptance Criteria -->
-    <section class="max-w-5xl mx-auto px-6 pb-8">
+    <section id="acceptance" class="max-w-5xl mx-auto px-6 pb-8 scroll-mt-20">
         <div class="bg-[#1c69af]/5 border border-[#1c69af]/20 p-6">
             <h2 class="text-lg font-bold text-[#333333] mb-4">Acceptance Criteria &mdash; Verification</h2>
             <table class="w-full text-sm">
@@ -616,37 +631,65 @@
                 </thead>
                 <tbody>
                     <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 text-green-600 font-bold">Yes</td>
+                        <td class="px-3 py-2">
+                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </td>
                         <td class="px-3 py-2 font-medium text-[#333333]">Review all used modules in scope</td>
                         <td class="px-3 py-2 text-gray-600">All 700 packages from <code class="bg-gray-100 px-1 text-xs">composer.lock</code> analysed. 137 relevant modules identified, categorised (Custom Client, Custom GetJohn, Third-Party Extension, Payment Gateway, SSO/SAML, Magento Core Dep, etc.) and included in the Module Register.</td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 text-green-600 font-bold">Yes</td>
+                        <td class="px-3 py-2">
+                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </td>
                         <td class="px-3 py-2 font-medium text-[#333333]">Module register showing which modules are used</td>
                         <td class="px-3 py-2 text-gray-600"><a href="php84-compatibility-report.csv" download class="inline-flex items-center gap-1 text-[#1c69af] hover:underline"><code class="bg-[#1c69af]/10 px-1 text-xs text-[#1c69af]">PHP-8.4-Module-Register.csv</code><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3"/></svg></a> &mdash; 137 rows, one per package. Columns: Package, Installed Version, Category, PHP 8.4 Status, Risk Level, Errors, Warnings, Files Needing Changes, Recommendation.</td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 text-green-600 font-bold">Yes</td>
+                        <td class="px-3 py-2">
+                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </td>
                         <td class="px-3 py-2 font-medium text-[#333333]">PHP 8.4 compatibility status per module</td>
                         <td class="px-3 py-2 text-gray-600">7,377 files scanned across 28 vendor groups. Every module categorised as PASS (97), WARN (12), FAIL (8), NOT SCANNED (18), or NOT IN SCOPE (2). Per-package issue attribution via file path matching.</td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 text-green-600 font-bold">Yes</td>
+                        <td class="px-3 py-2">
+                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </td>
                         <td class="px-3 py-2 font-medium text-[#333333]">List of files that need changing</td>
                         <td class="px-3 py-2 text-gray-600">33 specific file paths listed in the written report. Module Register CSV includes per-package file lists. Raw CSV has 118 rows with file path, line number, and exact error message.</td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 text-green-600 font-bold">Yes</td>
+                        <td class="px-3 py-2">
+                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </td>
                         <td class="px-3 py-2 font-medium text-[#333333]">Written summary</td>
                         <td class="px-3 py-2 text-gray-600"><code class="bg-gray-100 px-1 text-xs">PHP-8.4-Compatibility-Report.md</code> &mdash; 330-line report with executive summary, per-vendor breakdown, file lists, risk assessment, upgrade recommendations, and Amasty licensing migration guide.</td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 text-green-600 font-bold">Yes</td>
+                        <td class="px-3 py-2">
+                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </td>
                         <td class="px-3 py-2 font-medium text-[#333333]">Text file or spreadsheet output</td>
                         <td class="px-3 py-2 text-gray-600">Text: Markdown report (330 lines). Spreadsheets: Module Register (137 rows) + raw issue detail (118 rows), both CSV format for Excel/Google Sheets. Raw JSON: 28 vendor scan files.</td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 text-green-600 font-bold">Yes</td>
+                        <td class="px-3 py-2">
+                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </td>
                         <td class="px-3 py-2 font-medium text-[#333333]">Use SAST tool (PHP-CS / SonarQube)</td>
                         <td class="px-3 py-2 text-gray-600">PHP_CodeSniffer 3.13.5 + PHPCompatibility 9.3.5 &mdash; the industry-standard SAST toolchain for PHP version compatibility scanning. More specialised than SonarQube for this specific use case. JSON output can be imported into SonarQube if needed.</td>
                     </tr>
@@ -656,7 +699,7 @@
     </section>
 
     <!-- Deliverable Files -->
-    <section class="max-w-5xl mx-auto px-6 pb-8">
+    <section id="files" class="max-w-5xl mx-auto px-6 pb-8 scroll-mt-20">
         <div class="bg-white border border-gray-200 p-6">
             <h2 class="text-lg font-bold text-[#333333] mb-4">Deliverable Files</h2>
             <table class="w-full text-sm">
@@ -718,7 +761,7 @@
     </section>
 
     <!-- Recommended Next Steps -->
-    <section class="max-w-5xl mx-auto px-6 pb-8">
+    <section id="next-steps" class="max-w-5xl mx-auto px-6 pb-8 scroll-mt-20">
         <div class="bg-white border border-gray-200 p-6">
             <h2 class="text-lg font-bold text-[#333333] mb-4">Recommended Next Steps</h2>
             <table class="w-full text-sm">
@@ -770,7 +813,7 @@
         <div class="max-w-5xl mx-auto px-6 py-6">
             <div class="flex items-center justify-between text-xs text-gray-400">
                 <div>Get Connect &mdash; Task 2 Delivery Report &mdash; 13 February 2026</div>
-                <div>Merchandise Store &mdash; Magento 2.4.5 Enterprise Cloud</div>
+                <div>QB Digital Software Ltd &mdash; qbdigital.co.uk</div>
             </div>
         </div>
     </footer>
