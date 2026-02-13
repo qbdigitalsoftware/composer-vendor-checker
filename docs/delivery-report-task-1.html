@@ -5,8 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Task 1 Delivery Report — Composer Vendor Checker — GetJohn</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <style>
         @media print { .no-print { display: none !important; } }
+        [x-cloak] { display: none !important; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900 antialiased">
@@ -18,7 +21,7 @@
         <div class="max-w-5xl mx-auto px-6 py-8">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <svg class="w-10 h-10" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg class="w-10 h-10" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                         <rect width="40" height="40" rx="0" fill="#1c69af"/>
                         <path d="M16 12L8 20L16 28" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                         <path d="M24 12L32 20L24 28" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -36,8 +39,28 @@
         </div>
     </header>
 
+    <!-- Sticky Section Nav -->
+    <nav x-data="{ activeSection: 'brief' }" class="sticky top-0 z-30 bg-white border-b border-gray-200 shadow-sm no-print">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="flex items-center gap-1 overflow-x-auto py-2 text-xs">
+                <a href="#brief" @click="activeSection = 'brief'" :class="activeSection === 'brief' ? 'bg-[#1c69af] text-white' : 'text-gray-600 hover:bg-gray-100'" class="px-3 py-1.5 rounded whitespace-nowrap transition-colors">Brief</a>
+                <a href="#summary" @click="activeSection = 'summary'" :class="activeSection === 'summary' ? 'bg-[#1c69af] text-white' : 'text-gray-600 hover:bg-gray-100'" class="px-3 py-1.5 rounded whitespace-nowrap transition-colors">Summary</a>
+                <a href="#commits" @click="activeSection = 'commits'" :class="activeSection === 'commits' ? 'bg-[#1c69af] text-white' : 'text-gray-600 hover:bg-gray-100'" class="px-3 py-1.5 rounded whitespace-nowrap transition-colors">Commits</a>
+                <a href="#features" @click="activeSection = 'features'" :class="activeSection === 'features' ? 'bg-[#1c69af] text-white' : 'text-gray-600 hover:bg-gray-100'" class="px-3 py-1.5 rounded whitespace-nowrap transition-colors">Features</a>
+                <a href="#acceptance" @click="activeSection = 'acceptance'" :class="activeSection === 'acceptance' ? 'bg-[#1c69af] text-white' : 'text-gray-600 hover:bg-gray-100'" class="px-3 py-1.5 rounded whitespace-nowrap transition-colors">Acceptance</a>
+                <a href="#files" @click="activeSection = 'files'" :class="activeSection === 'files' ? 'bg-[#1c69af] text-white' : 'text-gray-600 hover:bg-gray-100'" class="px-3 py-1.5 rounded whitespace-nowrap transition-colors">Files</a>
+                <button onclick="window.print()" class="ml-auto px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded transition-colors flex items-center gap-1.5" aria-label="Print this report">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                    </svg>
+                    Print
+                </button>
+            </div>
+        </div>
+    </nav>
+
     <!-- Brief -->
-    <section class="max-w-5xl mx-auto px-6 py-8">
+    <section id="brief" class="max-w-5xl mx-auto px-6 py-8 scroll-mt-20">
         <div class="bg-white border border-gray-200 p-6">
             <h2 class="text-lg font-bold text-[#333333] mb-4">Task Brief</h2>
             <div class="bg-gray-50 border border-gray-200 p-4 mb-4">
@@ -73,180 +96,301 @@
     </section>
 
     <!-- Summary Cards -->
-    <section class="max-w-5xl mx-auto px-6 pb-8">
+    <section id="summary" class="max-w-5xl mx-auto px-6 pb-8 scroll-mt-20">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-white border border-green-200 p-4">
-                <div class="text-2xl font-bold text-green-600">8</div>
-                <div class="text-xs text-gray-500 mt-1">Commits Delivered</div>
+            <div class="bg-white border border-green-200 p-4 rounded-lg">
+                <div class="flex items-center gap-2 mb-1">
+                    <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    <div class="text-2xl font-bold text-green-600">8</div>
+                </div>
+                <div class="text-xs text-gray-500">Commits Delivered</div>
             </div>
-            <div class="bg-white border border-[#1c69af]/30 p-4">
-                <div class="text-2xl font-bold text-[#1c69af]">29</div>
-                <div class="text-xs text-gray-500 mt-1">Packages Tracked</div>
+            <div class="bg-white border border-[#1c69af]/30 p-4 rounded-lg">
+                <div class="flex items-center gap-2 mb-1">
+                    <svg class="w-5 h-5 text-[#1c69af]" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                        <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/>
+                    </svg>
+                    <div class="text-2xl font-bold text-[#1c69af]">29</div>
+                </div>
+                <div class="text-xs text-gray-500">Packages Tracked</div>
             </div>
-            <div class="bg-white border border-[#1c69af]/30 p-4">
-                <div class="text-2xl font-bold text-[#1c69af]">3</div>
-                <div class="text-xs text-gray-500 mt-1">Version Sources</div>
+            <div class="bg-white border border-[#1c69af]/30 p-4 rounded-lg">
+                <div class="flex items-center gap-2 mb-1">
+                    <svg class="w-5 h-5 text-[#1c69af]" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 0l-2 2a1 1 0 101.414 1.414L8 10.414l1.293 1.293a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    <div class="text-2xl font-bold text-[#1c69af]">3</div>
+                </div>
+                <div class="text-xs text-gray-500">Version Sources</div>
             </div>
-            <div class="bg-white border border-[#1c69af]/30 p-4">
-                <div class="text-2xl font-bold text-[#1c69af]">v0.3.0</div>
-                <div class="text-xs text-gray-500 mt-1">Final Version</div>
+            <div class="bg-white border border-[#1c69af]/30 p-4 rounded-lg">
+                <div class="flex items-center gap-2 mb-1">
+                    <svg class="w-5 h-5 text-[#1c69af]" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V8z" clip-rule="evenodd"/>
+                    </svg>
+                    <div class="text-2xl font-bold text-[#1c69af]">v0.3.0</div>
+                </div>
+                <div class="text-xs text-gray-500">Final Version</div>
             </div>
         </div>
     </section>
 
     <!-- Commit History -->
-    <section class="max-w-5xl mx-auto px-6 pb-8">
+    <section id="commits" class="max-w-5xl mx-auto px-6 pb-8 scroll-mt-20">
         <div class="bg-white border border-gray-200 p-6">
             <h2 class="text-lg font-bold text-[#333333] mb-4">Commit History</h2>
             <p class="text-sm text-gray-600 mb-4">All commits pushed to <code class="bg-gray-100 px-1 text-xs">origin/master</code> on Bitbucket &mdash; <a href="https://bitbucket.org/getjohn/module-composer-vendor-checker/src/master/" target="_blank" class="text-[#1c69af] hover:text-[#154f87] underline">getjohn/module-composer-vendor-checker</a>.</p>
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="bg-[#1c69af]/5 border-b border-[#1c69af]/20">
-                        <th class="text-left px-3 py-2 font-medium text-[#333333] text-xs w-20">Hash</th>
-                        <th class="text-left px-3 py-2 font-medium text-[#333333] text-xs w-16">Version</th>
-                        <th class="text-left px-3 py-2 font-medium text-[#333333] text-xs">Message</th>
-                        <th class="text-left px-3 py-2 font-medium text-[#333333] text-xs">What Changed</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 font-mono text-xs"><a href="https://bitbucket.org/getjohn/module-composer-vendor-checker/commits/aa0c2998f36c15f2ebc0bf4c4af78dedac2d5517" target="_blank" class="text-[#1c69af] hover:text-[#154f87] underline">aa0c299</a></td>
-                        <td class="px-3 py-2"><code class="text-xs bg-gray-100 px-1">v0.1.1</code></td>
-                        <td class="px-3 py-2 font-medium text-[#333333]">fix: correct getSupportedVendors return format</td>
-                        <td class="px-3 py-2 text-gray-600">Fixed method that was breaking vendor key &rarr; name mapping with incorrect <code class="bg-gray-100 px-1 text-xs">explode()</code> call</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 font-mono text-xs"><a href="https://bitbucket.org/getjohn/module-composer-vendor-checker/commits/da9677623ea74f44619dcaf817dcaaf3c7b637c2" target="_blank" class="text-[#1c69af] hover:text-[#154f87] underline">da96776</a></td>
-                        <td class="px-3 py-2"><code class="text-xs bg-gray-100 px-1">v0.2.0</code></td>
-                        <td class="px-3 py-2 font-medium text-[#333333]">fix: correct XTENTO M2 version extraction, add Packagist fallback and Cloudflare detection</td>
-                        <td class="px-3 py-2 text-gray-600">XTENTO picks M2 version (not M1). Packagist API fallback when scraping fails. Cloudflare Managed Challenge detection with clear messaging.</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 font-mono text-xs"><a href="https://bitbucket.org/getjohn/module-composer-vendor-checker/commits/e702302ce0f87af3bd68cd001042b74146e0ab6a" target="_blank" class="text-[#1c69af] hover:text-[#154f87] underline">e702302</a></td>
-                        <td class="px-3 py-2"><code class="text-xs bg-gray-100 px-1">v0.2.0</code></td>
-                        <td class="px-3 py-2 font-medium text-[#333333]">feat: expand package tracking to 22 packages with Packagist-only support</td>
-                        <td class="px-3 py-2 text-gray-600">Added Packagist-only tracking for Klaviyo, TaxJar, Yotpo, ParadoxLabs, Justuno, Stripe, etc. UNAVAILABLE status. Version source tracking.</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 font-mono text-xs"><a href="https://bitbucket.org/getjohn/module-composer-vendor-checker/commits/fa8f3a35597cfbf23ed8e0e720fb82e4b97bf9ee" target="_blank" class="text-[#1c69af] hover:text-[#154f87] underline">fa8f3a3</a></td>
-                        <td class="px-3 py-2"><code class="text-xs bg-gray-100 px-1">v0.2.0</code></td>
-                        <td class="px-3 py-2 font-medium text-[#333333]">docs: add v0.2.0 and v0.3.0 CHANGELOG entries</td>
-                        <td class="px-3 py-2 text-gray-600">CHANGELOG.md with detailed entries for both version bumps</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 font-mono text-xs"><a href="https://bitbucket.org/getjohn/module-composer-vendor-checker/commits/2516244b5560299fc16ad42debc9e50a3fdcb67b" target="_blank" class="text-[#1c69af] hover:text-[#154f87] underline">2516244</a></td>
-                        <td class="px-3 py-2"><code class="text-xs bg-gray-100 px-1">v0.3.0</code></td>
-                        <td class="px-3 py-2 font-medium text-[#333333]">feat: add private Composer repo support with auth.json integration</td>
-                        <td class="px-3 py-2 text-gray-600">Auto-detect private repos from composer.json. Auth.json credential matching. Multi-format Satis resolution (V2/V1/packages.json/provider-includes).</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 font-mono text-xs"><a href="https://bitbucket.org/getjohn/module-composer-vendor-checker/commits/1b4baa9ee14eeb3f1f0d57e1d10421834e6f3bd3" target="_blank" class="text-[#1c69af] hover:text-[#154f87] underline">1b4baa9</a></td>
-                        <td class="px-3 py-2"><code class="text-xs bg-gray-100 px-1">v0.3.0</code></td>
-                        <td class="px-3 py-2 font-medium text-[#333333]">fix: improve Cloudflare detection and remove dead code</td>
-                        <td class="px-3 py-2 text-gray-600">Hybrid Cloudflare detection (headers + body). Removed dead methods: checkMultiplePackages, getComposerVersion, getMarketplaceVersion, getMarketplaceUrl.</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 font-mono text-xs"><a href="https://bitbucket.org/getjohn/module-composer-vendor-checker/commits/557810535e5553e10dabfe574d0585d8e88d2af4" target="_blank" class="text-[#1c69af] hover:text-[#154f87] underline">5578105</a></td>
-                        <td class="px-3 py-2"><code class="text-xs bg-gray-100 px-1">v0.3.0</code></td>
-                        <td class="px-3 py-2 font-medium text-[#333333]">feat: add concurrent HTTP requests, exit codes, and --packages filter</td>
-                        <td class="px-3 py-2 text-gray-600">warmCache/cachedGet for parallel HTTP. Exit codes (0=current, 1=updates, 2=errors) for CI/CD. --packages filter option.</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 font-mono text-xs"><a href="https://bitbucket.org/getjohn/module-composer-vendor-checker/commits/2955dcc669f12f7e74cd1b515a7bddda485794fd" target="_blank" class="text-[#1c69af] hover:text-[#154f87] underline">2955dcc</a></td>
-                        <td class="px-3 py-2"><code class="text-xs bg-gray-100 px-1">v0.3.0</code></td>
-                        <td class="px-3 py-2 font-medium text-[#333333]">docs: update README for v0.3.0 with private repo and multi-source docs</td>
-                        <td class="px-3 py-2 text-gray-600">Complete README rewrite. Three version source tables. Private repo docs. Installation, usage, architecture, troubleshooting.</td>
-                    </tr>
-                </tbody>
-            </table>
+
+            <div class="space-y-2" x-data="{ expandedCommit: null }">
+                <!-- Commit 1 -->
+                <div class="border border-gray-200 rounded-lg">
+                    <button @click="expandedCommit = expandedCommit === 1 ? null : 1" class="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-gray-50 transition-colors">
+                        <svg :class="expandedCommit === 1 ? 'rotate-90' : ''" class="w-4 h-4 text-gray-400 transition-transform" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <code class="font-mono text-xs text-[#1c69af]"><a href="https://bitbucket.org/getjohn/module-composer-vendor-checker/commits/aa0c2998f36c15f2ebc0bf4c4af78dedac2d5517" target="_blank" class="hover:underline">aa0c299</a></code>
+                        <code class="text-xs bg-gray-100 px-1.5 py-0.5 rounded">v0.1.1</code>
+                        <span class="flex-1 text-sm font-medium text-[#333333]">fix: correct getSupportedVendors return format</span>
+                    </button>
+                    <div x-show="expandedCommit === 1" x-collapse x-cloak class="px-4 pb-4 border-t border-gray-100">
+                        <div class="pt-3 text-sm text-gray-600">
+                            <div class="font-medium text-[#333333] mb-1">What Changed</div>
+                            Fixed method that was breaking vendor key &rarr; name mapping with incorrect <code class="bg-gray-100 px-1 text-xs">explode()</code> call
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Commit 2 -->
+                <div class="border border-gray-200 rounded-lg">
+                    <button @click="expandedCommit = expandedCommit === 2 ? null : 2" class="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-gray-50 transition-colors">
+                        <svg :class="expandedCommit === 2 ? 'rotate-90' : ''" class="w-4 h-4 text-gray-400 transition-transform" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <code class="font-mono text-xs text-[#1c69af]"><a href="https://bitbucket.org/getjohn/module-composer-vendor-checker/commits/da9677623ea74f44619dcaf817dcaaf3c7b637c2" target="_blank" class="hover:underline">da96776</a></code>
+                        <code class="text-xs bg-gray-100 px-1.5 py-0.5 rounded">v0.2.0</code>
+                        <span class="flex-1 text-sm font-medium text-[#333333]">fix: correct XTENTO M2 version extraction, add Packagist fallback and Cloudflare detection</span>
+                    </button>
+                    <div x-show="expandedCommit === 2" x-collapse x-cloak class="px-4 pb-4 border-t border-gray-100">
+                        <div class="pt-3 text-sm text-gray-600">
+                            <div class="font-medium text-[#333333] mb-1">What Changed</div>
+                            XTENTO picks M2 version (not M1). Packagist API fallback when scraping fails. Cloudflare Managed Challenge detection with clear messaging.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Commit 3 -->
+                <div class="border border-gray-200 rounded-lg">
+                    <button @click="expandedCommit = expandedCommit === 3 ? null : 3" class="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-gray-50 transition-colors">
+                        <svg :class="expandedCommit === 3 ? 'rotate-90' : ''" class="w-4 h-4 text-gray-400 transition-transform" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <code class="font-mono text-xs text-[#1c69af]"><a href="https://bitbucket.org/getjohn/module-composer-vendor-checker/commits/e702302ce0f87af3bd68cd001042b74146e0ab6a" target="_blank" class="hover:underline">e702302</a></code>
+                        <code class="text-xs bg-gray-100 px-1.5 py-0.5 rounded">v0.2.0</code>
+                        <span class="flex-1 text-sm font-medium text-[#333333]">feat: expand package tracking to 22 packages with Packagist-only support</span>
+                    </button>
+                    <div x-show="expandedCommit === 3" x-collapse x-cloak class="px-4 pb-4 border-t border-gray-100">
+                        <div class="pt-3 text-sm text-gray-600">
+                            <div class="font-medium text-[#333333] mb-1">What Changed</div>
+                            Added Packagist-only tracking for Klaviyo, TaxJar, Yotpo, ParadoxLabs, Justuno, Stripe, etc. UNAVAILABLE status. Version source tracking.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Commit 4 -->
+                <div class="border border-gray-200 rounded-lg">
+                    <button @click="expandedCommit = expandedCommit === 4 ? null : 4" class="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-gray-50 transition-colors">
+                        <svg :class="expandedCommit === 4 ? 'rotate-90' : ''" class="w-4 h-4 text-gray-400 transition-transform" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <code class="font-mono text-xs text-[#1c69af]"><a href="https://bitbucket.org/getjohn/module-composer-vendor-checker/commits/fa8f3a35597cfbf23ed8e0e720fb82e4b97bf9ee" target="_blank" class="hover:underline">fa8f3a3</a></code>
+                        <code class="text-xs bg-gray-100 px-1.5 py-0.5 rounded">v0.2.0</code>
+                        <span class="flex-1 text-sm font-medium text-[#333333]">docs: add v0.2.0 and v0.3.0 CHANGELOG entries</span>
+                    </button>
+                    <div x-show="expandedCommit === 4" x-collapse x-cloak class="px-4 pb-4 border-t border-gray-100">
+                        <div class="pt-3 text-sm text-gray-600">
+                            <div class="font-medium text-[#333333] mb-1">What Changed</div>
+                            CHANGELOG.md with detailed entries for both version bumps
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Commit 5 -->
+                <div class="border border-gray-200 rounded-lg">
+                    <button @click="expandedCommit = expandedCommit === 5 ? null : 5" class="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-gray-50 transition-colors">
+                        <svg :class="expandedCommit === 5 ? 'rotate-90' : ''" class="w-4 h-4 text-gray-400 transition-transform" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <code class="font-mono text-xs text-[#1c69af]"><a href="https://bitbucket.org/getjohn/module-composer-vendor-checker/commits/2516244b5560299fc16ad42debc9e50a3fdcb67b" target="_blank" class="hover:underline">2516244</a></code>
+                        <code class="text-xs bg-gray-100 px-1.5 py-0.5 rounded">v0.3.0</code>
+                        <span class="flex-1 text-sm font-medium text-[#333333]">feat: add private Composer repo support with auth.json integration</span>
+                    </button>
+                    <div x-show="expandedCommit === 5" x-collapse x-cloak class="px-4 pb-4 border-t border-gray-100">
+                        <div class="pt-3 text-sm text-gray-600">
+                            <div class="font-medium text-[#333333] mb-1">What Changed</div>
+                            Auto-detect private repos from composer.json. Auth.json credential matching. Multi-format Satis resolution (V2/V1/packages.json/provider-includes).
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Commit 6 -->
+                <div class="border border-gray-200 rounded-lg">
+                    <button @click="expandedCommit = expandedCommit === 6 ? null : 6" class="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-gray-50 transition-colors">
+                        <svg :class="expandedCommit === 6 ? 'rotate-90' : ''" class="w-4 h-4 text-gray-400 transition-transform" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <code class="font-mono text-xs text-[#1c69af]"><a href="https://bitbucket.org/getjohn/module-composer-vendor-checker/commits/1b4baa9ee14eeb3f1f0d57e1d10421834e6f3bd3" target="_blank" class="hover:underline">1b4baa9</a></code>
+                        <code class="text-xs bg-gray-100 px-1.5 py-0.5 rounded">v0.3.0</code>
+                        <span class="flex-1 text-sm font-medium text-[#333333]">fix: improve Cloudflare detection and remove dead code</span>
+                    </button>
+                    <div x-show="expandedCommit === 6" x-collapse x-cloak class="px-4 pb-4 border-t border-gray-100">
+                        <div class="pt-3 text-sm text-gray-600">
+                            <div class="font-medium text-[#333333] mb-1">What Changed</div>
+                            Hybrid Cloudflare detection (headers + body). Removed dead methods: checkMultiplePackages, getComposerVersion, getMarketplaceVersion, getMarketplaceUrl.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Commit 7 -->
+                <div class="border border-gray-200 rounded-lg">
+                    <button @click="expandedCommit = expandedCommit === 7 ? null : 7" class="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-gray-50 transition-colors">
+                        <svg :class="expandedCommit === 7 ? 'rotate-90' : ''" class="w-4 h-4 text-gray-400 transition-transform" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <code class="font-mono text-xs text-[#1c69af]"><a href="https://bitbucket.org/getjohn/module-composer-vendor-checker/commits/557810535e5553e10dabfe574d0585d8e88d2af4" target="_blank" class="hover:underline">5578105</a></code>
+                        <code class="text-xs bg-gray-100 px-1.5 py-0.5 rounded">v0.3.0</code>
+                        <span class="flex-1 text-sm font-medium text-[#333333]">feat: add concurrent HTTP requests, exit codes, and --packages filter</span>
+                    </button>
+                    <div x-show="expandedCommit === 7" x-collapse x-cloak class="px-4 pb-4 border-t border-gray-100">
+                        <div class="pt-3 text-sm text-gray-600">
+                            <div class="font-medium text-[#333333] mb-1">What Changed</div>
+                            warmCache/cachedGet for parallel HTTP. Exit codes (0=current, 1=updates, 2=errors) for CI/CD. --packages filter option.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Commit 8 -->
+                <div class="border border-gray-200 rounded-lg">
+                    <button @click="expandedCommit = expandedCommit === 8 ? null : 8" class="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-gray-50 transition-colors">
+                        <svg :class="expandedCommit === 8 ? 'rotate-90' : ''" class="w-4 h-4 text-gray-400 transition-transform" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        <code class="font-mono text-xs text-[#1c69af]"><a href="https://bitbucket.org/getjohn/module-composer-vendor-checker/commits/2955dcc669f12f7e74cd1b515a7bddda485794fd" target="_blank" class="hover:underline">2955dcc</a></code>
+                        <code class="text-xs bg-gray-100 px-1.5 py-0.5 rounded">v0.3.0</code>
+                        <span class="flex-1 text-sm font-medium text-[#333333]">docs: update README for v0.3.0 with private repo and multi-source docs</span>
+                    </button>
+                    <div x-show="expandedCommit === 8" x-collapse x-cloak class="px-4 pb-4 border-t border-gray-100">
+                        <div class="pt-3 text-sm text-gray-600">
+                            <div class="font-medium text-[#333333] mb-1">What Changed</div>
+                            Complete README rewrite. Three version source tables. Private repo docs. Installation, usage, architecture, troubleshooting.
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
     <!-- What Was Delivered -->
-    <section class="max-w-5xl mx-auto px-6 pb-8">
+    <section id="features" class="max-w-5xl mx-auto px-6 pb-8 scroll-mt-20">
         <div class="bg-white border border-gray-200 p-6">
             <h2 class="text-lg font-bold text-[#333333] mb-4">What Was Delivered</h2>
 
             <!-- Bug Fixes -->
-            <h3 class="text-xs font-semibold text-[#1c69af] uppercase tracking-wider mt-4 mb-2">Bug Fixes (v0.1.1)</h3>
-            <table class="w-full text-sm mb-6">
-                <tbody>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-2 pr-4 font-medium text-[#333333] w-1/3">getSupportedVendors() broken</td>
-                        <td class="py-2 text-gray-600">Method was incorrectly transforming vendor keys using <code class="bg-gray-100 px-1 text-xs">explode('.', $domain)[0]</code>, causing vendor name mismatches and preventing packages from being matched. Removed the unnecessary transformation.</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-2 pr-4 font-medium text-[#333333]">XTENTO picking M1 version</td>
-                        <td class="py-2 text-gray-600">Product pages list both Magento 1 and Magento 2 versions. Implemented <code class="bg-gray-100 px-1 text-xs">version_select: highest</code> strategy to correctly select the M2 version.</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div x-data="{ open: true }" class="mb-6">
+                <button @click="open = !open" :aria-expanded="open" class="w-full flex items-center justify-between mb-2">
+                    <h3 class="text-xs font-semibold text-[#1c69af] uppercase tracking-wider">Bug Fixes (v0.1.1)</h3>
+                    <svg :class="open ? 'rotate-180' : ''" class="w-4 h-4 text-gray-400 transition-transform" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                    </svg>
+                </button>
+                <div x-show="open" x-collapse x-cloak class="space-y-3">
+                    <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
+                        <div class="text-sm font-medium text-[#333333] mb-1">getSupportedVendors() broken</div>
+                        <p class="text-sm text-gray-600">Method was incorrectly transforming vendor keys using <code class="bg-gray-100 px-1 text-xs">explode('.', $domain)[0]</code>, causing vendor name mismatches and preventing packages from being matched. Removed the unnecessary transformation.</p>
+                    </div>
+                    <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
+                        <div class="text-sm font-medium text-[#333333] mb-1">XTENTO picking M1 version</div>
+                        <p class="text-sm text-gray-600">Product pages list both Magento 1 and Magento 2 versions. Implemented <code class="bg-gray-100 px-1 text-xs">version_select: highest</code> strategy to correctly select the M2 version.</p>
+                    </div>
+                </div>
+            </div>
 
             <!-- New Features v0.2.0 -->
-            <h3 class="text-xs font-semibold text-[#1c69af] uppercase tracking-wider mt-4 mb-2">New Features (v0.2.0)</h3>
-            <table class="w-full text-sm mb-6">
-                <tbody>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-2 pr-4 font-medium text-[#333333] w-1/3">Packagist API fallback</td>
-                        <td class="py-2 text-gray-600">When website scraping fails (Cloudflare, no version on page), falls back to the Packagist API (<code class="bg-gray-100 px-1 text-xs">repo.packagist.org/p2/</code>) for latest stable version. Results labelled <code class="bg-gray-100 px-1 text-xs">[via Packagist]</code>.</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-2 pr-4 font-medium text-[#333333]">Packagist-only tracking</td>
-                        <td class="py-2 text-gray-600">Packages without vendor website patterns (Klaviyo, TaxJar, Yotpo, etc.) checked directly via Packagist API.</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-2 pr-4 font-medium text-[#333333]">Cloudflare detection</td>
-                        <td class="py-2 text-gray-600">HTTP 403 responses containing Cloudflare Managed Challenge markers detected and reported with clear messaging instead of raw error dumps.</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-2 pr-4 font-medium text-[#333333]">UNAVAILABLE status</td>
-                        <td class="py-2 text-gray-600">New status for packages that can&rsquo;t be checked automatically. Previously showed misleading <code class="bg-gray-100 px-1 text-xs">AHEAD_OF_VENDOR</code> with empty version.</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-2 pr-4 font-medium text-[#333333]">Version source tracking</td>
-                        <td class="py-2 text-gray-600">Each result now includes a <code class="bg-gray-100 px-1 text-xs">source</code> field indicating where the version was obtained (Website, Packagist, or Private Repo).</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-2 pr-4 font-medium text-[#333333]">Coverage expansion</td>
-                        <td class="py-2 text-gray-600">Package coverage expanded from 10 to 22 tracked packages. New website mappings: amasty/gdpr-cookie, amasty/geoipredirect, amasty/module-gdpr, amasty/number, aheadworks/module-blog, mageplaza/module-smtp. New Packagist: taxjar, webshopapps, klaviyo, yotpo (x2), paradoxlabs (x2), justuno, stripe, bsscommerce, mageworx (x2).</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div x-data="{ open: true }" class="mb-6">
+                <button @click="open = !open" :aria-expanded="open" class="w-full flex items-center justify-between mb-2">
+                    <h3 class="text-xs font-semibold text-[#1c69af] uppercase tracking-wider">New Features (v0.2.0)</h3>
+                    <svg :class="open ? 'rotate-180' : ''" class="w-4 h-4 text-gray-400 transition-transform" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                    </svg>
+                </button>
+                <div x-show="open" x-collapse x-cloak class="space-y-3">
+                    <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
+                        <div class="text-sm font-medium text-[#333333] mb-1">Packagist API fallback</div>
+                        <p class="text-sm text-gray-600">When website scraping fails (Cloudflare, no version on page), falls back to the Packagist API (<code class="bg-gray-100 px-1 text-xs">repo.packagist.org/p2/</code>) for latest stable version. Results labelled <code class="bg-gray-100 px-1 text-xs">[via Packagist]</code>.</p>
+                    </div>
+                    <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
+                        <div class="text-sm font-medium text-[#333333] mb-1">Packagist-only tracking</div>
+                        <p class="text-sm text-gray-600">Packages without vendor website patterns (Klaviyo, TaxJar, Yotpo, etc.) checked directly via Packagist API.</p>
+                    </div>
+                    <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
+                        <div class="text-sm font-medium text-[#333333] mb-1">Cloudflare detection</div>
+                        <p class="text-sm text-gray-600">HTTP 403 responses containing Cloudflare Managed Challenge markers detected and reported with clear messaging instead of raw error dumps.</p>
+                    </div>
+                    <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
+                        <div class="text-sm font-medium text-[#333333] mb-1">UNAVAILABLE status</div>
+                        <p class="text-sm text-gray-600">New status for packages that can&rsquo;t be checked automatically. Previously showed misleading <code class="bg-gray-100 px-1 text-xs">AHEAD_OF_VENDOR</code> with empty version.</p>
+                    </div>
+                    <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
+                        <div class="text-sm font-medium text-[#333333] mb-1">Version source tracking</div>
+                        <p class="text-sm text-gray-600">Each result now includes a <code class="bg-gray-100 px-1 text-xs">source</code> field indicating where the version was obtained (Website, Packagist, or Private Repo).</p>
+                    </div>
+                    <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
+                        <div class="text-sm font-medium text-[#333333] mb-1">Coverage expansion</div>
+                        <p class="text-sm text-gray-600">Package coverage expanded from 10 to 22 tracked packages. New website mappings: amasty/gdpr-cookie, amasty/geoipredirect, amasty/module-gdpr, amasty/number, aheadworks/module-blog, mageplaza/module-smtp. New Packagist: taxjar, webshopapps, klaviyo, yotpo (x2), paradoxlabs (x2), justuno, stripe, bsscommerce, mageworx (x2).</p>
+                    </div>
+                </div>
+            </div>
 
             <!-- New Features v0.3.0 -->
-            <h3 class="text-xs font-semibold text-[#1c69af] uppercase tracking-wider mt-4 mb-2">New Features (v0.3.0)</h3>
-            <table class="w-full text-sm mb-6">
-                <tbody>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-2 pr-4 font-medium text-[#333333] w-1/3">Private Composer repo support</td>
-                        <td class="py-2 text-gray-600">Auto-detects private repositories from <code class="bg-gray-100 px-1 text-xs">composer.json</code> and matches credentials from <code class="bg-gray-100 px-1 text-xs">auth.json</code>. Supports Composer V2 (<code class="bg-gray-100 px-1 text-xs">p2/</code>), V1 (<code class="bg-gray-100 px-1 text-xs">p/</code>), full <code class="bg-gray-100 px-1 text-xs">packages.json</code>, and Satis provider-includes with hash-based URL resolution.</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-2 pr-4 font-medium text-[#333333]">Concurrent HTTP requests</td>
-                        <td class="py-2 text-gray-600">warmCache/cachedGet pattern using Guzzle async promises. All vendor URLs pre-fetched in parallel before version extraction. Reduces total runtime from ~30s to ~3s.</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-2 pr-4 font-medium text-[#333333]">CI/CD exit codes</td>
-                        <td class="py-2 text-gray-600">Exit code 0 = all current, 1 = updates available, 2 = errors. Enables use in CI pipelines with <code class="bg-gray-100 px-1 text-xs">composer vendor:check; echo $?</code>.</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-2 pr-4 font-medium text-[#333333]">--packages filter</td>
-                        <td class="py-2 text-gray-600"><code class="bg-gray-100 px-1 text-xs">composer vendor:check --packages=amasty/promo,xtento/orderexport</code> to check specific packages only.</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-2 pr-4 font-medium text-[#333333]">Improved Cloudflare detection</td>
-                        <td class="py-2 text-gray-600">Hybrid approach: checks response headers (<code class="bg-gray-100 px-1 text-xs">cf-ray</code>, <code class="bg-gray-100 px-1 text-xs">cf-mitigated</code> + 403) first, falls back to body content markers.</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-2 pr-4 font-medium text-[#333333]">Dead code removal</td>
-                        <td class="py-2 text-gray-600">Removed unused methods: checkMultiplePackages, getComposerVersion (shell_exec security risk), getMarketplaceVersion, getMarketplaceUrl, checkAllPackages, displayResults.</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-2 pr-4 font-medium text-[#333333]">Auth expired handling</td>
-                        <td class="py-2 text-gray-600">When private repo queries fail (HTTP 403), reports &ldquo;auth may be expired&rdquo; with actionable guidance. Smart filtering skips repo.magento.com and internal repos.</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div x-data="{ open: true }" class="mb-6">
+                <button @click="open = !open" :aria-expanded="open" class="w-full flex items-center justify-between mb-2">
+                    <h3 class="text-xs font-semibold text-[#1c69af] uppercase tracking-wider">New Features (v0.3.0)</h3>
+                    <svg :class="open ? 'rotate-180' : ''" class="w-4 h-4 text-gray-400 transition-transform" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                    </svg>
+                </button>
+                <div x-show="open" x-collapse x-cloak class="space-y-3">
+                    <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
+                        <div class="text-sm font-medium text-[#333333] mb-1">Private Composer repo support</div>
+                        <p class="text-sm text-gray-600">Auto-detects private repositories from <code class="bg-gray-100 px-1 text-xs">composer.json</code> and matches credentials from <code class="bg-gray-100 px-1 text-xs">auth.json</code>. Supports Composer V2 (<code class="bg-gray-100 px-1 text-xs">p2/</code>), V1 (<code class="bg-gray-100 px-1 text-xs">p/</code>), full <code class="bg-gray-100 px-1 text-xs">packages.json</code>, and Satis provider-includes with hash-based URL resolution.</p>
+                    </div>
+                    <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
+                        <div class="text-sm font-medium text-[#333333] mb-1">Concurrent HTTP requests</div>
+                        <p class="text-sm text-gray-600">warmCache/cachedGet pattern using Guzzle async promises. All vendor URLs pre-fetched in parallel before version extraction. Reduces total runtime from ~30s to ~3s.</p>
+                    </div>
+                    <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
+                        <div class="text-sm font-medium text-[#333333] mb-1">CI/CD exit codes</div>
+                        <p class="text-sm text-gray-600">Exit code 0 = all current, 1 = updates available, 2 = errors. Enables use in CI pipelines with <code class="bg-gray-100 px-1 text-xs">composer vendor:check; echo $?</code>.</p>
+                    </div>
+                    <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
+                        <div class="text-sm font-medium text-[#333333] mb-1">--packages filter</div>
+                        <p class="text-sm text-gray-600"><code class="bg-gray-100 px-1 text-xs">composer vendor:check --packages=amasty/promo,xtento/orderexport</code> to check specific packages only.</p>
+                    </div>
+                    <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
+                        <div class="text-sm font-medium text-[#333333] mb-1">Improved Cloudflare detection</div>
+                        <p class="text-sm text-gray-600">Hybrid approach: checks response headers (<code class="bg-gray-100 px-1 text-xs">cf-ray</code>, <code class="bg-gray-100 px-1 text-xs">cf-mitigated</code> + 403) first, falls back to body content markers.</p>
+                    </div>
+                    <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
+                        <div class="text-sm font-medium text-[#333333] mb-1">Dead code removal</div>
+                        <p class="text-sm text-gray-600">Removed unused methods: checkMultiplePackages, getComposerVersion (shell_exec security risk), getMarketplaceVersion, getMarketplaceUrl, checkAllPackages, displayResults.</p>
+                    </div>
+                    <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
+                        <div class="text-sm font-medium text-[#333333] mb-1">Auth expired handling</div>
+                        <p class="text-sm text-gray-600">When private repo queries fail (HTTP 403), reports &ldquo;auth may be expired&rdquo; with actionable guidance. Smart filtering skips repo.magento.com and internal repos.</p>
+                    </div>
+                </div>
+            </div>
 
             <!-- Blocker Resolution -->
             <h3 class="text-xs font-semibold text-[#1c69af] uppercase tracking-wider mt-4 mb-2">Blocker Resolution</h3>
@@ -296,27 +440,25 @@
 
             <!-- Documentation -->
             <h3 class="text-xs font-semibold text-[#1c69af] uppercase tracking-wider mt-4 mb-2">Documentation</h3>
-            <table class="w-full text-sm">
-                <tbody>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-2 pr-4 font-medium text-[#333333] w-1/3">README.md</td>
-                        <td class="py-2 text-gray-600">Complete rewrite covering features, supported vendors (3 tables: website, Packagist, private repo), installation, usage, command options, example output, version sources, architecture, known limitations, and troubleshooting.</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-2 pr-4 font-medium text-[#333333]">CHANGELOG.md</td>
-                        <td class="py-2 text-gray-600">Detailed changelog with v0.1.1 (bug fixes), v0.2.0 (Packagist, Cloudflare, coverage), v0.3.0 (private repos, concurrent HTTP, exit codes).</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="py-2 pr-4 font-medium text-[#333333]">HTML Dashboard</td>
-                        <td class="py-2 text-gray-600">Interactive dashboard with TailwindCSS + Alpine.js. Summary cards, filterable results table, version source badges, module documentation, supported vendors, known limitations. Works offline via inlined JSON data.</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="space-y-3">
+                <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
+                    <div class="text-sm font-medium text-[#333333] mb-1">README.md</div>
+                    <p class="text-sm text-gray-600">Complete rewrite covering features, supported vendors (3 tables: website, Packagist, private repo), installation, usage, command options, example output, version sources, architecture, known limitations, and troubleshooting.</p>
+                </div>
+                <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
+                    <div class="text-sm font-medium text-[#333333] mb-1">CHANGELOG.md</div>
+                    <p class="text-sm text-gray-600">Detailed changelog with v0.1.1 (bug fixes), v0.2.0 (Packagist, Cloudflare, coverage), v0.3.0 (private repos, concurrent HTTP, exit codes).</p>
+                </div>
+                <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
+                    <div class="text-sm font-medium text-[#333333] mb-1">HTML Dashboard</div>
+                    <p class="text-sm text-gray-600">Interactive dashboard with TailwindCSS + Alpine.js. Summary cards, filterable results table, version source badges, module documentation, supported vendors, known limitations. Works offline via inlined JSON data.</p>
+                </div>
+            </div>
         </div>
     </section>
 
     <!-- Acceptance Criteria -->
-    <section class="max-w-5xl mx-auto px-6 pb-8">
+    <section id="acceptance" class="max-w-5xl mx-auto px-6 pb-8 scroll-mt-20">
         <div class="bg-[#1c69af]/5 border border-[#1c69af]/20 p-6">
             <h2 class="text-lg font-bold text-[#333333] mb-4">Acceptance Criteria &mdash; Verification</h2>
             <table class="w-full text-sm">
@@ -329,42 +471,74 @@
                 </thead>
                 <tbody>
                     <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 text-green-600 font-bold">Yes</td>
+                        <td class="px-3 py-2">
+                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </td>
                         <td class="px-3 py-2 font-medium text-[#333333]">Review current implementation and intended behaviour</td>
                         <td class="px-3 py-2 text-gray-600">Found and fixed 2 bugs: getSupportedVendors() broken return format, XTENTO picking M1 version over M2. Identified dead code and security risks (shell_exec in getComposerVersion).</td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 text-green-600 font-bold">Yes</td>
+                        <td class="px-3 py-2">
+                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </td>
                         <td class="px-3 py-2 font-medium text-[#333333]">Complete missing functionality for practical use</td>
                         <td class="px-3 py-2 text-gray-600">Added Packagist API fallback, Packagist-only tracking, private Composer repo support, Cloudflare detection, UNAVAILABLE status, version source tracking, concurrent HTTP, exit codes, --packages filter.</td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 text-green-600 font-bold">Yes</td>
+                        <td class="px-3 py-2">
+                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </td>
                         <td class="px-3 py-2 font-medium text-[#333333]">Ensure tool can be run reliably</td>
                         <td class="px-3 py-2 text-gray-600">Tested against real store composer.lock. 29 packages checked across 3 version sources in ~3 seconds. Clear results for all packages. Repeatable via <code class="bg-gray-100 px-1 text-xs">composer vendor:check</code>.</td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 text-green-600 font-bold">Yes</td>
+                        <td class="px-3 py-2">
+                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </td>
                         <td class="px-3 py-2 font-medium text-[#333333]">Improve robustness (parsing, error handling, edge cases)</td>
                         <td class="px-3 py-2 text-gray-600">3-tier fallback (website &rarr; private repo &rarr; Packagist). Cloudflare detection. Auth expired handling. Smart repo filtering to avoid false matches. Graceful error messaging. Dead code with security risks removed.</td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 text-green-600 font-bold">Yes</td>
+                        <td class="px-3 py-2">
+                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </td>
                         <td class="px-3 py-2 font-medium text-[#333333]">Ensure output is usable for analysis and reporting</td>
                         <td class="px-3 py-2 text-gray-600"><code class="bg-gray-100 px-1 text-xs">--json</code> output for CI/CD pipelines. Exit codes for automation. HTML dashboard for visual review. Version source badges for traceability.</td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 text-green-600 font-bold">Yes</td>
+                        <td class="px-3 py-2">
+                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </td>
                         <td class="px-3 py-2 font-medium text-[#333333]">A working tool suitable for repeated use</td>
                         <td class="px-3 py-2 text-gray-600">Runs via <code class="bg-gray-100 px-1 text-xs">composer vendor:check</code> with no manual setup. Reads composer.lock, composer.json, auth.json automatically. Handles all edge cases gracefully.</td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 text-green-600 font-bold">Yes</td>
+                        <td class="px-3 py-2">
+                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </td>
                         <td class="px-3 py-2 font-medium text-[#333333]">README.md with usage documentation</td>
                         <td class="px-3 py-2 text-gray-600">Full README.md with features, supported vendors (3 tables), installation, usage examples, command options, example output, architecture diagram, known limitations, troubleshooting.</td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 text-green-600 font-bold">Yes</td>
+                        <td class="px-3 py-2">
+                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </td>
                         <td class="px-3 py-2 font-medium text-[#333333]">Amasty blocker addressed</td>
                         <td class="px-3 py-2 text-gray-600">Cloudflare detected and reported. Private repo path implemented (needs valid keys). Amasty licensing migration documented with step-by-step instructions for obtaining new project-level keys.</td>
                     </tr>
@@ -374,44 +548,55 @@
     </section>
 
     <!-- File Inventory -->
-    <section class="max-w-5xl mx-auto px-6 pb-8">
+    <section id="files" class="max-w-5xl mx-auto px-6 pb-8 scroll-mt-20">
         <div class="bg-white border border-gray-200 p-6">
             <h2 class="text-lg font-bold text-[#333333] mb-4">Deliverable Files</h2>
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="bg-[#1c69af]/5 border-b border-[#1c69af]/20">
-                        <th class="text-left px-3 py-2 font-medium text-[#333333] text-xs">File</th>
-                        <th class="text-left px-3 py-2 font-medium text-[#333333] text-xs">Purpose</th>
-                    </tr>
-                </thead>
+
+            <!-- Source Code -->
+            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 mt-4">Source Code</h3>
+            <table class="w-full text-sm mb-4">
                 <tbody>
                     <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 text-gray-600"><code class="text-xs">src/Service/VersionChecker.php</code></td>
-                        <td class="px-3 py-2 text-gray-600">Core scraping engine, Packagist API, private repo queries, warmCache/cachedGet</td>
+                        <td class="py-2 pr-4 text-gray-600 w-2/5"><code class="text-xs">src/Service/VersionChecker.php</code></td>
+                        <td class="py-2 text-gray-600">Core scraping engine, Packagist API, private repo queries, warmCache/cachedGet</td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 text-gray-600"><code class="text-xs">src/Service/ComposerIntegration.php</code></td>
-                        <td class="px-3 py-2 text-gray-600">Lock + JSON + auth parsing, private repo map, report generation</td>
+                        <td class="py-2 pr-4 text-gray-600"><code class="text-xs">src/Service/ComposerIntegration.php</code></td>
+                        <td class="py-2 text-gray-600">Lock + JSON + auth parsing, private repo map, report generation</td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 text-gray-600"><code class="text-xs">src/Command/VendorCheckCommand.php</code></td>
-                        <td class="px-3 py-2 text-gray-600">CLI command with rewritten execute(), exit codes, --packages filter</td>
+                        <td class="py-2 pr-4 text-gray-600"><code class="text-xs">src/Command/VendorCheckCommand.php</code></td>
+                        <td class="py-2 text-gray-600">CLI command with rewritten execute(), exit codes, --packages filter</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Documentation -->
+            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 mt-4">Documentation</h3>
+            <table class="w-full text-sm mb-4">
+                <tbody>
+                    <tr class="border-b border-gray-100">
+                        <td class="py-2 pr-4 text-gray-600 w-2/5"><code class="text-xs">README.md</code></td>
+                        <td class="py-2 text-gray-600">Full module documentation</td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 text-gray-600"><code class="text-xs">README.md</code></td>
-                        <td class="px-3 py-2 text-gray-600">Full module documentation</td>
+                        <td class="py-2 pr-4 text-gray-600"><code class="text-xs">CHANGELOG.md</code></td>
+                        <td class="py-2 text-gray-600">Version history (v0.1.0 through v0.3.0)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Data & Reports -->
+            <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 mt-4">Data & Reports</h3>
+            <table class="w-full text-sm">
+                <tbody>
+                    <tr class="border-b border-gray-100">
+                        <td class="py-2 pr-4 text-gray-600 w-2/5"><code class="text-xs">docs/index.html</code></td>
+                        <td class="py-2 text-gray-600">Interactive dashboard (TailwindCSS + Alpine.js)</td>
                     </tr>
                     <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 text-gray-600"><code class="text-xs">CHANGELOG.md</code></td>
-                        <td class="px-3 py-2 text-gray-600">Version history (v0.1.0 through v0.3.0)</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 text-gray-600"><code class="text-xs">docs/index.html</code></td>
-                        <td class="px-3 py-2 text-gray-600">Interactive dashboard (TailwindCSS + Alpine.js)</td>
-                    </tr>
-                    <tr class="border-b border-gray-100">
-                        <td class="px-3 py-2 text-gray-600"><code class="text-xs">docs/results.json</code></td>
-                        <td class="px-3 py-2 text-gray-600">Machine-readable scan results (multi-store, all packages)</td>
+                        <td class="py-2 pr-4 text-gray-600"><code class="text-xs">docs/results.json</code></td>
+                        <td class="py-2 text-gray-600">Machine-readable scan results (multi-store, all packages)</td>
                     </tr>
                 </tbody>
             </table>
