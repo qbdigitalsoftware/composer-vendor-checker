@@ -47,7 +47,7 @@ module-composer-vendor-checker/
 │   │       └── VendorCheckCommandTest.php # Command options and exit codes
 │   │
 │   └── Fixtures/
-│       ├── composer.lock                 # Minimal lock file with 7 test packages
+│       ├── composer.lock                 # Minimal lock file with 8 test packages
 │       ├── composer.json                 # Test repos (amasty, xtento, magento, satis)
 │       ├── auth.json                     # Test HTTP basic credentials
 │       ├── packages.php                  # Test config with skip lists
@@ -74,7 +74,7 @@ module-composer-vendor-checker/
 
 ### src/Service/
 
-- **PackageResolver.php** — Determines how to check each package. Resolution: skip lists -> website overrides -> private repo -> Packagist (default).
+- **PackageResolver.php** — Determines how to check each package. Resolution: skip lists -> website overrides -> private repo -> packagist_packages list -> unresolved (default).
 
 - **ComposerIntegration.php** — Core orchestrator. Reads composer.lock, builds private repo map from composer.json + auth.json, loads config, dispatches checks via VersionChecker with cache and progress support.
 
@@ -90,7 +90,7 @@ module-composer-vendor-checker/
 
 ### config/
 
-- **packages.php** — Package configuration. Defines `package_url_mappings`, `skip_vendors`, `skip_packages`, `skip_hosts`, `skip_patterns`. Optional — everything defaults to Packagist without config.
+- **packages.php** — Package configuration. Defines `package_url_mappings`, `packagist_packages`, `skip_vendors`, `skip_packages`, `skip_hosts`, `skip_patterns`. Without config, unconfigured packages resolve as UNRESOLVED.
 
 ## How It All Works Together
 

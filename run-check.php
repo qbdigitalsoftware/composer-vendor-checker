@@ -58,14 +58,6 @@ $total = count($packages);
 // Progress to stderr so it doesn't pollute JSON/CSV output
 fwrite(STDERR, "Checking $total packages from: $lockPath\n\n");
 
-// Simple progress callback via STDERR
-$checked = 0;
-$progress = null;
-if ($format === 'table' || $outputFile) {
-    // Use a simple stderr progress since we don't have Symfony Output
-    $progress = null; // ProgressReporter needs OutputInterface, skip for standalone
-}
-
 $results = $integration->checkForUpdates(null, []);
 
 // Format
@@ -93,7 +85,7 @@ if ($outputFile) {
 $hasErrors = false;
 $hasUpdates = false;
 foreach ($results as $r) {
-    if ($r['status'] === 'ERROR' || $r['status'] === 'UNAVAILABLE') $hasErrors = true;
+    if ($r['status'] === 'ERROR' || $r['status'] === 'UNAVAILABLE' || $r['status'] === 'UNRESOLVED') $hasErrors = true;
     if ($r['status'] === 'UPDATE_AVAILABLE') $hasUpdates = true;
 }
 exit($hasErrors ? 2 : ($hasUpdates ? 1 : 0));

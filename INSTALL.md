@@ -72,14 +72,14 @@ Checking packages from: ./composer.lock
       Installed: 4.4.2              Latest: 4.5.0 [via Packagist]
 
   --------------------------------------------------------------------------
-  Summary: 35 up-to-date, 5 updates available, 0 unavailable, 2 errors
+  Summary: 35 up-to-date, 5 updates available, 0 ahead, 0 unavailable, 0 unresolved, 2 errors
 ```
 
 ---
 
 ## Configuration
 
-Configuration is **optional**. Without any config, all packages are checked via Packagist.
+Configuration is **optional**. Without a config file, packages with no configured source resolve as UNRESOLVED. The bundled `config/packages.php` defines Packagist, website, and skip lists.
 
 ### Custom Config File
 
@@ -105,9 +105,15 @@ return [
     // Skip specific packages
     'skip_packages' => ['my-agency/internal-module'],
 
-    // Website overrides (checked before Packagist)
+    // Packages checked via Packagist API
+    'packagist_packages' => [
+        'stripe/stripe-payments',
+        'klaviyo/magento2-extension',
+    ],
+
+    // Website overrides (scraped for version info)
     'package_url_mappings' => [
-        'amasty/promo' => 'https://amasty.com/special-promotions-for-magento-2.html',
+        'mageplaza/module-smtp' => 'https://www.mageplaza.com/magento-2-smtp/',
     ],
 
     // Private repo hosts to skip
@@ -211,7 +217,7 @@ If all packages are being skipped, check your `skip_vendors` list in the config.
 
 ### Cloudflare Blocked
 
-Vendors using Cloudflare cannot be scraped. The tool falls back to Packagist automatically. If the package isn't on Packagist, it reports as ERROR.
+Vendors using Cloudflare cannot be scraped. Website checks will report as ERROR. If the package is available via a private Composer repo (e.g. `composer.amasty.com`), configure it there instead of as a website mapping.
 
 ### SSL Certificate Errors
 

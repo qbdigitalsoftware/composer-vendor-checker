@@ -386,8 +386,8 @@
                 </button>
                 <div x-show="open" x-collapse x-cloak class="space-y-3">
                     <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
-                        <div class="text-sm font-medium text-[#333333] mb-1">Packagist API fallback</div>
-                        <p class="text-sm text-gray-600">When website scraping fails (Cloudflare, no version on page), falls back to the Packagist API (<code class="bg-gray-100 px-1 text-xs">repo.packagist.org/p2/</code>) for latest stable version. Results labelled <code class="bg-gray-100 px-1 text-xs">[via Packagist]</code>.</p>
+                        <div class="text-sm font-medium text-[#333333] mb-1">Explicit Packagist resolution</div>
+                        <p class="text-sm text-gray-600">Packages listed in <code class="bg-gray-100 px-1 text-xs">packagist_packages</code> config are checked via the Packagist API (<code class="bg-gray-100 px-1 text-xs">repo.packagist.org/p2/</code>). Results labelled <code class="bg-gray-100 px-1 text-xs">[via Packagist]</code>. Packages not in any configured source resolve as UNRESOLVED.</p>
                     </div>
                     <div class="border-l-2 border-[#1c69af] bg-[#1c69af]/[0.03] border-t border-t-gray-100 pl-4 pr-4 py-3">
                         <div class="text-sm font-medium text-[#333333] mb-1">Packagist-only tracking</div>
@@ -580,7 +580,7 @@
                             </svg>
                         </td>
                         <td class="px-3 py-2 font-medium text-[#333333]">Complete missing functionality for practical use</td>
-                        <td class="px-3 py-2 text-gray-600">Added Packagist API fallback, Packagist-only tracking, private Composer repo support, Cloudflare detection, UNAVAILABLE status, version source tracking, concurrent HTTP, exit codes, --packages filter.</td>
+                        <td class="px-3 py-2 text-gray-600">Added explicit Packagist package list, private Composer repo support, Cloudflare detection, UNAVAILABLE/UNRESOLVED statuses, version source tracking, concurrent HTTP, exit codes, --packages filter.</td>
                     </tr>
                     <tr class="border-b border-gray-100">
                         <td class="px-3 py-2">
@@ -598,7 +598,7 @@
                             </svg>
                         </td>
                         <td class="px-3 py-2 font-medium text-[#333333]">Improve robustness (parsing, error handling, edge cases)</td>
-                        <td class="px-3 py-2 text-gray-600">3-tier fallback (website &rarr; private repo &rarr; Packagist). Cloudflare detection. Auth expired handling. Smart repo filtering to avoid false matches. Graceful error messaging. Dead code with security risks removed.</td>
+                        <td class="px-3 py-2 text-gray-600">5-step resolution (skip &rarr; website &rarr; private repo &rarr; packagist list &rarr; unresolved). Cloudflare detection. Auth expired handling. Smart repo filtering to avoid false matches. Graceful error messaging. Dead code with security risks removed.</td>
                     </tr>
                     <tr class="border-b border-gray-100">
                         <td class="px-3 py-2">
