@@ -63,6 +63,14 @@
                 "type": "zip"
             },
             "notification-url": "https://cisco.satis.getjohn.co.uk/downloads/"
+        },
+        {
+            "name": "unknown/unconfigured-module",
+            "version": "1.0.0",
+            "dist": {
+                "url": "https://example.com/dist/unknown/unconfigured-module-1.0.0.zip",
+                "type": "zip"
+            }
         }
     ],
     "packages-dev": [],

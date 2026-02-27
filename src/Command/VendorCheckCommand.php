@@ -298,7 +298,7 @@ EOF
         $hasUpdates = false;
 
         foreach ($results as $result) {
-            if ($result['status'] === 'ERROR' || $result['status'] === 'UNAVAILABLE') {
+            if ($result['status'] === 'ERROR' || $result['status'] === 'UNAVAILABLE' || $result['status'] === 'UNRESOLVED') {
                 $hasErrors = true;
             }
             if ($result['status'] === 'UPDATE_AVAILABLE') {

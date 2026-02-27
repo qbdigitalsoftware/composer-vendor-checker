@@ -13,6 +13,7 @@ class PackageResolverTest extends TestCase
             'package_url_mappings' => [
                 'amasty/promo' => 'https://amasty.com/special-promotions-for-magento-2.html',
             ],
+            'packagist_packages' => ['klaviyo/magento2-extension'],
             'skip_vendors' => ['magento', 'laminas'],
             'skip_packages' => ['getjohn/module-customsprice'],
         ], $configOverrides);
@@ -20,12 +21,20 @@ class PackageResolverTest extends TestCase
         return new PackageResolver($config, $privateRepoMap);
     }
 
-    public function testResolveDefaultsToPackagist()
+    public function testResolvePackagistListPackage()
     {
         $resolver = $this->createResolver();
         $result = $resolver->resolve('klaviyo/magento2-extension');
 
         $this->assertEquals('packagist', $result['method']);
+    }
+
+    public function testResolveDefaultsToUnresolved()
+    {
+        $resolver = $this->createResolver();
+        $result = $resolver->resolve('unknown/some-random-package');
+
+        $this->assertEquals('unresolved', $result['method']);
     }
 
     public function testResolveWebsiteOverride()
@@ -116,12 +125,12 @@ class PackageResolverTest extends TestCase
         $this->assertEquals('2.12.0', $results['amasty/promo']['version']);
     }
 
-    public function testEmptyConfigDefaultsToPackagist()
+    public function testEmptyConfigDefaultsToUnresolved()
     {
         $resolver = new PackageResolver();
         $result = $resolver->resolve('some/random-package');
 
-        $this->assertEquals('packagist', $result['method']);
+        $this->assertEquals('unresolved', $result['method']);
     }
 
     public function testResolveAllPreservesVersions()

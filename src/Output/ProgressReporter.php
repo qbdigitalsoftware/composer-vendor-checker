@@ -59,6 +59,9 @@ class ProgressReporter
                 case 'UNAVAILABLE':
                     $statusIcon = '<error>ERR</error>';
                     break;
+                case 'UNRESOLVED':
+                    $statusIcon = 'UNRESOLVED';
+                    break;
                 case 'AHEAD_OF_VENDOR':
                     $statusIcon = '<comment>AHEAD</comment>';
                     break;

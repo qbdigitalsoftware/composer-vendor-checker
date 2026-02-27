@@ -24,16 +24,6 @@ return [
     |
     */
     'package_url_mappings' => [
-        // Amasty modules (Cloudflare-protected — will fall back to private repo or error)
-        'amasty/module-admin-actions-log' => 'https://amasty.com/admin-actions-log-for-magento-2.html',
-        'amasty/promo' => 'https://amasty.com/special-promotions-for-magento-2.html',
-        'amasty/shopby' => 'https://amasty.com/improved-layered-navigation-for-magento-2.html',
-        'amasty/geoip' => 'https://amasty.com/geoip-for-magento-2.html',
-        'amasty/gdpr-cookie' => 'https://amasty.com/gdpr-cookie-compliance-for-magento-2.html',
-        'amasty/geoipredirect' => 'https://amasty.com/geoip-redirect-for-magento-2.html',
-        'amasty/module-gdpr' => 'https://amasty.com/gdpr-for-magento-2.html',
-        'amasty/number' => 'https://amasty.com/custom-order-number-for-magento-2.html',
-
         // Aheadworks modules (Cloudflare-protected)
         'aheadworks/module-blog' => 'https://aheadworks.com/magento-2-blog-extension',
 

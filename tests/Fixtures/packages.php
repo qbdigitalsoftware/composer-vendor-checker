@@ -9,6 +9,7 @@ return [
     ],
     'packagist_packages' => [
         'klaviyo/magento2-extension',
+        'stripe/stripe-payments',
     ],
     'skip_hosts' => [
         'repo.magento.com',

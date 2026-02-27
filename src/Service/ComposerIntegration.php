@@ -319,8 +319,9 @@ class ComposerIntegration
                 $urlsToFetch[$pkg['url']] = [];
             }
 
-            // Pre-fetch Packagist for packagist packages and as fallback for website/private_repo
-            $urlsToFetch["https://repo.packagist.org/p2/{$name}.json"] = [];
+            if ($method === 'packagist') {
+                $urlsToFetch["https://repo.packagist.org/p2/{$name}.json"] = [];
+            }
 
             if ($method === 'private_repo' && isset($pkg['auth'])) {
                 $repoUrl = rtrim($pkg['repo_url'], '/');
@@ -358,6 +359,10 @@ class ComposerIntegration
 
         if ($method === 'website') {
             return $this->checkViaWebsite($name, $version, $pkg['url']);
+        }
+
+        if ($method === 'unresolved') {
+            return $this->checkViaUnresolved($name, $version);
         }
 
         return [
@@ -401,7 +406,7 @@ class ComposerIntegration
     }
 
     /**
-     * Check a package via private Composer repository with Packagist fallback.
+     * Check a package via private Composer repository.
      *
      * @param string $name
      * @param string $installedVersion
@@ -422,18 +427,6 @@ class ComposerIntegration
                 'latest_version' => $latestVersion,
                 'status' => self::compareVersions($installedVersion, $latestVersion),
                 'source' => 'private_repo',
-            ];
-        }
-
-        // Private repo failed — try Packagist as fallback
-        $packagistVersion = $this->versionChecker->getPackagistVersion($name);
-        if ($packagistVersion !== null) {
-            return [
-                'package' => $name,
-                'installed_version' => $installedVersion,
-                'latest_version' => $packagistVersion,
-                'status' => self::compareVersions($installedVersion, $packagistVersion),
-                'source' => 'packagist',
             ];
         }
 
@@ -458,7 +451,7 @@ class ComposerIntegration
     protected function checkViaWebsite($name, $installedVersion, $url)
     {
         try {
-            $vendorData = $this->versionChecker->getVendorVersion($url, $name);
+            $vendorData = $this->versionChecker->getVendorVersion($url);
             $latestVersion = isset($vendorData['latest_version']) ? $vendorData['latest_version'] : null;
 
             if ($latestVersion === null) {
@@ -495,6 +488,24 @@ class ComposerIntegration
                 'error' => $e->getMessage(),
             ];
         }
+    }
+
+    /**
+     * Handle an unresolved package (no configured check method).
+     *
+     * @param string $name
+     * @param string $installedVersion
+     * @return array
+     */
+    protected function checkViaUnresolved($name, $installedVersion)
+    {
+        return [
+            'package' => $name,
+            'installed_version' => $installedVersion,
+            'latest_version' => 'N/A',
+            'status' => 'UNRESOLVED',
+            'error' => 'No configured check method for this package',
+        ];
     }
 
     /**

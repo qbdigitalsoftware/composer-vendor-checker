@@ -47,8 +47,8 @@ class ComposerIntegrationTest extends TestCase
 
         $packages = $integration->getInstalledPackages();
 
-        // 7 packages in fixture lock file
-        $this->assertCount(7, $packages);
+        // 8 packages in fixture lock file
+        $this->assertCount(8, $packages);
         $this->assertArrayHasKey('amasty/promo', $packages);
         $this->assertArrayHasKey('klaviyo/magento2-extension', $packages);
         $this->assertArrayHasKey('magento/framework', $packages);
@@ -124,7 +124,7 @@ class ComposerIntegrationTest extends TestCase
 
         $packages = $integration->getInstalledPackages();
 
-        // stripe/stripe-payments has no website override, no private repo — defaults to packagist
+        // stripe/stripe-payments is in packagist_packages list — resolves to packagist
         $this->assertEquals('packagist', $packages['stripe/stripe-payments']['method']);
     }
 
@@ -178,8 +178,8 @@ class ComposerIntegrationTest extends TestCase
 
         $results = $integration->checkForUpdates();
 
-        // 7 packages total, 3 skipped (magento, laminas, getjohn) = 4 results
-        $this->assertCount(4, $results);
+        // 8 packages total, 3 skipped (magento, laminas, getjohn) = 5 results
+        $this->assertCount(5, $results);
 
         // Verify skipped packages are not in results
         $resultPackages = array_column($results, 'package');
@@ -279,15 +279,46 @@ class ComposerIntegrationTest extends TestCase
 
         $packages = $integration->getInstalledPackages();
 
-        // All 7 packages from fixture lock file should be present
-        $this->assertCount(7, $packages);
+        // All 8 packages from fixture lock file should be present
+        $this->assertCount(8, $packages);
         $this->assertArrayHasKey('amasty/promo', $packages);
         $this->assertArrayHasKey('klaviyo/magento2-extension', $packages);
         $this->assertArrayHasKey('stripe/stripe-payments', $packages);
 
-        // Packages not in any config should default to packagist
+        // Packages in bundled config's packagist_packages list resolve as packagist
         $this->assertEquals('packagist', $packages['stripe/stripe-payments']['method']);
         $this->assertEquals('packagist', $packages['klaviyo/magento2-extension']['method']);
+
+        // Packages not in any config resolve as unresolved
+        $this->assertEquals('unresolved', $packages['unknown/unconfigured-module']['method']);
+    }
+
+    public function testUnresolvedPackageReturnsCorrectStatus()
+    {
+        // Mock: provide enough responses for warm cache + checks
+        $responses = [];
+        for ($i = 0; $i < 20; $i++) {
+            $responses[] = new Response(200, [], json_encode([
+                'packages' => ['x/y' => [['version' => '1.0.0']]],
+            ]));
+        }
+
+        $checker = $this->createMockChecker($responses);
+
+        $integration = new ComposerIntegration(
+            $this->fixturesDir . '/composer.lock',
+            $this->fixturesDir . '/composer.json',
+            $this->fixturesDir . '/auth.json',
+            $this->fixturesDir . '/packages.php',
+            null,
+            $checker
+        );
+
+        $results = $integration->checkForUpdates(null, ['unknown/unconfigured-module']);
+
+        $this->assertCount(1, $results);
+        $this->assertEquals('unknown/unconfigured-module', $results[0]['package']);
+        $this->assertEquals('UNRESOLVED', $results[0]['status']);
     }
 
     public function testPrivateRepoMapBuiltFromFixtures()

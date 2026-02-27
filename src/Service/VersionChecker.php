@@ -179,15 +179,13 @@ class VersionChecker
     }
 
     /**
-     * Get version information from a vendor website
-     * Falls back to Packagist API if website scraping fails or returns no version
+     * Get version information from a vendor website.
      *
      * @param string $url
-     * @param string|null $packageName Composer package name for Packagist fallback
      * @return array
      * @throws \Exception
      */
-    public function getVendorVersion($url, $packageName = null)
+    public function getVendorVersion($url)
     {
         try {
             $html = $this->cachedGet($url);
@@ -197,30 +195,21 @@ class VersionChecker
 
             // Extract version
             $version = $this->extractVersion($html, $vendor_info);
-            $source = 'vendor_website';
 
             // Extract changelog
             $changelog = $this->extractChangelog($html, $vendor_info);
-
-            // If website returned no version, try Packagist as fallback
-            if ($version === null && $packageName !== null) {
-                $version = $this->getPackagistVersion($packageName);
-                if ($version !== null) {
-                    $source = 'packagist';
-                }
-            }
 
             return [
                 'url' => $url,
                 'vendor' => $vendor,
                 'latest_version' => $version,
                 'changelog' => $changelog,
-                'source' => $source,
+                'source' => 'vendor_website',
                 'checked_at' => date('Y-m-d H:i:s')
             ];
 
         } catch (GuzzleException $e) {
-            // Check for Cloudflare protection before attempting Packagist fallback
+            // Check for Cloudflare protection
             $isCloudflareBlocked = false;
             if ($e instanceof RequestException && $e->hasResponse()) {
                 $response = $e->getResponse();
@@ -245,23 +234,6 @@ class VersionChecker
                 }
             }
 
-            // Website unreachable (e.g., Cloudflare block) — try Packagist fallback
-            if ($packageName !== null) {
-                $version = $this->getPackagistVersion($packageName);
-                if ($version !== null) {
-                    $vendor = $this->getVendorFromPackage($packageName);
-                    return [
-                        'url' => $url,
-                        'vendor' => $vendor ?? 'unknown',
-                        'latest_version' => $version,
-                        'changelog' => [],
-                        'source' => 'packagist',
-                        'checked_at' => date('Y-m-d H:i:s')
-                    ];
-                }
-            }
-
-            // Throw specific Cloudflare error after Packagist fallback attempt
             if ($isCloudflareBlocked) {
                 throw new \Exception("Cloudflare protection detected on {$url} — website requires browser verification");
             }
