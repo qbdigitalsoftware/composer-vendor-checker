@@ -10,9 +10,10 @@ namespace GetJohn\VendorChecker\Service;
  *
  * Resolution order:
  * 1. skip_vendors / skip_packages → skip
- * 2. package_url_mappings → website (with Packagist fallback)
- * 3. privateRepoMap → private_repo (with Packagist fallback)
- * 4. Default → packagist (auto-discovery)
+ * 2. package_url_mappings → website
+ * 3. privateRepoMap → private_repo
+ * 4. packagist_packages → packagist
+ * 5. Default → unresolved
  */
 class PackageResolver
 {
@@ -27,6 +28,9 @@ class PackageResolver
 
     /** @var array Specific package names to skip */
     private $skipPackages;
+
+    /** @var array Packages that should be checked via Packagist only */
+    private $packagistPackages;
 
     /**
      * @param array $config Config from packages.php
@@ -43,6 +47,9 @@ class PackageResolver
         $this->skipPackages = isset($config['skip_packages']) && is_array($config['skip_packages'])
             ? $config['skip_packages']
             : [];
+        $this->packagistPackages = isset($config['packagist_packages']) && is_array($config['packagist_packages'])
+            ? $config['packagist_packages']
+            : [];
         $this->privateRepoMap = $privateRepoMap;
     }
 
@@ -50,7 +57,7 @@ class PackageResolver
      * Determine the check strategy for a single package.
      *
      * @param string $packageName Composer package name (e.g. 'amasty/promo')
-     * @return array ['method' => 'packagist'|'private_repo'|'website'|'skip', 'url' => '...']
+     * @return array ['method' => 'packagist'|'private_repo'|'website'|'skip'|'unresolved', 'url' => '...']
      */
     public function resolve($packageName)
     {
@@ -81,8 +88,13 @@ class PackageResolver
             ];
         }
 
-        // 4. Default to Packagist auto-discovery
-        return ['method' => 'packagist'];
+        // 4. Check explicit Packagist list
+        if (in_array($packageName, $this->packagistPackages, true)) {
+            return ['method' => 'packagist'];
+        }
+
+        // 5. Unresolved — no configured check method
+        return ['method' => 'unresolved'];
     }
 
     /**

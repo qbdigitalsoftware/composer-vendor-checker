@@ -29,6 +29,7 @@ class OutputFormatter
         $errorCount = 0;
         $unavailableCount = 0;
         $aheadCount = 0;
+        $unresolvedCount = 0;
 
         foreach ($results as $result) {
             $package = $result['package'];
@@ -53,6 +54,10 @@ class OutputFormatter
                 case 'UNAVAILABLE':
                     $statusSymbol = '?';
                     $unavailableCount++;
+                    break;
+                case 'UNRESOLVED':
+                    $statusSymbol = '·';
+                    $unresolvedCount++;
                     break;
                 case 'ERROR':
                     $statusSymbol = '✗';
@@ -86,11 +91,12 @@ class OutputFormatter
 
         $report[] = "  " . str_repeat("─", 74);
         $report[] = sprintf(
-            "  Summary: %d up-to-date, %d updates available, %d ahead, %d unavailable, %d errors",
+            "  Summary: %d up-to-date, %d updates available, %d ahead, %d unavailable, %d unresolved, %d errors",
             $upToDateCount,
             $updateCount,
             $aheadCount,
             $unavailableCount,
+            $unresolvedCount,
             $errorCount
         );
         $report[] = "";
