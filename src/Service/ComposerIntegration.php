@@ -121,14 +121,9 @@ class ComposerIntegration
         $repos = $composerJson['repositories'] ?? [];
         $httpBasic = $authJson['http-basic'] ?? [];
 
-        // Read skip hosts and patterns from config (with sensible defaults)
-        $skipHosts = isset($this->config['skip_hosts']) && is_array($this->config['skip_hosts'])
-            ? $this->config['skip_hosts']
-            : ['repo.magento.com', 'marketplace.magento.com'];
-
-        $skipPatterns = isset($this->config['skip_patterns']) && is_array($this->config['skip_patterns'])
-            ? $this->config['skip_patterns']
-            : ['/\.satis\./i', '/\.getjohn\./i'];
+        // Read skip hosts and patterns from config (bundled packages.php provides defaults)
+        $skipHosts = $this->config['skip_hosts'] ?? [];
+        $skipPatterns = $this->config['skip_patterns'] ?? [];
 
         // Build list of private Composer repos with their auth
         $privateRepos = [];
@@ -186,12 +181,14 @@ class ComposerIntegration
         foreach ($packages as $pkg) {
             $name = $pkg['name'] ?? '';
             $distUrl = $pkg['dist']['url'] ?? '';
+            $sourceUrl = $pkg['source']['url'] ?? '';
             $notificationUrl = $pkg['notification-url'] ?? '';
 
             foreach ($privateRepos as $repo) {
                 if (
                     (strpos($distUrl, $repo['host']) !== false) ||
-                    (strpos($notificationUrl, $repo['host']) !== false)
+                    (strpos($notificationUrl, $repo['host']) !== false) ||
+                    (strpos($sourceUrl, $repo['host']) !== false)
                 ) {
                     $this->privateRepoMap[$name] = [
                         'repo_url' => $repo['url'],
