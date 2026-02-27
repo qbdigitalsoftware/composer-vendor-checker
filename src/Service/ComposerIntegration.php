@@ -441,7 +441,7 @@ class ComposerIntegration
     }
 
     /**
-     * Check a package via vendor website with Packagist fallback.
+     * Check a package via vendor website scraping.
      *
      * @param string $name
      * @param string $installedVersion
@@ -461,7 +461,7 @@ class ComposerIntegration
                     'latest_version' => 'N/A',
                     'status' => 'UNAVAILABLE',
                     'source' => $vendorData['source'] ?? 'vendor_website',
-                    'error' => 'No version information found on vendor page or Packagist',
+                    'error' => 'No version information found on vendor page',
                 ];
             }
 
@@ -504,6 +504,7 @@ class ComposerIntegration
             'installed_version' => $installedVersion,
             'latest_version' => 'N/A',
             'status' => 'UNRESOLVED',
+            'source' => 'unresolved',
             'error' => 'No configured check method for this package',
         ];
     }

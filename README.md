@@ -1,6 +1,6 @@
 # Composer Vendor Version Checker
 
-A Composer plugin that checks all installed packages for available updates. Works on **any Composer project** with zero configuration — auto-discovers packages via Packagist, with optional support for vendor website scraping and private Composer repositories.
+A Composer plugin that checks installed packages for available updates via three sources: **Packagist API** (for explicitly listed packages), **private Composer repositories** (auto-detected from composer.json + auth.json), and **vendor website scraping**. Packages not configured for any source are reported as UNRESOLVED.
 
 ## The Problem This Solves
 
@@ -10,12 +10,12 @@ A Composer plugin that checks all installed packages for available updates. Work
 - The version available through Composer repositories lags behind the vendor's latest release
 - The package is distributed via a private Composer repository with restricted access
 
-This tool checks **Packagist** (auto-discovery), **private Composer repos** (with auth.json credentials), and **vendor websites** to give you the complete picture.
+This tool checks **Packagist** (for explicitly configured packages), **private Composer repos** (with auth.json credentials), and **vendor websites** to give you the complete picture.
 
 ## Features
 
 - Custom Composer command: `composer vendor:check`
-- **Auto-discovery** — checks all installed packages via Packagist with zero config
+- **Explicit resolution** — checks packages via configured sources (Packagist list, private repos, vendor websites)
 - Three version sources: Packagist API, private Composer repos, vendor website scraping
 - **Result caching** — avoids redundant HTTP calls within a configurable TTL
 - **Per-package progress** — live progress indicator during checks
@@ -56,7 +56,7 @@ composer vendor:check --help
 composer vendor:check
 ```
 
-Scans `composer.lock` and checks every non-skipped package for updates. Packages are checked via Packagist by default, with private repo and website overrides configurable via `config/packages.php`.
+Scans `composer.lock` and checks every non-skipped package for updates. Check method is determined by `config/packages.php`: website overrides, private repos (auto-detected), explicit Packagist list, or UNRESOLVED.
 
 ### Check Specific Packages
 
@@ -164,12 +164,12 @@ Checking packages from: ./composer.lock
       Error: Cloudflare protection detected — website requires browser verification
 
   --------------------------------------------------------------------------
-  Summary: 15 up-to-date, 6 updates available, 0 unavailable, 3 errors
+  Summary: 15 up-to-date, 6 updates available, 0 ahead, 0 unavailable, 0 unresolved, 3 errors
 ```
 
 ## Configuration
 
-Configuration is optional. Without a config file, all packages are checked via Packagist.
+Configuration is optional. Without a config file, packages with no configured source resolve as UNRESOLVED. Use the bundled `config/packages.php` to define Packagist, website, and skip lists.
 
 ### Config File Format
 
@@ -179,9 +179,15 @@ Key configuration options:
 
 ```php
 return [
-    // Website URL overrides — checked before Packagist
+    // Website URL overrides — scraped for version info
     'package_url_mappings' => [
-        'amasty/promo' => 'https://amasty.com/special-promotions-for-magento-2.html',
+        'mageplaza/module-smtp' => 'https://www.mageplaza.com/magento-2-smtp/',
+    ],
+
+    // Packages checked via Packagist API only
+    'packagist_packages' => [
+        'stripe/stripe-payments',
+        'klaviyo/magento2-extension',
     ],
 
     // Vendor prefixes to skip entirely
@@ -212,9 +218,10 @@ return [
 For each package in `composer.lock`:
 
 1. **Skip** — if vendor is in `skip_vendors` or package is in `skip_packages`
-2. **Website** — if package has a URL in `package_url_mappings` (with Packagist fallback)
-3. **Private Repo** — if package came from a private Composer repo detected in `composer.json` + `auth.json` (with Packagist fallback)
-4. **Packagist** — default auto-discovery for everything else
+2. **Website** — if package has a URL in `package_url_mappings`
+3. **Private Repo** — if package came from a private Composer repo detected in `composer.json` + `auth.json`
+4. **Packagist** — if package is in the `packagist_packages` list
+5. **Unresolved** — no configured check method (reported as UNRESOLVED)
 
 ## How It Works
 

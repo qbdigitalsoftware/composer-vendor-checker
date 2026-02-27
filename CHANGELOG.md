@@ -13,8 +13,8 @@ All changes since v0.1.3. Not yet tagged in Satis.
 
 ### New Features
 
-- **Packagist API fallback** — When vendor website scraping fails (Cloudflare block, no version on page), falls back to the Packagist API (`repo.packagist.org/p2/`) for the latest stable version. Results labelled `[via Packagist]`.
-- **Packagist-only package tracking** — Packages without vendor website patterns (Klaviyo, TaxJar, Yotpo, etc.) checked directly via Packagist API.
+- **Explicit Packagist package list** — Packagist is only queried for packages explicitly listed in `packagist_packages` config (Stripe, Klaviyo, Yotpo, etc.). Unknown packages resolve as UNRESOLVED instead of silently hitting Packagist.
+- **UNRESOLVED status** — New status for packages with no configured check method. Displayed as `·` in table output.
 - **UNAVAILABLE status** — New status for packages where the vendor page loads but no version can be extracted.
 - **Cloudflare detection** — HTTP 403 responses containing Cloudflare Managed Challenge markers detected and reported clearly.
 - **Version source tracking** — Each result includes a `source` field (Website, Packagist, or Private Repo).
@@ -22,7 +22,7 @@ All changes since v0.1.3. Not yet tagged in Satis.
 - **Auth expired detection** — When private repo queries fail, reports "auth may be expired" with actionable guidance.
 - **Concurrent HTTP requests** — All URLs pre-fetched in parallel via Guzzle async promises for significantly faster checks.
 - **Hybrid Cloudflare detection** — Header-based detection (cf-ray, cf-mitigated) with body marker fallback.
-- **Exit codes** — `0` = all current, `1` = updates available, `2` = errors (for CI/CD integration).
+- **Exit codes** — `0` = all current, `1` = updates available, `2` = errors/unresolved (for CI/CD integration).
 - **Package filter** — `--packages` option to check specific packages only.
 
 ### Expanded Package Coverage
@@ -30,8 +30,11 @@ All changes since v0.1.3. Not yet tagged in Satis.
 Package coverage expanded from ~10 to 29 tracked packages.
 
 **New vendor website mappings:**
-- `amasty/gdpr-cookie`, `amasty/geoipredirect`, `amasty/module-gdpr`, `amasty/number`
 - `aheadworks/module-blog`, `mageplaza/module-smtp`
+
+**New private repo resolutions (via composer.amasty.com):**
+- `amasty/gdpr-cookie`, `amasty/geoipredirect`, `amasty/module-gdpr`, `amasty/number`
+- All Amasty packages now resolve via `composer.amasty.com` private repo (auto-detected from composer.json + auth.json)
 
 **New Packagist-only packages:**
 - `taxjar/module-taxjar`, `webshopapps/module-matrixrate`, `klaviyo/magento2-extension`
@@ -44,12 +47,14 @@ Package coverage expanded from ~10 to 29 tracked packages.
 
 - **Smart repo filtering** — Skips `repo.magento.com`, `marketplace.magento.com`, and internal Satis repos.
 - **Response header caching** — `warmCache()` stores response headers alongside body for cached Cloudflare detection.
+- **Selective Packagist pre-fetching** — `warmHttpCache()` only pre-fetches Packagist URLs for packages resolved via the packagist method, reducing unnecessary HTTP calls.
 - **Updated User-Agent** — Standard Chrome User-Agent to reduce bot detection.
 - **`section_filter` and `version_select` in `extractVersion()`** — New vendor pattern options for precise version extraction.
 
 ### Removed
 
 - Dead methods: `checkMultiplePackages`, `getComposerVersion` (shell_exec security risk), `getMarketplaceVersion`, `getMarketplaceUrl`
+- Packagist fallback from website and private repo check methods — each source now stands alone
 
 ### Documentation
 
@@ -59,9 +64,9 @@ Package coverage expanded from ~10 to 29 tracked packages.
 
 ### Known Limitations
 
-- **Amasty** — Private repo (`composer.amasty.com`) returns 403. Global keys deprecated 1 Jan 2026. Requires project-level keys.
+- **Amasty** — Resolved via `composer.amasty.com` private repo. Requires valid project-level keys (global keys deprecated 1 Jan 2026).
 - **MageWorx** — Private repo credentials returning errors. Auth likely expired.
-- **Aheadworks** — Private repo credentials present but repo format not yet verified.
+- **Aheadworks** — Cloudflare-protected website; private repo credentials present but repo format not yet verified.
 
 ---
 
