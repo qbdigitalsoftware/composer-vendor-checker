@@ -27,7 +27,7 @@ class ResultCache
      * @param string $cacheDir Absolute path to cache directory
      * @param int $ttl Cache TTL in seconds (default 3600 = 1 hour)
      */
-    public function __construct($cacheDir, $ttl = 3600)
+    public function __construct(string $cacheDir, int $ttl = 3600)
     {
         $this->cacheDir = rtrim($cacheDir, '/');
         $this->ttl = $ttl;
@@ -39,7 +39,7 @@ class ResultCache
      * @param string $packageName
      * @return array|null Result array, or null if not cached or expired
      */
-    public function get($packageName)
+    public function get(string $packageName): ?array
     {
         $this->load();
 
@@ -63,7 +63,7 @@ class ResultCache
      * @param string $packageName
      * @param array $result
      */
-    public function set($packageName, array $result)
+    public function set(string $packageName, array $result): void
     {
         $this->load();
         $this->data[$packageName] = [
@@ -79,7 +79,7 @@ class ResultCache
      * @param string $packageName
      * @return bool
      */
-    public function has($packageName)
+    public function has(string $packageName): bool
     {
         return $this->get($packageName) !== null;
     }
@@ -87,7 +87,7 @@ class ResultCache
     /**
      * Clear all cached results.
      */
-    public function clear()
+    public function clear(): void
     {
         $path = $this->getCachePath();
         if (file_exists($path)) {
@@ -101,7 +101,7 @@ class ResultCache
      * Persist any modified data to disk.
      * Call this after all set() operations are complete.
      */
-    public function flush()
+    public function flush(): void
     {
         if (!$this->dirty) {
             return;
@@ -111,10 +111,14 @@ class ResultCache
             mkdir($this->cacheDir, 0755, true);
         }
 
-        file_put_contents(
+        $result = file_put_contents(
             $this->getCachePath(),
-            json_encode($this->data, JSON_PRETTY_PRINT)
+            json_encode($this->data, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR)
         );
+
+        if ($result === false) {
+            throw new \RuntimeException('Failed to write cache to: ' . $this->getCachePath());
+        }
 
         $this->dirty = false;
     }
@@ -122,7 +126,7 @@ class ResultCache
     /**
      * Load cache data from disk if not already loaded.
      */
-    private function load()
+    private function load(): void
     {
         if ($this->data !== null) {
             return;
@@ -131,7 +135,11 @@ class ResultCache
         $path = $this->getCachePath();
         if (file_exists($path)) {
             $json = file_get_contents($path);
-            $this->data = json_decode($json, true) ?: [];
+            try {
+                $this->data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+            } catch (\JsonException $e) {
+                $this->data = [];
+            }
         } else {
             $this->data = [];
         }
@@ -142,7 +150,7 @@ class ResultCache
      *
      * @return string
      */
-    private function getCachePath()
+    private function getCachePath(): string
     {
         return $this->cacheDir . '/results.json';
     }

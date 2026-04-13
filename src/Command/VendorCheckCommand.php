@@ -90,6 +90,12 @@ class VendorCheckCommand extends BaseCommand
                 InputOption::VALUE_OPTIONAL,
                 'Path to packages.php config file'
             )
+            ->addOption(
+                'strict',
+                null,
+                InputOption::VALUE_NONE,
+                'Treat UNRESOLVED and UNAVAILABLE as errors (exit code 2)'
+            )
             ->setHelp(<<<EOF
 The <info>vendor:check</info> command checks installed packages for available updates.
 
@@ -212,8 +218,9 @@ EOF
         // Set up progress reporter (suppress for non-table formats unless writing to file)
         $progress = null;
         if ($format === 'table' || $outputPath) {
-            $installedCount = count($integration->getInstalledPackages($packageFilter));
-            $progress = new ProgressReporter($output, $installedCount);
+            $allPackages = $integration->getInstalledPackages($packageFilter);
+            $checkableCount = count(array_filter($allPackages, fn($p) => $p['method'] !== 'skip'));
+            $progress = new ProgressReporter($output, $checkableCount);
         }
 
         $results = $integration->checkForUpdates($progress, $packageFilter);
@@ -246,7 +253,7 @@ EOF
             $output->writeln($formatted);
         }
 
-        return $this->getExitCode($results);
+        return $this->getExitCode($results, $input->getOption('strict'));
     }
 
     /**
@@ -257,7 +264,7 @@ EOF
      * @param string $format
      * @return int
      */
-    protected function checkSingleUrl($url, OutputInterface $output, $format)
+    protected function checkSingleUrl(string $url, OutputInterface $output, string $format): int
     {
         $checker = new VersionChecker();
 
@@ -292,13 +299,16 @@ EOF
      * @param array $results
      * @return int 0 = all current, 1 = updates available, 2 = errors
      */
-    protected function getExitCode(array $results)
+    protected function getExitCode(array $results, bool $strict = false): int
     {
         $hasErrors = false;
         $hasUpdates = false;
 
         foreach ($results as $result) {
-            if ($result['status'] === 'ERROR' || $result['status'] === 'UNAVAILABLE' || $result['status'] === 'UNRESOLVED') {
+            if ($result['status'] === 'ERROR') {
+                $hasErrors = true;
+            }
+            if ($strict && ($result['status'] === 'UNAVAILABLE' || $result['status'] === 'UNRESOLVED')) {
                 $hasErrors = true;
             }
             if ($result['status'] === 'UPDATE_AVAILABLE') {
@@ -322,7 +332,7 @@ EOF
      * @param OutputInterface $output
      * @param bool $verbose
      */
-    protected function displaySingleResult(array $result, OutputInterface $output, $verbose)
+    protected function displaySingleResult(array $result, OutputInterface $output, bool $verbose): void
     {
         if (isset($result['error'])) {
             $output->writeln("<error>Error: {$result['error']}</error>");

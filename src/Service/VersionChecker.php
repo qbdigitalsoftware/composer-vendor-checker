@@ -67,7 +67,7 @@ class VersionChecker
      *
      * @param Client|null $httpClient Optional Guzzle client (for testing)
      */
-    public function __construct($httpClient = null)
+    public function __construct(?Client $httpClient = null)
     {
         $this->httpClient = $httpClient ?: new Client([
             'timeout' => 30,
@@ -84,7 +84,7 @@ class VersionChecker
      *
      * @param array $urlConfigs ['url' => ['auth' => [...], 'timeout' => N], ...]
      */
-    public function warmCache(array $urlConfigs)
+    public function warmCache(array $urlConfigs): void
     {
         if (empty($urlConfigs)) {
             return;
@@ -131,7 +131,7 @@ class VersionChecker
      * @return string Response body
      * @throws GuzzleException
      */
-    protected function cachedGet($url, array $options = [])
+    protected function cachedGet(string $url, array $options = []): string
     {
         if (isset($this->bodyCache[$url])) {
             $cached = $this->bodyCache[$url];
@@ -161,7 +161,7 @@ class VersionChecker
      *
      * @return array
      */
-    public function getSupportedVendors()
+    public function getSupportedVendors(): array
     {
         return array_keys($this->vendorPatterns);
     }
@@ -172,7 +172,7 @@ class VersionChecker
      * @param string $packageName
      * @return string|null
      */
-    public function getVendorFromPackage($packageName)
+    public function getVendorFromPackage(string $packageName): ?string
     {
         $parts = explode('/', $packageName);
         return isset($parts[0]) ? $parts[0] : null;
@@ -185,13 +185,14 @@ class VersionChecker
      * @return array
      * @throws \Exception
      */
-    public function getVendorVersion($url)
+    public function getVendorVersion(string $url): array
     {
+        // Validate vendor BEFORE making HTTP request (prevents SSRF)
+        $vendor = $this->detectVendor($url);
+        $vendor_info = $this->vendorPatterns[$vendor];
+
         try {
             $html = $this->cachedGet($url);
-
-            $vendor = $this->detectVendor($url);
-            $vendor_info = $this->vendorPatterns[$vendor];
 
             // Extract version
             $version = $this->extractVersion($html, $vendor_info);
@@ -250,7 +251,7 @@ class VersionChecker
      * @param array $auth ['username' => '...', 'password' => '...']
      * @return string|null
      */
-    public function getPrivateRepoVersion($packageName, $repoUrl, array $auth)
+    public function getPrivateRepoVersion(string $packageName, string $repoUrl, array $auth): ?string
     {
         if (!isset($auth['username'], $auth['password'])) {
             return null;
@@ -272,8 +273,9 @@ class VersionChecker
         foreach ($endpoints as $endpoint) {
             try {
                 $body = $this->cachedGet($endpoint, $authOptions);
-                $data = json_decode($body, true);
-                if (!$data) {
+                try {
+                    $data = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+                } catch (\JsonException $e) {
                     continue;
                 }
 
@@ -299,8 +301,11 @@ class VersionChecker
                     }
                 }
 
-            } catch (\Exception $e) {
-                // Try next endpoint
+            } catch (RequestException $e) {
+                // HTTP error (401/403/404) — try next endpoint format
+                continue;
+            } catch (ConnectException $e) {
+                // Network error — try next endpoint format
                 continue;
             }
         }
@@ -314,7 +319,7 @@ class VersionChecker
      * @param array $versions Array of version entries from packages.json
      * @return string|null
      */
-    protected function extractLatestStableFromRepo(array $versions)
+    protected function extractLatestStableFromRepo(array $versions): ?string
     {
         $stableVersions = [];
 
@@ -350,7 +355,7 @@ class VersionChecker
      * @param array $auth
      * @return string|null
      */
-    protected function resolveFromSatisProviders(array $rootData, $packageName, $repoUrl, array $auth)
+    protected function resolveFromSatisProviders(array $rootData, string $packageName, string $repoUrl, array $auth): ?string
     {
         $authOptions = [
             'auth' => [$auth['username'], $auth['password']],
@@ -364,7 +369,11 @@ class VersionChecker
 
                 try {
                     $body = $this->cachedGet($url, $authOptions);
-                    $providers = json_decode($body, true);
+                    try {
+                        $providers = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+                    } catch (\JsonException $e) {
+                        continue;
+                    }
 
                     if (isset($providers['providers'][$packageName])) {
                         $pkgHash = $providers['providers'][$packageName]['sha256'] ?? '';
@@ -376,7 +385,11 @@ class VersionChecker
                         );
 
                         $pkgBody = $this->cachedGet($pkgUrl, $authOptions);
-                        $pkgData = json_decode($pkgBody, true);
+                        try {
+                            $pkgData = json_decode($pkgBody, true, 512, JSON_THROW_ON_ERROR);
+                        } catch (\JsonException $e) {
+                            continue;
+                        }
 
                         if (isset($pkgData['packages'][$packageName])) {
                             return $this->extractLatestStableFromRepo($pkgData['packages'][$packageName]);
@@ -397,11 +410,11 @@ class VersionChecker
      * @param string $packageName e.g. 'amasty/promo'
      * @return string|null
      */
-    public function getPackagistVersion($packageName)
+    public function getPackagistVersion(string $packageName): ?string
     {
         try {
             $body = $this->cachedGet("https://repo.packagist.org/p2/{$packageName}.json");
-            $data = json_decode($body, true);
+            $data = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
 
             if (!isset($data['packages'][$packageName])) {
                 return null;
@@ -435,14 +448,16 @@ class VersionChecker
      * @param string $url
      * @return string
      */
-    protected function detectVendor($url)
+    protected function detectVendor(string $url): string
     {
+        $host = parse_url($url, PHP_URL_HOST);
         foreach ($this->vendorPatterns as $vendor => $vendor_info) {
-            if (strpos($url, $vendor_info['url_match']) !== false) {
+            $match = $vendor_info['url_match'];
+            if ($host !== null && ($host === $match || str_ends_with($host, '.' . $match))) {
                 return $vendor;
             }
         }
-        throw new \Exception("Unknown vendor for ".$url);
+        throw new \Exception("Unknown vendor for " . $url);
     }
 
     /**
@@ -452,7 +467,7 @@ class VersionChecker
      * @param array $vendor_info
      * @return string|null
      */
-    protected function extractVersion($html, $vendor_info)
+    protected function extractVersion(string $html, array $vendor_info): ?string
     {
         $content = $html;
 
@@ -487,7 +502,7 @@ class VersionChecker
      * @param array $vendor_info
      * @return array
      */
-    protected function extractChangelog($html, $vendor_info)
+    protected function extractChangelog(string $html, array $vendor_info): array
     {
         $changelog = [];
 

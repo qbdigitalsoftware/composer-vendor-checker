@@ -16,7 +16,7 @@ class OutputFormatter
      * @param array $results
      * @return string
      */
-    public function formatTable(array $results)
+    public function formatTable(array $results): string
     {
         $report = [];
         $report[] = "";
@@ -110,7 +110,7 @@ class OutputFormatter
      * @param array $results
      * @return string
      */
-    public function formatJson(array $results)
+    public function formatJson(array $results): string
     {
         return json_encode($results, JSON_PRETTY_PRINT);
     }
@@ -121,7 +121,7 @@ class OutputFormatter
      * @param array $results
      * @return string
      */
-    public function formatCsv(array $results)
+    public function formatCsv(array $results): string
     {
         $lines = [];
         $lines[] = 'Package,Installed Version,Latest Version,Status,Source,Error';
@@ -157,7 +157,7 @@ class OutputFormatter
      * @param string $filePath
      * @throws \RuntimeException
      */
-    public function writeToFile($content, $filePath)
+    public function writeToFile(string $content, string $filePath): void
     {
         $dir = dirname($filePath);
         if (!is_dir($dir)) {
