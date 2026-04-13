@@ -26,7 +26,7 @@ Now you can run `composer vendor:check` in any project.
 ### As a Path Repository
 
 ```bash
-composer config repositories.vendor-checker path /path/to/module-composer-vendor-checker
+composer config repositories.vendor-checker path /path/to/composer-vendor-checker
 composer require --dev qbdigitalsoftware/composer-vendor-checker
 ```
 
