@@ -21,7 +21,7 @@ class ComposerPlugin implements PluginInterface, Capable
      * @param IOInterface $io
      * @return void
      */
-    public function activate(Composer $composer, IOInterface $io)
+    public function activate(Composer $composer, IOInterface $io): void
     {
         // Plugin activation - nothing needed here as we use getCapabilities()
     }
@@ -31,7 +31,7 @@ class ComposerPlugin implements PluginInterface, Capable
      * @param IOInterface $io
      * @return void
      */
-    public function deactivate(Composer $composer, IOInterface $io)
+    public function deactivate(Composer $composer, IOInterface $io): void
     {
         // Plugin deactivation
     }
@@ -41,7 +41,7 @@ class ComposerPlugin implements PluginInterface, Capable
      * @param IOInterface $io
      * @return void
      */
-    public function uninstall(Composer $composer, IOInterface $io)
+    public function uninstall(Composer $composer, IOInterface $io): void
     {
         // Plugin uninstall
     }
@@ -51,7 +51,7 @@ class ComposerPlugin implements PluginInterface, Capable
      *
      * @return array
      */
-    public function getCapabilities()
+    public function getCapabilities(): array
     {
         return [
             CommandProviderCapability::class => CommandProvider::class,

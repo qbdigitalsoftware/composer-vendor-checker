@@ -18,7 +18,7 @@ class CommandProvider implements CommandProviderCapability
      *
      * @return \Composer\Command\BaseCommand[]
      */
-    public function getCommands()
+    public function getCommands(): array
     {
         return [
             new VendorCheckCommand(),

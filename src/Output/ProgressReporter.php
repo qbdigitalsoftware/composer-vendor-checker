@@ -26,7 +26,7 @@ class ProgressReporter
      * @param OutputInterface $output
      * @param int $total Total number of packages to check
      */
-    public function __construct(OutputInterface $output, $total)
+    public function __construct(OutputInterface $output, int $total)
     {
         $this->output = $output;
         $this->total = $total;
@@ -39,7 +39,7 @@ class ProgressReporter
      * @param string $method Check method used (packagist, private_repo, website, cached)
      * @param string|null $status Result status (UP_TO_DATE, UPDATE_AVAILABLE, ERROR, etc.)
      */
-    public function advance($packageName, $method, $status = null)
+    public function advance(string $packageName, string $method, ?string $status = null): void
     {
         $this->current++;
 
@@ -84,7 +84,7 @@ class ProgressReporter
     /**
      * Output a completion message.
      */
-    public function finish()
+    public function finish(): void
     {
         $this->output->writeln('');
     }

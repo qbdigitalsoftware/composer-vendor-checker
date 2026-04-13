@@ -81,10 +81,17 @@ class ComposerIntegration
      * @param string|null $configPath
      * @return array
      */
-    protected function loadConfig($configPath)
+    protected function loadConfig(?string $configPath): array
     {
         if ($configPath !== null && file_exists($configPath)) {
-            $config = require $configPath;
+            $realPath = realpath($configPath);
+            if ($realPath === false) {
+                throw new \InvalidArgumentException("Config path could not be resolved: {$configPath}");
+            }
+            if (pathinfo($realPath, PATHINFO_EXTENSION) !== 'php') {
+                throw new \InvalidArgumentException("Config file must be a .php file: {$configPath}");
+            }
+            $config = require $realPath;
             if (is_array($config)) {
                 return $config;
             }
@@ -111,10 +118,10 @@ class ComposerIntegration
             return;
         }
 
-        $composerJson = json_decode(file_get_contents($this->composerJsonPath), true);
-        $authJson = json_decode(file_get_contents($this->authJsonPath), true);
-
-        if (!$composerJson || !$authJson) {
+        try {
+            $composerJson = json_decode(file_get_contents($this->composerJsonPath), true, 512, JSON_THROW_ON_ERROR);
+            $authJson = json_decode(file_get_contents($this->authJsonPath), true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
             return;
         }
 
@@ -175,7 +182,11 @@ class ComposerIntegration
             return;
         }
 
-        $lockData = json_decode(file_get_contents($this->composerLockPath), true);
+        try {
+            $lockData = json_decode(file_get_contents($this->composerLockPath), true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            return;
+        }
         $packages = $lockData['packages'] ?? [];
 
         foreach ($packages as $pkg) {
@@ -206,7 +217,7 @@ class ComposerIntegration
      * @param string $packageName
      * @return array|null ['repo_url' => '...', 'auth' => ['username' => '...', 'password' => '...']]
      */
-    public function getPrivateRepoConfig($packageName)
+    public function getPrivateRepoConfig(string $packageName): ?array
     {
         return $this->privateRepoMap[$packageName] ?? null;
     }
@@ -220,13 +231,17 @@ class ComposerIntegration
      * @param array $packageFilter Optional list of specific package names to include
      * @return array ['package/name' => ['method' => ..., 'version' => ..., ...], ...]
      */
-    public function getInstalledPackages(array $packageFilter = [])
+    public function getInstalledPackages(array $packageFilter = []): array
     {
         if (!file_exists($this->composerLockPath)) {
             throw new \Exception("composer.lock not found at: {$this->composerLockPath}");
         }
 
-        $lockData = json_decode(file_get_contents($this->composerLockPath), true);
+        try {
+            $lockData = json_decode(file_get_contents($this->composerLockPath), true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            throw new \Exception("Invalid JSON in composer.lock: " . $e->getMessage());
+        }
 
         if (!isset($lockData['packages'])) {
             throw new \Exception("Invalid composer.lock format");
@@ -248,7 +263,7 @@ class ComposerIntegration
      * @param array $packageFilter Optional list of specific package names to check
      * @return array
      */
-    public function checkForUpdates($progress = null, array $packageFilter = [])
+    public function checkForUpdates(?ProgressReporter $progress = null, array $packageFilter = []): array
     {
         $packages = $this->getInstalledPackages($packageFilter);
 
@@ -305,7 +320,7 @@ class ComposerIntegration
      *
      * @param array $packages ['name' => ['method' => ..., ...], ...]
      */
-    protected function warmHttpCache(array $packages)
+    protected function warmHttpCache(array $packages): void
     {
         $urlsToFetch = [];
 
@@ -341,7 +356,7 @@ class ComposerIntegration
      * @param array $pkg Resolution info from PackageResolver
      * @return array Result item
      */
-    protected function checkPackage($name, array $pkg)
+    protected function checkPackage(string $name, array $pkg): array
     {
         $method = $pkg['method'];
         $version = $pkg['version'];
@@ -378,7 +393,7 @@ class ComposerIntegration
      * @param string $installedVersion
      * @return array
      */
-    protected function checkViaPackagist($name, $installedVersion)
+    protected function checkViaPackagist(string $name, string $installedVersion): array
     {
         $latestVersion = $this->versionChecker->getPackagistVersion($name);
 
@@ -387,7 +402,7 @@ class ComposerIntegration
                 'package' => $name,
                 'installed_version' => $installedVersion,
                 'latest_version' => $latestVersion,
-                'status' => self::compareVersions($installedVersion, $latestVersion),
+                'status' => $this->compareVersions($installedVersion, $latestVersion),
                 'source' => 'packagist',
             ];
         }
@@ -410,7 +425,7 @@ class ComposerIntegration
      * @param array $pkg Resolution info containing repo_url and auth
      * @return array
      */
-    protected function checkViaPrivateRepo($name, $installedVersion, array $pkg)
+    protected function checkViaPrivateRepo(string $name, string $installedVersion, array $pkg): array
     {
         $repoUrl = $pkg['repo_url'];
         $auth = $pkg['auth'];
@@ -422,7 +437,7 @@ class ComposerIntegration
                 'package' => $name,
                 'installed_version' => $installedVersion,
                 'latest_version' => $latestVersion,
-                'status' => self::compareVersions($installedVersion, $latestVersion),
+                'status' => $this->compareVersions($installedVersion, $latestVersion),
                 'source' => 'private_repo',
             ];
         }
@@ -445,7 +460,7 @@ class ComposerIntegration
      * @param string $url Vendor product page URL
      * @return array
      */
-    protected function checkViaWebsite($name, $installedVersion, $url)
+    protected function checkViaWebsite(string $name, string $installedVersion, string $url): array
     {
         try {
             $vendorData = $this->versionChecker->getVendorVersion($url);
@@ -466,7 +481,7 @@ class ComposerIntegration
                 'package' => $name,
                 'installed_version' => $installedVersion,
                 'latest_version' => $latestVersion,
-                'status' => self::compareVersions($installedVersion, $latestVersion),
+                'status' => $this->compareVersions($installedVersion, $latestVersion),
                 'source' => $vendorData['source'] ?? 'vendor_website',
             ];
 
@@ -494,7 +509,7 @@ class ComposerIntegration
      * @param string $installedVersion
      * @return array
      */
-    protected function checkViaUnresolved($name, $installedVersion)
+    protected function checkViaUnresolved(string $name, string $installedVersion): array
     {
         return [
             'package' => $name,
@@ -513,7 +528,7 @@ class ComposerIntegration
      * @param string $latest
      * @return string UP_TO_DATE|UPDATE_AVAILABLE|AHEAD_OF_VENDOR
      */
-    public static function compareVersions($installed, $latest)
+    public function compareVersions(string $installed, string $latest): string
     {
         $installed = ltrim($installed, 'v');
         $latest = ltrim($latest, 'v');

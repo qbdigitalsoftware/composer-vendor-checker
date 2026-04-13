@@ -59,7 +59,7 @@ class PackageResolver
      * @param string $packageName Composer package name (e.g. 'amasty/promo')
      * @return array ['method' => 'packagist'|'private_repo'|'website'|'skip'|'unresolved', 'url' => '...']
      */
-    public function resolve($packageName)
+    public function resolve(string $packageName): array
     {
         $vendor = $this->getVendor($packageName);
 
@@ -103,7 +103,7 @@ class PackageResolver
      * @param array $lockPackages The 'packages' array from composer.lock
      * @return array ['package/name' => ['method' => ..., 'version' => ..., ...], ...]
      */
-    public function resolveAll(array $lockPackages)
+    public function resolveAll(array $lockPackages): array
     {
         $resolved = [];
 
@@ -124,7 +124,7 @@ class PackageResolver
      * @param string $packageName
      * @return string
      */
-    private function getVendor($packageName)
+    private function getVendor(string $packageName): string
     {
         $parts = explode('/', $packageName);
         return $parts[0];

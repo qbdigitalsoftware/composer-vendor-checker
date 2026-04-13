@@ -241,23 +241,27 @@ class ComposerIntegrationTest extends TestCase
 
     public function testCompareVersionsUpToDate()
     {
-        $this->assertEquals('UP_TO_DATE', ComposerIntegration::compareVersions('1.0.0', '1.0.0'));
+        $integration = new ComposerIntegration($this->fixturesDir . '/composer.lock');
+        $this->assertEquals('UP_TO_DATE', $integration->compareVersions('1.0.0', '1.0.0'));
     }
 
     public function testCompareVersionsUpdateAvailable()
     {
-        $this->assertEquals('UPDATE_AVAILABLE', ComposerIntegration::compareVersions('1.0.0', '2.0.0'));
+        $integration = new ComposerIntegration($this->fixturesDir . '/composer.lock');
+        $this->assertEquals('UPDATE_AVAILABLE', $integration->compareVersions('1.0.0', '2.0.0'));
     }
 
     public function testCompareVersionsAheadOfVendor()
     {
-        $this->assertEquals('AHEAD_OF_VENDOR', ComposerIntegration::compareVersions('3.0.0', '2.0.0'));
+        $integration = new ComposerIntegration($this->fixturesDir . '/composer.lock');
+        $this->assertEquals('AHEAD_OF_VENDOR', $integration->compareVersions('3.0.0', '2.0.0'));
     }
 
     public function testCompareVersionsStripsVPrefix()
     {
-        $this->assertEquals('UP_TO_DATE', ComposerIntegration::compareVersions('v1.5.0', '1.5.0'));
-        $this->assertEquals('UP_TO_DATE', ComposerIntegration::compareVersions('1.5.0', 'v1.5.0'));
+        $integration = new ComposerIntegration($this->fixturesDir . '/composer.lock');
+        $this->assertEquals('UP_TO_DATE', $integration->compareVersions('v1.5.0', '1.5.0'));
+        $this->assertEquals('UP_TO_DATE', $integration->compareVersions('1.5.0', 'v1.5.0'));
     }
 
     public function testMissingLockFileThrowsException()
