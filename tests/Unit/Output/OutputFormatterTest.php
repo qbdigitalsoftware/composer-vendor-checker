@@ -1,8 +1,8 @@
 <?php
 
-namespace GetJohn\VendorChecker\Tests\Unit\Output;
+namespace QBDigital\VendorChecker\Tests\Unit\Output;
 
-use GetJohn\VendorChecker\Output\OutputFormatter;
+use QBDigital\VendorChecker\Output\OutputFormatter;
 use PHPUnit\Framework\TestCase;
 
 class OutputFormatterTest extends TestCase

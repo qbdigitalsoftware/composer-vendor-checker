@@ -12,7 +12,7 @@
 ┌──────────────────────────────────────────────────────────────────────────┐
 │  Composer Core                                                           │
 │  - Loads installed plugins                                               │
-│  - Finds getjohn/module-composer-vendor-checker                          │
+│  - Finds qbdigitalsoftware/composer-vendor-checker                       │
 └────────────────────────────────┬─────────────────────────────────────────┘
                                  │
                                  ▼

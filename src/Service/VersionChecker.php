@@ -1,9 +1,9 @@
 <?php
 /**
- * Copyright © GetJohn. All rights reserved.
+ * Copyright © QB Digital Software Ltd. All rights reserved.
  */
 
-namespace GetJohn\VendorChecker\Service;
+namespace QBDigital\VendorChecker\Service;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;

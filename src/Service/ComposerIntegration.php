@@ -1,11 +1,11 @@
 <?php
 /**
- * Copyright © GetJohn. All rights reserved.
+ * Copyright © QB Digital Software Ltd. All rights reserved.
  */
 
-namespace GetJohn\VendorChecker\Service;
+namespace QBDigital\VendorChecker\Service;
 
-use GetJohn\VendorChecker\Output\ProgressReporter;
+use QBDigital\VendorChecker\Output\ProgressReporter;
 
 /**
  * Service to integrate with Composer and check installed packages for available updates.

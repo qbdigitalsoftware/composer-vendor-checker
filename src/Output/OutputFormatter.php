@@ -1,9 +1,9 @@
 <?php
 /**
- * Copyright © GetJohn. All rights reserved.
+ * Copyright © QB Digital Software Ltd. All rights reserved.
  */
 
-namespace GetJohn\VendorChecker\Output;
+namespace QBDigital\VendorChecker\Output;
 
 /**
  * Formats version check results into various output formats.

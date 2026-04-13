@@ -56,13 +56,13 @@
             "notification-url": "https://packages.stripe.com/downloads/"
         },
         {
-            "name": "getjohn/module-customsprice",
+            "name": "vendor/internal-module",
             "version": "1.0.0",
             "dist": {
-                "url": "https://cisco.satis.getjohn.co.uk/dist/getjohn/module-customsprice/getjohn-module-customsprice-1.0.0.zip",
+                "url": "https://satis.example-agency.co.uk/dist/vendor/internal-module/vendor-internal-module-1.0.0.zip",
                 "type": "zip"
             },
-            "notification-url": "https://cisco.satis.getjohn.co.uk/downloads/"
+            "notification-url": "https://satis.example-agency.co.uk/downloads/"
         },
         {
             "name": "unknown/unconfigured-module",

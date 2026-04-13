@@ -1,9 +1,9 @@
 <?php
 /**
- * Copyright © GetJohn. All rights reserved.
+ * Copyright © QB Digital Software Ltd. All rights reserved.
  */
 
-namespace GetJohn\VendorChecker;
+namespace QBDigital\VendorChecker;
 
 use Composer\Composer;
 use Composer\IO\IOInterface;

@@ -1,8 +1,8 @@
 <?php
 
-namespace GetJohn\VendorChecker\Tests\Unit\Service;
+namespace QBDigital\VendorChecker\Tests\Unit\Service;
 
-use GetJohn\VendorChecker\Service\ResultCache;
+use QBDigital\VendorChecker\Service\ResultCache;
 use PHPUnit\Framework\TestCase;
 
 class ResultCacheTest extends TestCase

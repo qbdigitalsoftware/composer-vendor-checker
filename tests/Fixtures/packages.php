@@ -22,6 +22,6 @@ return [
         'laminas',
     ],
     'skip_packages' => [
-        'getjohn/module-customsprice',
+        'vendor/internal-module',
     ],
 ];

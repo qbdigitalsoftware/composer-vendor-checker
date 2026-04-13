@@ -7,10 +7,10 @@
 
 require __DIR__ . '/vendor/autoload.php';
 
-use GetJohn\VendorChecker\Service\ComposerIntegration;
-use GetJohn\VendorChecker\Output\OutputFormatter;
-use GetJohn\VendorChecker\Output\ProgressReporter;
-use GetJohn\VendorChecker\Service\ResultCache;
+use QBDigital\VendorChecker\Service\ComposerIntegration;
+use QBDigital\VendorChecker\Output\OutputFormatter;
+use QBDigital\VendorChecker\Output\ProgressReporter;
+use QBDigital\VendorChecker\Service\ResultCache;
 
 // Parse arguments
 $lockPath = $argv[1] ?? null;

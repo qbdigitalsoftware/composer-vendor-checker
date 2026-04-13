@@ -1,8 +1,8 @@
 <?php
 
-namespace GetJohn\VendorChecker\Tests\Unit\Command;
+namespace QBDigital\VendorChecker\Tests\Unit\Command;
 
-use GetJohn\VendorChecker\Command\VendorCheckCommand;
+use QBDigital\VendorChecker\Command\VendorCheckCommand;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;

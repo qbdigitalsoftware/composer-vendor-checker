@@ -102,7 +102,7 @@ return [
     */
     'skip_patterns' => [
         '/\.satis\./i',         // e.g. client.satis.agency.co.uk
-        '/\.getjohn\./i',       // e.g. any getjohn internal repo
+        '/\.example-agency\./i', // e.g. any internal agency satis repo
     ],
 
     /*
