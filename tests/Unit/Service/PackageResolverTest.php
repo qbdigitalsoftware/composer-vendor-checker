@@ -1,8 +1,8 @@
 <?php
 
-namespace GetJohn\VendorChecker\Tests\Unit\Service;
+namespace QBDigital\VendorChecker\Tests\Unit\Service;
 
-use GetJohn\VendorChecker\Service\PackageResolver;
+use QBDigital\VendorChecker\Service\PackageResolver;
 use PHPUnit\Framework\TestCase;
 
 class PackageResolverTest extends TestCase
@@ -15,7 +15,7 @@ class PackageResolverTest extends TestCase
             ],
             'packagist_packages' => ['klaviyo/magento2-extension'],
             'skip_vendors' => ['magento', 'laminas'],
-            'skip_packages' => ['getjohn/module-customsprice'],
+            'skip_packages' => ['vendor/internal-module'],
         ], $configOverrides);
 
         return new PackageResolver($config, $privateRepoMap);
@@ -74,7 +74,7 @@ class PackageResolverTest extends TestCase
     public function testResolveSkipPackage()
     {
         $resolver = $this->createResolver();
-        $result = $resolver->resolve('getjohn/module-customsprice');
+        $result = $resolver->resolve('vendor/internal-module');
 
         $this->assertEquals('skip', $result['method']);
         $this->assertEquals('skip_packages', $result['reason']);
@@ -83,11 +83,11 @@ class PackageResolverTest extends TestCase
     public function testSkipPackageTakesPrecedenceOverWebsite()
     {
         $resolver = $this->createResolver([
-            'package_url_mappings' => ['getjohn/module-customsprice' => 'https://example.com'],
-            'skip_packages' => ['getjohn/module-customsprice'],
+            'package_url_mappings' => ['vendor/internal-module' => 'https://example.com'],
+            'skip_packages' => ['vendor/internal-module'],
         ]);
 
-        $result = $resolver->resolve('getjohn/module-customsprice');
+        $result = $resolver->resolve('vendor/internal-module');
         $this->assertEquals('skip', $result['method']);
     }
 

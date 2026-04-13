@@ -12,13 +12,13 @@ This is a Composer plugin that provides the `composer vendor:check` command. It 
 
 ```bash
 cd /path/to/your/project
-composer require --dev getjohn/module-composer-vendor-checker
+composer require --dev qbdigitalsoftware/composer-vendor-checker
 ```
 
 ### Global Installation
 
 ```bash
-composer global require getjohn/module-composer-vendor-checker
+composer global require qbdigitalsoftware/composer-vendor-checker
 ```
 
 Now you can run `composer vendor:check` in any project.
@@ -27,7 +27,7 @@ Now you can run `composer vendor:check` in any project.
 
 ```bash
 composer config repositories.vendor-checker path /path/to/module-composer-vendor-checker
-composer require --dev getjohn/module-composer-vendor-checker
+composer require --dev qbdigitalsoftware/composer-vendor-checker
 ```
 
 ### Verify Installation
@@ -86,7 +86,7 @@ Configuration is **optional**. Without a config file, packages with no configure
 Create a PHP file based on `config/packages.php.example`:
 
 ```bash
-cp vendor/getjohn/module-composer-vendor-checker/config/packages.php.example my-packages.php
+cp vendor/qbdigitalsoftware/composer-vendor-checker/config/packages.php.example my-packages.php
 ```
 
 Edit the file to add your skip lists, website overrides, and skip patterns, then run:
@@ -236,7 +236,7 @@ brew install ca-certificates
 ## Uninstallation
 
 ```bash
-composer remove getjohn/module-composer-vendor-checker
+composer remove qbdigitalsoftware/composer-vendor-checker
 ```
 
 ## Requirements

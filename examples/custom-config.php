@@ -9,9 +9,9 @@
  * sufficient. This file is for advanced programmatic usage.
  */
 
-use GetJohn\VendorChecker\Output\OutputFormatter;
-use GetJohn\VendorChecker\Service\ComposerIntegration;
-use GetJohn\VendorChecker\Service\ResultCache;
+use QBDigital\VendorChecker\Output\OutputFormatter;
+use QBDigital\VendorChecker\Service\ComposerIntegration;
+use QBDigital\VendorChecker\Service\ResultCache;
 
 // Auto-discovery mode — works on any Composer project with zero config.
 // All packages from composer.lock are checked via Packagist by default.

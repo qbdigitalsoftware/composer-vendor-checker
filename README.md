@@ -32,14 +32,14 @@ This tool checks **Packagist** (for explicitly configured packages), **private C
 ### Via Composer (Recommended)
 
 ```bash
-composer require --dev getjohn/module-composer-vendor-checker
+composer require --dev qbdigitalsoftware/composer-vendor-checker
 ```
 
 ### As a Path Repository
 
 ```bash
-composer config repositories.vendor-checker path /path/to/module-composer-vendor-checker
-composer require --dev getjohn/module-composer-vendor-checker
+composer config repositories.vendor-checker path /path/to/composer-vendor-checker
+composer require --dev qbdigitalsoftware/composer-vendor-checker
 ```
 
 ### Verify Installation
@@ -198,7 +198,7 @@ return [
 
     // Specific packages to skip
     'skip_packages' => [
-        'getjohn/module-customsprice',
+        'vendor/internal-module',
     ],
 
     // Private repo hosts to skip
@@ -284,8 +284,8 @@ vendor/bin/phpunit
 
 ## Author
 
-**John @ GetJohn**
-https://getjohn.co.uk
+**Carl Simpson — QB Digital Software Ltd**
+https://qbdigital.co.uk
 
 ## License
 

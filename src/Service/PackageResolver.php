@@ -1,9 +1,9 @@
 <?php
 /**
- * Copyright © GetJohn. All rights reserved.
+ * Copyright © QB Digital Software Ltd. All rights reserved.
  */
 
-namespace GetJohn\VendorChecker\Service;
+namespace QBDigital\VendorChecker\Service;
 
 /**
  * Determines the check strategy for each package.

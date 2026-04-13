@@ -1,8 +1,8 @@
 <?php
 
-namespace GetJohn\VendorChecker\Tests\Unit\Service;
+namespace QBDigital\VendorChecker\Tests\Unit\Service;
 
-use GetJohn\VendorChecker\Service\VersionChecker;
+use QBDigital\VendorChecker\Service\VersionChecker;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;

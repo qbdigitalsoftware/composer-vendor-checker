@@ -1,9 +1,9 @@
 <?php
 /**
- * Copyright © GetJohn. All rights reserved.
+ * Copyright © QB Digital Software Ltd. All rights reserved.
  */
 
-namespace GetJohn\VendorChecker\Output;
+namespace QBDigital\VendorChecker\Output;
 
 use Symfony\Component\Console\Output\OutputInterface;
 

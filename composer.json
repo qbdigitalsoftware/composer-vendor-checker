@@ -1,12 +1,12 @@
 {
-    "name": "getjohn/module-composer-vendor-checker",
+    "name": "qbdigitalsoftware/composer-vendor-checker",
     "description": "Composer plugin to check installed packages for available updates",
     "type": "composer-plugin",
     "license": "MIT",
     "authors": [
         {
-            "name": "John",
-            "email": "john@getjohn.co.uk"
+            "name": "Carl Simpson",
+            "email": "carl@qbdigital.co.uk"
         }
     ],
     "require": {
@@ -21,20 +21,20 @@
     },
     "autoload": {
         "psr-4": {
-            "GetJohn\\VendorChecker\\": "src/"
+            "QBDigital\\VendorChecker\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "GetJohn\\VendorChecker\\Tests\\": "tests/"
+            "QBDigital\\VendorChecker\\Tests\\": "tests/"
         }
     },
     "extra": {
-        "class": "GetJohn\\VendorChecker\\ComposerPlugin"
+        "class": "QBDigital\\VendorChecker\\ComposerPlugin"
     },
     "config": {
         "allow-plugins": {
-            "getjohn/module-composer-vendor-checker": true
+            "qbdigitalsoftware/composer-vendor-checker": true
         }
     }
 }

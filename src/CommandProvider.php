@@ -1,12 +1,12 @@
 <?php
 /**
- * Copyright © GetJohn. All rights reserved.
+ * Copyright © QB Digital Software Ltd. All rights reserved.
  */
 
-namespace GetJohn\VendorChecker;
+namespace QBDigital\VendorChecker;
 
 use Composer\Plugin\Capability\CommandProvider as CommandProviderCapability;
-use GetJohn\VendorChecker\Command\VendorCheckCommand;
+use QBDigital\VendorChecker\Command\VendorCheckCommand;
 
 /**
  * Command Provider for vendor:check command

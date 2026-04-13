@@ -1,16 +1,16 @@
 <?php
 /**
- * Copyright © GetJohn. All rights reserved.
+ * Copyright © QB Digital Software Ltd. All rights reserved.
  */
 
-namespace GetJohn\VendorChecker\Command;
+namespace QBDigital\VendorChecker\Command;
 
 use Composer\Command\BaseCommand;
-use GetJohn\VendorChecker\Output\OutputFormatter;
-use GetJohn\VendorChecker\Output\ProgressReporter;
-use GetJohn\VendorChecker\Service\ComposerIntegration;
-use GetJohn\VendorChecker\Service\ResultCache;
-use GetJohn\VendorChecker\Service\VersionChecker;
+use QBDigital\VendorChecker\Output\OutputFormatter;
+use QBDigital\VendorChecker\Output\ProgressReporter;
+use QBDigital\VendorChecker\Service\ComposerIntegration;
+use QBDigital\VendorChecker\Service\ResultCache;
+use QBDigital\VendorChecker\Service\VersionChecker;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;

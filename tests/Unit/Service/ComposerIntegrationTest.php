@@ -1,10 +1,10 @@
 <?php
 
-namespace GetJohn\VendorChecker\Tests\Unit\Service;
+namespace QBDigital\VendorChecker\Tests\Unit\Service;
 
-use GetJohn\VendorChecker\Service\ComposerIntegration;
-use GetJohn\VendorChecker\Service\ResultCache;
-use GetJohn\VendorChecker\Service\VersionChecker;
+use QBDigital\VendorChecker\Service\ComposerIntegration;
+use QBDigital\VendorChecker\Service\ResultCache;
+use QBDigital\VendorChecker\Service\VersionChecker;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
@@ -81,7 +81,7 @@ class ComposerIntegrationTest extends TestCase
 
         $packages = $integration->getInstalledPackages();
 
-        $this->assertEquals('skip', $packages['getjohn/module-customsprice']['method']);
+        $this->assertEquals('skip', $packages['vendor/internal-module']['method']);
     }
 
     public function testWebsiteOverrideResolvedCorrectly()
@@ -178,14 +178,14 @@ class ComposerIntegrationTest extends TestCase
 
         $results = $integration->checkForUpdates();
 
-        // 8 packages total, 3 skipped (magento, laminas, getjohn) = 5 results
+        // 8 packages total, 3 skipped (magento, laminas, vendor) = 5 results
         $this->assertCount(5, $results);
 
         // Verify skipped packages are not in results
         $resultPackages = array_column($results, 'package');
         $this->assertNotContains('magento/framework', $resultPackages);
         $this->assertNotContains('laminas/laminas-validator', $resultPackages);
-        $this->assertNotContains('getjohn/module-customsprice', $resultPackages);
+        $this->assertNotContains('vendor/internal-module', $resultPackages);
     }
 
     public function testCheckForUpdatesCacheHitAvoidsFetch()
@@ -344,6 +344,6 @@ class ComposerIntegrationTest extends TestCase
         $this->assertNull($integration->getPrivateRepoConfig('magento/framework'));
 
         // satis repos are skipped by pattern
-        $this->assertNull($integration->getPrivateRepoConfig('getjohn/module-customsprice'));
+        $this->assertNull($integration->getPrivateRepoConfig('vendor/internal-module'));
     }
 }
