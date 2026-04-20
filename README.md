@@ -1,5 +1,11 @@
 # Composer Vendor Version Checker
 
+[![Latest Stable Version](https://poser.pugx.org/qbdigitalsoftware/composer-vendor-checker/v/stable)](https://packagist.org/packages/qbdigitalsoftware/composer-vendor-checker)
+[![Total Downloads](https://poser.pugx.org/qbdigitalsoftware/composer-vendor-checker/downloads)](https://packagist.org/packages/qbdigitalsoftware/composer-vendor-checker)
+[![CI](https://github.com/qbdigitalsoftware/composer-vendor-checker/actions/workflows/ci.yml/badge.svg)](https://github.com/qbdigitalsoftware/composer-vendor-checker/actions/workflows/ci.yml)
+[![PHP Version Require](https://poser.pugx.org/qbdigitalsoftware/composer-vendor-checker/require/php)](https://packagist.org/packages/qbdigitalsoftware/composer-vendor-checker)
+[![License](https://poser.pugx.org/qbdigitalsoftware/composer-vendor-checker/license)](https://packagist.org/packages/qbdigitalsoftware/composer-vendor-checker)
+
 A Composer plugin that checks installed packages for available updates via three sources: **Packagist API** (for explicitly listed packages), **private Composer repositories** (auto-detected from composer.json + auth.json), and **vendor website scraping**. Packages not configured for any source are reported as UNRESOLVED.
 
 ## The Problem This Solves
