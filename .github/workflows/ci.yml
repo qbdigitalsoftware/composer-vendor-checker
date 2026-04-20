@@ -31,5 +31,6 @@ jobs:
       - name: Check code style
         if: matrix.php == '8.2'
         run: |
+          composer global config --no-plugins allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
           composer global require squizlabs/php_codesniffer magento/magento-coding-standard
           ~/.composer/vendor/bin/phpcs --standard=Magento2 --extensions=php src/
