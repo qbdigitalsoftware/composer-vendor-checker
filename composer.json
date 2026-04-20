@@ -3,10 +3,12 @@
     "description": "Composer plugin to check installed packages for available updates",
     "type": "composer-plugin",
     "license": "MIT",
+    "homepage": "https://github.com/qbdigitalsoftware/composer-vendor-checker",
+    "keywords": ["composer", "magento", "vendor", "update-checker", "version", "audit", "satis"],
     "authors": [
         {
             "name": "Carl Simpson",
-            "email": "carl@qbdigital.co.uk"
+            "email": "carl.simpson@gmail.com"
         }
     ],
     "require": {
