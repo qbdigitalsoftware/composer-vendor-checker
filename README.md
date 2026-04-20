@@ -270,7 +270,7 @@ jobs:
 
 ## Requirements
 
-- PHP 7.4 or higher
+- PHP 8.1 or higher
 - Composer 2.x
 - ext-json
 - guzzlehttp/guzzle ^6.5 or ^7.0
