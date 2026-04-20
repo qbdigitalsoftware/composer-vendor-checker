@@ -2,9 +2,16 @@
 
 All notable changes to the Vendor Version Checker module are documented here.
 
-## v0.1.4 — Unreleased
+## v1.0.0 — 2026-04-13
 
-All changes since v0.1.3. Not yet tagged in Satis.
+First public Packagist release. Plugin is available as `qbdigitalsoftware/composer-vendor-checker`.
+
+### Rebranding
+
+- **Namespace change**: `GetJohn\VendorChecker` → `QBDigital\VendorChecker`. Users of pre-1.0 versions must update `use` statements and `extra.class` references.
+- **Package name change**: published on Packagist as `qbdigitalsoftware/composer-vendor-checker`.
+- **Author**: Carl Simpson / QB Digital Software Ltd.
+- **License**: MIT.
 
 ### Bug Fixes
 
