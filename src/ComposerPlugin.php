@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright © QB Digital Software Ltd. All rights reserved.
  */
