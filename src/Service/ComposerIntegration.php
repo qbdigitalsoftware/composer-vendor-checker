@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright © QB Digital Software Ltd. All rights reserved.
  */
@@ -490,7 +491,6 @@ class ComposerIntegration
             }
 
             return $result;
-
         } catch (\Exception $e) {
             return [
                 'package' => $name,

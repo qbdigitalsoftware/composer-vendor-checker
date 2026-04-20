@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright © QB Digital Software Ltd. All rights reserved.
  */
@@ -46,7 +47,8 @@ class VersionChecker
         ],
         'mageme' => [ 'url_match' => 'mageme.com',
             'version_pattern' => '/(\d+\.\d+\.\d+)/i',
-            'changelog_pattern' => '/(\d+\.\d+\.\d+)\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d+\s+\d{4}/i',
+            'changelog_pattern' => '/(\d+\.\d+\.\d+)\s+'
+                . '(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d+\s+\d{4}/i',
             'changelog_section' => '/CHANGE\s+LOG(.*?)(?=Frequently|$)/is'
         ],
         'mageworx' => [ 'url_match' => 'mageworx.com',
@@ -73,7 +75,8 @@ class VersionChecker
             'timeout' => 30,
             'verify' => true,
             'headers' => [
-                'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 '
+                    . '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             ]
         ]);
     }
@@ -208,7 +211,6 @@ class VersionChecker
                 'source' => 'vendor_website',
                 'checked_at' => date('Y-m-d H:i:s')
             ];
-
         } catch (GuzzleException $e) {
             // Check for Cloudflare protection
             $isCloudflareBlocked = false;
@@ -224,7 +226,8 @@ class VersionChecker
                     } else {
                         // Body-based fallback for cached responses or edge cases where headers are stripped
                         $body = (string) $response->getBody();
-                        if (strpos($body, 'Just a moment') !== false ||
+                        if (
+                            strpos($body, 'Just a moment') !== false ||
                             strpos($body, '_cf_chl_opt') !== false ||
                             strpos($body, 'cf-browser-verification') !== false ||
                             strpos($body, 'Checking your browser') !== false
@@ -236,7 +239,9 @@ class VersionChecker
             }
 
             if ($isCloudflareBlocked) {
-                throw new \Exception("Cloudflare protection detected on {$url} — website requires browser verification");
+                throw new \Exception(
+                    "Cloudflare protection detected on {$url} — website requires browser verification"
+                );
             }
 
             throw new \Exception("Failed to fetch {$url}: " . $e->getMessage());
@@ -300,7 +305,6 @@ class VersionChecker
                         return $version;
                     }
                 }
-
             } catch (RequestException $e) {
                 // HTTP error (401/403/404) — try next endpoint format
                 continue;
@@ -355,8 +359,12 @@ class VersionChecker
      * @param array $auth
      * @return string|null
      */
-    protected function resolveFromSatisProviders(array $rootData, string $packageName, string $repoUrl, array $auth): ?string
-    {
+    protected function resolveFromSatisProviders(
+        array $rootData,
+        string $packageName,
+        string $repoUrl,
+        array $auth
+    ): ?string {
         $authOptions = [
             'auth' => [$auth['username'], $auth['password']],
             'timeout' => 15,
@@ -507,7 +515,10 @@ class VersionChecker
         $changelog = [];
 
         // Try to find changelog section first
-        if (isset($vendor_info['changelog_section']) && preg_match($vendor_info['changelog_section'], $html, $sectionMatch)) {
+        if (
+            isset($vendor_info['changelog_section'])
+            && preg_match($vendor_info['changelog_section'], $html, $sectionMatch)
+        ) {
             $html = $sectionMatch[1];
         }
 

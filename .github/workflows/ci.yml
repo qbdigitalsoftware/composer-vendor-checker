@@ -31,5 +31,5 @@ jobs:
       - name: Check code style
         if: matrix.php == '8.2'
         run: |
-          composer global require squizlabs/php_codesniffer magento/magento-coding-standard
-          ~/.composer/vendor/bin/phpcs --standard=Magento2 --extensions=php src/
+          composer global require squizlabs/php_codesniffer
+          ~/.composer/vendor/bin/phpcs --standard=PSR12 --extensions=php src/
